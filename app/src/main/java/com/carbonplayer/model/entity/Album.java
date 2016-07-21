@@ -10,6 +10,8 @@ import io.realm.annotations.PrimaryKey;
  * Album object
  */
 public class Album extends RealmObject {
+    public static final String ID = "id";
+
     @PrimaryKey private String id;
     private Date recentTimestamp;
     private String title;
@@ -20,6 +22,8 @@ public class Album extends RealmObject {
     private String albumArtURL;
     private RealmList<RealmString> artistId;
     private RealmList<RealmString> songIds;
+
+    public Album(){}
 
     public Album(String id, Date recentTimestamp, String title, String artist,
                  String composer, Integer year, String genre, String albumArtURL,
