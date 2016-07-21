@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/constraintLayout">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/intro_done"
+        android:id="@+id/introDone"
+        android:fontFamily="sans-serif-light"
+        android:textSize="26sp"
+        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout"
+        app:layout_constraintTop_toTopOf="@+id/constraintLayout"
+        android:layout_marginTop="64dp"
+        app:layout_constraintRight_toRightOf="@+id/constraintLayout" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/intro_slide4_desc"
+        android:fontFamily="sans-serif"
+        android:id="@+id/introSlide4Desc"
+        android:textSize="16sp"
+        android:textAlignment="center"
+        app:layout_constraintLeft_toLeftOf="@+id/introDone"
+        app:layout_constraintTop_toBottomOf="@+id/introDone"
+        android:layout_marginTop="48dp"
+        app:layout_constraintRight_toRightOf="@+id/introDone" />
+
+</android.support.constraint.ConstraintLayout>

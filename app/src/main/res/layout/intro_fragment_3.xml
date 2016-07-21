@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/constraintLayout3">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/intro_settingup"
+        android:id="@+id/introSettingup"
+        android:fontFamily="sans-serif-light"
+        android:textSize="26sp"
+        android:textAlignment="center"
+        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout3"
+        app:layout_constraintTop_toTopOf="@+id/constraintLayout3"
+        android:layout_marginTop="64dp"
+        app:layout_constraintRight_toRightOf="@+id/constraintLayout3" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/intro_slide3_desc"
+        android:fontFamily="sans-serif"
+        android:id="@+id/introSlide3Desc"
+        android:textSize="16sp"
+        android:textAlignment="center"
+        android:maxWidth="320dp"
+        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout3"
+        app:layout_constraintTop_toBottomOf="@+id/introSettingup"
+        android:layout_marginTop="48dp"
+        app:layout_constraintRight_toRightOf="@+id/constraintLayout3" />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/slide3Spinner"
+        app:layout_constraintLeft_toLeftOf="@+id/introSlide3Desc"
+        app:layout_constraintTop_toBottomOf="@+id/introSlide3Desc"
+        app:layout_constraintRight_toRightOf="@+id/introSlide3Desc"
+        app:layout_constraintBottom_toBottomOf="@+id/constraintLayout3"
+        app:layout_constraintVertical_bias="0.32999998" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@android:string/ok"
+        android:id="@+id/nautilusFailedOKButton"
+        android:fontFamily="sans-serif"
+        android:textStyle="bold"
+        android:visibility="invisible"
+        android:enabled="false"
+        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout3"
+        app:layout_constraintTop_toBottomOf="@+id/introSlide3Desc"
+        app:layout_constraintRight_toRightOf="@+id/constraintLayout3"
+        app:layout_constraintBottom_toBottomOf="@+id/constraintLayout3" />
+
+</android.support.constraint.ConstraintLayout>

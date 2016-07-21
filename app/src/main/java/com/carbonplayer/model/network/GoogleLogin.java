@@ -1,0 +1,277 @@
+package com.carbonplayer.model.network;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.util.ArrayMap;
+import android.util.Base64;
+import android.util.Log;
+
+import com.carbonplayer.CarbonPlayerApplication;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.net.URL;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPublicKeySpec;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.net.ssl.HttpsURLConnection;
+
+import timber.log.Timber;
+
+/**
+ * Contains methods used to authenticate to Google services,
+ * as well as to retrieve a Play Music OAuth token.
+ */
+public class GoogleLogin {
+
+    // The Google public key
+    private static final String googleDefaultPublicKey = "AAAAgMom/1a/v0lblO2Ubrt60J2gcuXSljGFQXgcyZWveWLEwo6prwgi3iJIZdodyhKZQrNWp5nKJ3srRXcUW+F1BD3baEVGcmEgqaLZUNBjm057pKRI16kB0YppeGx5qIQ5QjKzsR8ETQbKLNWgRY0QRNVz34kMJR3P/LgHax/6rmf5AAAAAwEAAQ==";
+
+    /**
+     * @param login - your mail, should looks like myemail@gmail.com
+     * @param password - your password
+     *
+     * @return a base64 string containing the encrypted password
+     *
+     * Function credits - Dima Kovalenko (http://codedigging.com/blog/2014-06-09-about-encryptedpasswd/)
+     **/
+    @SuppressWarnings("static-access")
+    private static String encrypt(String login, String password)
+            throws NoSuchAlgorithmException, InvalidKeySpecException,
+            NoSuchPaddingException, UnsupportedEncodingException,
+            InvalidKeyException, IllegalBlockSizeException,
+            BadPaddingException {
+
+        // First of all, let's convert Google login public key from base64
+        // to PublicKey, and then calculate SHA-1 of the key:
+
+        // 1. Converting Google login public key from base64 to byte[]
+        byte[] binaryKey = Base64.decode(googleDefaultPublicKey, 0);
+
+        // 2. Calculating the first BigInteger
+        int i = readInt(binaryKey, 0);
+        byte [] half = new byte[i];
+        System.arraycopy(binaryKey, 4, half, 0, i);
+        BigInteger firstKeyInteger = new BigInteger(1, half);
+
+        // 3. Calculating the second BigInteger
+        int j = readInt(binaryKey, i + 4);
+        half = new byte[j];
+        System.arraycopy(binaryKey, i + 8, half, 0, j);
+        BigInteger secondKeyInteger = new BigInteger(1, half);
+
+        // 4. Let's calculate SHA-1 of the public key, and put it to signature[]:
+        // signature[0] = 0 (always 0!)
+        // signature[1...4] = first 4 bytes of SHA-1 of the public key
+        byte[] sha1 = MessageDigest.getInstance("SHA-1").digest(binaryKey);
+        byte[] signature = new byte[5];
+        signature[0] = 0;
+        System.arraycopy(sha1, 0, signature, 1, 4);
+
+        // 5. Use the BigIntegers (see calculations above) to generate
+        // a PublicKey object
+        PublicKey publicKey = KeyFactory.getInstance("RSA").
+                generatePublic(new RSAPublicKeySpec(firstKeyInteger, secondKeyInteger));
+
+        // It's time to encrypt our password:
+        // 1. Let's create Cipher:
+        @SuppressLint("GetInstance") Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING");
+
+        // 2. Then concatenate the login and password (use "\u0000" as a separator):
+        String combined = login + "\u0000" + password;
+
+        // 3. Then converting the string to bytes
+        byte[] plain = combined.getBytes("UTF-8");
+
+        // 4. and encrypt the bytes with the public key:
+        cipher.init(cipher.PUBLIC_KEY, publicKey);
+        byte[] encrypted = cipher.doFinal(plain);
+
+        // 5. Add the result to a byte array output[] of 133 bytes length:
+        // output[0] = 0 (always 0!)
+        // output[1...4] = first 4 bytes of SHA-1 of the public key
+        // output[5...132] = encrypted login+password ("\u0000" is used as a separator)
+        byte[] output = new byte [133];
+        System.arraycopy(signature, 0, output, 0, signature.length);
+        System.arraycopy(encrypted, 0, output, signature.length, encrypted.length);
+
+        // Done! Just encrypt the result as base64 string and return it
+        return Base64.encodeToString(output, Base64.URL_SAFE + Base64.NO_WRAP);
+    }
+
+   /**
+    * Aux. method, it takes 4 bytes from a byte array and turns the bytes to int
+    *
+    * Function credits - Dima Kovalenko (http://codedigging.com/blog/2014-06-09-about-encryptedpasswd/)
+    */
+    private static int readInt(byte[] arrayOfByte, int start) {
+        //return 0x0 | (0xFF & arrayOfByte[start]) << 24 | (0xFF & arrayOfByte[(start + 1)]) << 16 | (0xFF & arrayOfByte[(start + 2)]) << 8 | 0xFF & arrayOfByte[(start + 3)];
+        return (0xFF & arrayOfByte[start]) << 24 | (0xFF & arrayOfByte[(start + 1)]) << 16 | (0xFF & arrayOfByte[(start + 2)]) << 8 | 0xFF & arrayOfByte[(start + 3)];
+    }
+
+    /**
+     * Performs a Google login call
+     * @param url URL
+     * @param builder URI builder containing login params
+     * @return ArrayMap of response values
+     */
+    private static ArrayMap<String, String> loginCall(URL url, Uri.Builder builder) {
+        ArrayMap<String, String> response = new ArrayMap<>();
+
+        try {
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setReadTimeout(10000);
+            conn.setConnectTimeout(15000);
+            conn.setRequestMethod("POST");
+
+            String query = builder.build().getEncodedQuery();
+
+            conn.setRequestProperty("Content-Length", String.valueOf(query.length()));
+            conn.setRequestProperty("User-Agent", CarbonPlayerApplication.googleUserAgent);
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+
+            OutputStream os = conn.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(os, "UTF-8"));
+            writer.write(query);
+            writer.flush();
+            writer.close();
+            os.close();
+            int responseCode=conn.getResponseCode();
+
+            if (responseCode == HttpsURLConnection.HTTP_OK) {
+                String line;
+                BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                while ((line=br.readLine()) != null) {
+                    String[] s = line.split("=");
+                    response.put(s[0], s[1]);
+                }
+            }else{
+                return null;
+            }
+
+            conn.connect();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        return response;
+    }
+
+    private static String performMasterLogin(String email, String password, String androidId){
+
+        ArrayMap<String, String> response;
+        Uri.Builder builder = new Uri.Builder();
+
+        try {
+            URL url = new URL("https://android.clients.google.com/auth");
+
+            builder.appendQueryParameter("accountType", "HOSTED_OR_GOOGLE")
+                    .appendQueryParameter("Email", email)
+                    .appendQueryParameter("has_permission", "1")
+                    .appendQueryParameter("EncryptedPasswd", encrypt(email, password))
+                    //.appendQueryParameter("Passwd", password)
+                    .appendQueryParameter("service", "ac2dm")
+                    .appendQueryParameter("source", "android")
+                    .appendQueryParameter("androidId", androidId)
+                    .appendQueryParameter("device_country", "us")
+                    .appendQueryParameter("operatorCountry", "us")
+                    .appendQueryParameter("lang", "en")
+                    .appendQueryParameter("sdk_version", "17");
+
+            response = loginCall(url, builder);
+
+            if(response == null) return null;
+
+            Timber.d(response.toString().concat(response.get("Token")));
+            if(!response.containsKey("Token")) {Log.d("GPS", "issue"); return null; }
+            return response.get("Token");
+
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+
+    }
+
+    private static String performOAuth(String email, String masterToken, String androidId){
+
+        ArrayMap<String, String> response;
+        Uri.Builder builder = new Uri.Builder();
+
+        try {
+
+            URL url = new URL("https://android.clients.google.com/auth");
+
+            builder.appendQueryParameter("accountType", "HOSTED_OR_GOOGLE")
+                    .appendQueryParameter("Email", email)
+                    .appendQueryParameter("has_permission", "1")
+                    .appendQueryParameter("add_account", "1")
+                    .appendQueryParameter("EncryptedPasswd", masterToken)
+                    .appendQueryParameter("service", "sj")
+                    .appendQueryParameter("source", "android")
+                    .appendQueryParameter("androidId", androidId)
+                    .appendQueryParameter("app", "com.google.android.music")
+                    .appendQueryParameter("client_sig", "38918a453d07199354f8b19af05ec6562ced5788")
+                    .appendQueryParameter("device_country", "us")
+                    .appendQueryParameter("operatorCountry", "us")
+                    .appendQueryParameter("lang", "en")
+                    .appendQueryParameter("sdk_version", "17" );
+
+            response = loginCall(url, builder);
+
+            if(response == null) return null;
+            Timber.d(response.toString());
+
+            if(!response.containsKey("Auth")) return null;
+            return response.get("Auth");
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static boolean login(Activity context, String email, String password){
+
+        @SuppressLint("HardwareIds")
+        String androidId = Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+
+        String masterToken = performMasterLogin(email, password, androidId);
+        if(masterToken == null) return false;
+
+        String OAuthToken = performOAuth(email, masterToken, androidId);
+        if(OAuthToken == null) return false;
+
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context.getBaseContext());
+
+        prefs.edit().putString("OAuthToken", OAuthToken).apply();
+
+        return true;
+
+    }
+}

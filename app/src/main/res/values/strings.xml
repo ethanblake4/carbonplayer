@@ -1,0 +1,26 @@
+<resources>
+
+    <string name="app_name">Carbon Player</string>
+
+    <!--///// Intro /////-->
+    <string name="title_activity_intro">IntroActivity</string>
+
+    <string name="intro_welcome">Welcome to Carbon Player</string>
+    <string name="intro_slide_desc">Google Play Music, \ndesigned the way Google intended</string>
+
+    <string name="intro_setup">Let\'s get setup</string>
+    <string name="intro_slide2_desc">Sign in to your Google Account so we can access your music</string>
+    <string name="intro_signin">Sign In</string>
+
+    <string name="intro_settingup">Setting up...</string>
+    <string name="intro_slide3_desc">Logging in...</string>
+    <string name="intro_slide3_desc2">Getting your music library</string>
+    <string name="intro_slide3_error">Error</string>
+    <string name="intro_slide3_no_nautilus">A Play Music All Access subscription is required to use Carbon Player.</string>
+    <string name="intro_slide3_issue">An issue occurred while setting up Carbon Player.</string>
+    <string name="ok">OK</string>
+
+    <string name="intro_done">We\'re all set</string>
+    <string name="intro_slide4_desc">Tap the checkmark to start listening</string>
+    <string name="next">Next</string>
+</resources>

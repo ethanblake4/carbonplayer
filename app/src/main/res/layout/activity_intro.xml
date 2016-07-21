@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/constraintLayout4">
+
+    <android.support.v4.view.ViewPager
+        android:layout_width="0dp"
+        android:id="@+id/introPager"
+        android:layout_height="0dp"
+        tools:layout_editor_absoluteWidth="411dp"
+        tools:layout_editor_absoluteHeight="658dp"
+        android:visibility="visible"
+        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout4"
+        app:layout_constraintTop_toTopOf="@+id/constraintLayout4"></android.support.v4.view.ViewPager>
+
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/next"
+        android:src="@drawable/ic_arrow_forward_white_24px"
+        android:background="#0000"
+        android:contentDescription="@string/next"
+        tools:layout_editor_absoluteWidth="64dp"
+        tools:layout_editor_absoluteHeight="64dp"
+        app:layout_constraintRight_toRightOf="@+id/constraintLayout4"
+        android:layout_marginEnd="32dp"
+        app:layout_constraintBottom_toBottomOf="@+id/constraintLayout4"
+        android:layout_marginBottom="24dp" />
+
+
+</android.support.constraint.ConstraintLayout>
