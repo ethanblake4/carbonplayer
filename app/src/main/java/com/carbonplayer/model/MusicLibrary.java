@@ -1,16 +1,13 @@
 package com.carbonplayer.model;
 
-import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.RealmString;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Stack;
 
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -34,17 +31,20 @@ public final class MusicLibrary {
         return instance;
     }
 
-    public void saveTracks(final List<MusicTrack> tracks){
+    public void saveTracksAsync(final List<MusicTrack> tracks){
         final LinkedList<Album> albums = new LinkedList<>();
         for(MusicTrack track : tracks){
-            boolean exists = false;
+            if(track.getAlbumId() == null) continue;
+
+            Album exists = null;
             for(Album album : albums){
-                if(track.getAlbumId().equals(album.getId())){
-                    exists = true;
+                if(track.getAlbumId().equals(album.getId()) ||
+                        (track.getArtist().equals(album.getArtist()) && track.getAlbum().equals(album.getTitle())) ){
+                    exists = album;
                     break;
                 }
             }
-            if(!exists){
+            if(exists == null){
                 Album a = new Album(track.getAlbumId(), track.getRecentTimestamp(),
                         track.getAlbum(), track.getArtist(),
                         track.getComposer(), track.getYear(),
@@ -53,15 +53,17 @@ public final class MusicLibrary {
                         new RealmList<>(new RealmString(track.getTrackId()))
                 );
                 albums.addFirst(a);
+            }else{
+                exists.addSongId(track.getTrackId());
             }
         }
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                for (MusicTrack track : tracks) {
+                /*for (MusicTrack track : tracks) {
                     realm.copyToRealm(track);
-                    Timber.d("copied %s", track.toString());
-                }
+                }*/
+                realm.copyToRealm(tracks);
                 realm.copyToRealm(albums);
             }
         }, new Realm.Transaction.OnError() {
@@ -73,14 +75,20 @@ public final class MusicLibrary {
     }
 
     /**
-     * Loads the news feed as well as all future updates.
+     * Loads the tracks.
      */
     @UiThread
     public Observable<RealmResults<Album>> loadAlbums() {
 
         // Return the data in Realm.
         return realm.where(Album.class)
-                .findAllSortedAsync(Album.TITLE, Sort.DESCENDING)
+                .findAllSortedAsync(Album.TITLE, Sort.ASCENDING)
                 .asObservable();
+    }
+
+    public MusicTrack getTrack(String id){
+        return realm.where(MusicTrack.class)
+                .equalTo(MusicTrack.ID, id)
+                .findFirst();
     }
 }

@@ -378,7 +378,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
             switch(result.getSuccessCode()){
                 case SUCCESS:
                     Timber.d("copying tracks to Realm");
-                    MusicLibrary.getInstance().saveTracks(result.getTracks());
+                    MusicLibrary.getInstance().saveTracksAsync(result.getTracks());
                     Timber.d("tracks saved");
                     SharedPreferences getPrefs = PreferenceManager
                             .getDefaultSharedPreferences(getBaseContext());

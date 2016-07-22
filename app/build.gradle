@@ -33,4 +33,5 @@ dependencies {
     compile 'com.mpatric:mp3agic:0.8.4'
     compile 'com.squareup.okhttp3:okhttp:3.4.1'
     compile 'com.squareup.flow:flow:1.0.0-alpha'
+    compile 'com.android.support:recyclerview-v7:24.1.0'
 }
