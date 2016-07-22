@@ -11,6 +11,7 @@ import io.realm.annotations.PrimaryKey;
  */
 public class Album extends RealmObject {
     public static final String ID = "id";
+    public static final String TITLE = "title";
 
     @PrimaryKey private String id;
     private Date recentTimestamp;

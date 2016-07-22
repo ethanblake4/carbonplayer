@@ -254,7 +254,16 @@ public class MusicTrack extends RealmObject {
 
     @Override
     public String toString(){
-        return id + " (" + title + ")";
+        StringBuilder sb = new StringBuilder();
+        sb.append("MusicTrack: {");
+        sb.append("id: "); sb.append(id);
+        sb.append(", title: "); sb.append(title);
+        sb.append(", album: "); sb.append(album);
+        sb.append(", trackNumber: "); sb.append(trackNumber);
+        sb.append(", album id: "); sb.append(albumId);
+        sb.append("}");
+
+        return sb.toString();
     }
 
 }
