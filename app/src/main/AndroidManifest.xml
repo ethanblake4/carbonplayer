@@ -21,6 +21,10 @@
         <activity
             android:name=".ui.intro.IntroActivity"
             android:label="AppIntro" />
+        <activity
+            android:name=".ui.main.AlbumActivity"
+            android:label="Album"
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>

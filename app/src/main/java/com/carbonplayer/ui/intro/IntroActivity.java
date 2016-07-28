@@ -28,6 +28,8 @@ import android.widget.TextView;
 
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
+import com.carbonplayer.model.entity.Album;
+import com.carbonplayer.model.entity.StdCallback;
 import com.carbonplayer.model.network.GoogleLogin;
 import com.carbonplayer.model.network.Protocol;
 import com.carbonplayer.model.entity.MusicTrack;
@@ -43,6 +45,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -276,9 +279,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         new GetLibraryTask().execute(this);
     }
 
-    private void end(){
-        this.finish();
-    }
+    private void end(){this.finish();}
 
     private class LoginTask extends AsyncTask<IntroActivity, Void, Boolean> {
 
@@ -311,10 +312,10 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
                 return doConfig(caller[0]);
             } catch (Protocol.Call.ResponseCodeException e) {
                 e.printStackTrace();
-                return new TrackResult(null, ERR_RESPONSECODE);
+                return new TrackResult(null, null, ERR_RESPONSECODE);
             } catch (IOException e) {
                 e.printStackTrace();
-                return new TrackResult(null, ERR_IOEXCEPTION);
+                return new TrackResult(null, null, ERR_IOEXCEPTION);
             }
 
         }
@@ -328,13 +329,13 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
                 JSONObject nautilus = json.getJSONObject("data").getJSONArray("entries").getJSONObject(62);
                 Log.d("doConfig", nautilus.toString());
                 if (nautilus.getString("value").equals("false")) {
-                    return new TrackResult(null, ERR_NOT_NAUTILUS);
+                    return new TrackResult(null, null, ERR_NOT_NAUTILUS);
                 } else {
                     return getSongs(caller);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
-                return new TrackResult(null, ERR_IOEXCEPTION);
+                return new TrackResult(null, null, ERR_IOEXCEPTION);
             }
 
         }
@@ -363,10 +364,12 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
-                return new TrackResult(null, ERR_IOEXCEPTION);
+                return new TrackResult(null, null, ERR_IOEXCEPTION);
             }
 
-            return new TrackResult(tracks, SUCCESS);
+            LinkedList<Album> albums = MusicLibrary.getAlbumsFromTracks(tracks);
+
+            return new TrackResult(tracks, albums, SUCCESS);
 
         }
 
@@ -378,12 +381,19 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
             switch(result.getSuccessCode()){
                 case SUCCESS:
                     Timber.d("copying tracks to Realm");
-                    MusicLibrary.getInstance().saveTracksAsync(result.getTracks());
+                    MusicLibrary.getInstance().saveTracksAsync(result.getTracks(), null);
                     Timber.d("tracks saved");
+                    Timber.d("copying albums to Realm");
+                    MusicLibrary.getInstance().saveAlbumsAsync(result.getAlbums(), new StdCallback() {
+                        @Override
+                        public void onSuccess() {
+                            Timber.d("albums saved");
+                            end();
+                        }
+                    });
                     SharedPreferences getPrefs = PreferenceManager
                             .getDefaultSharedPreferences(getBaseContext());
                     getPrefs.edit().putBoolean("firstStart", true).apply();
-                    end();
                     break;
                 case ERR_NOT_NAUTILUS:
                     ((TextView) findViewById(R.id.introSettingup)).setText(R.string.intro_slide3_error);
@@ -404,10 +414,12 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
     private class TrackResult {
         private ArrayList<MusicTrack> list;
+        private LinkedList<Album> albums;
         private int successCode;
 
-        TrackResult(ArrayList<MusicTrack> list, int successCode) {
+        TrackResult(ArrayList<MusicTrack> list, LinkedList<Album> albums, int successCode) {
             this.list = list;
+            this.albums = albums;
             this.successCode = successCode;
         }
 
@@ -417,6 +429,9 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
         ArrayList<MusicTrack> getTracks() {
             return list;
+        }
+        LinkedList<Album> getAlbums() {
+            return albums;
         }
     }
 

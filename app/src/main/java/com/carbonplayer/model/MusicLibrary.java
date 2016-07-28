@@ -1,10 +1,12 @@
 package com.carbonplayer.model;
 
+import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.RealmString;
+import com.carbonplayer.model.entity.StdCallback;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -31,7 +33,7 @@ public final class MusicLibrary {
         return instance;
     }
 
-    public void saveTracksAsync(final List<MusicTrack> tracks){
+    public static LinkedList<Album> getAlbumsFromTracks(List<MusicTrack> tracks){
         final LinkedList<Album> albums = new LinkedList<>();
         for(MusicTrack track : tracks){
             if(track.getAlbumId() == null) continue;
@@ -57,25 +59,29 @@ public final class MusicLibrary {
                 exists.addSongId(track.getTrackId());
             }
         }
+        return albums;
+    }
+
+    public void saveTracksAsync(final List<MusicTrack> tracks, @Nullable StdCallback callback){
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                /*for (MusicTrack track : tracks) {
-                    realm.copyToRealm(track);
-                }*/
                 realm.copyToRealm(tracks);
+            }
+        },transactionError(null, "Could not save tracks"));
+    }
+
+    public void saveAlbumsAsync(final List<Album> albums, @Nullable StdCallback callback){
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
                 realm.copyToRealm(albums);
             }
-        }, new Realm.Transaction.OnError() {
-            @Override
-            public void onError(Throwable error) {
-                Timber.e(error, "Could not save tracks");
-            }
-        });
+        }, transactionError(null, "Could not save albums"));
     }
 
     /**
-     * Loads the tracks.
+     * Loads the albums.
      */
     @UiThread
     public Observable<RealmResults<Album>> loadAlbums() {
@@ -91,4 +97,40 @@ public final class MusicLibrary {
                 .equalTo(MusicTrack.ID, id)
                 .findFirst();
     }
+
+    private Realm.Transaction.OnError transactionError(@Nullable final StdCallback in, final String errMessage){
+        if(in != null){
+            return new Realm.Transaction.OnError() {
+                @Override
+                public void onError(Throwable error) {
+                    in.onError(error);
+                }
+            };
+        }
+        return new Realm.Transaction.OnError() {
+            @Override
+            public void onError(Throwable error) {
+                Timber.e(error, (errMessage == null ? error.toString() : errMessage));
+            }
+        };
+    }
+
+    private Realm.Transaction.OnSuccess transactionSuccess(@Nullable final StdCallback in, final String message){
+        if(in != null){
+            return new Realm.Transaction.OnSuccess() {
+                @Override
+                public void onSuccess() {
+                    in.onSuccess();
+                }
+            };
+        }
+        return new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                Timber.d(message);
+            }
+        };
+    }
+
+
 }

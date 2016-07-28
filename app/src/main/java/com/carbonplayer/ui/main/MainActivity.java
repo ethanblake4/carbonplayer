@@ -2,18 +2,22 @@ package com.carbonplayer.ui.main;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.graphics.Point;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.model.entity.Album;
@@ -24,7 +28,6 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import flow.Flow;
 import io.realm.RealmResults;
 import rx.Subscription;
 import rx.functions.Action1;
@@ -35,6 +38,12 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     @BindView(R.id.main_recycler) RecyclerView mainRecycler;
+
+    private static int screenHeightPx;
+    private static int screenWidthPx;
+    private static int screenHeightDp;
+    private static int screenWidthDp;
+    private static int dpSize;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,14 +75,23 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+
+        Configuration configuration = getResources().getConfiguration();
+        screenHeightPx = size.y;
+        screenWidthPx = size.x;
+        screenWidthDp = configuration.screenWidthDp;
+        screenHeightDp = configuration.screenHeightDp;
+
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
         mainRecycler.setHasFixedSize(true);
 
         // use a linear layout manager
-        mLayoutManager = new LinearLayoutManager(this);
+        mLayoutManager = new GridLayoutManager(MainActivity.this, 2);
         mainRecycler.setLayoutManager(mLayoutManager);
-
 
         sectionSelected();
     }
@@ -82,11 +100,12 @@ public class MainActivity extends AppCompatActivity {
         if (albumSubscription != null) {
             albumSubscription.unsubscribe();
         }
+        final MainActivity context = this;
         albumSubscription = MusicLibrary.getInstance().loadAlbums()
                 .subscribe(new Action1<RealmResults<Album>>() {
                     @Override
                     public void call(RealmResults<Album> albums) {
-                        mAdapter = new AlbumAdapter(albums);
+                        mAdapter = new AlbumAdapter(albums, context);
                         mainRecycler.setAdapter(mAdapter);
                     }
                 });
@@ -94,34 +113,44 @@ public class MainActivity extends AppCompatActivity {
 
     private class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> {
         private List<Album> mDataset;
+        private MainActivity context;
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
         // you provide access to all the views for a data item in a view holder
-        public class ViewHolder extends RecyclerView.ViewHolder {
+        class ViewHolder extends RecyclerView.ViewHolder {
             // each data item is just a string in this case
-            public ImageView thumb;
-            public TextView titleText;
-            public TextView detailText;
-            public String songs;
+            ImageView thumb;
+            TextView titleText;
+            TextView detailText;
+            String songs;
+            Album album;
 
-            public ViewHolder(View v) {
+            ViewHolder(View v) {
                 super(v);
                 thumb = (ImageView)    v.findViewById(R.id.imgthumb);
-                titleText = (TextView) v.findViewById(R.id.mainText);
+                titleText = (TextView) v.findViewById(R.id.primaryText);
                 detailText = (TextView)v.findViewById(R.id.detailText);
-                v.findViewById(R.id.listItemContraintLayout).setOnClickListener(new View.OnClickListener() {
+                v.findViewById(R.id.gridLayoutRoot).setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Toast.makeText(MainActivity.this, songs, Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(MainActivity.this, songs, Toast.LENGTH_SHORT).show();
+                        CarbonPlayerApplication.getInstance().currentAlbum = album;
+                        Intent i = new Intent(context, AlbumActivity.class);
+                        startActivity(i);
+
                     }
                 });
+
+                titleText.setMaxWidth((screenWidthPx/2)-(dpToPx(50)));
+                detailText.setMaxWidth((screenWidthPx/2)-(dpToPx(32)));
             }
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
-        public AlbumAdapter(List<Album> myDataset) {
+        public AlbumAdapter(List<Album> myDataset, MainActivity context) {
             mDataset = myDataset;
+            this.context = context;
         }
 
         // Create new views (invoked by the layout manager)
@@ -130,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
                                                           int viewType) {
             // create a new view
             View v = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.list_item_layout, parent, false);
+                    .inflate(R.layout.grid_item_layout, parent, false);
             // set the view's size, margins, paddings and layout parameters
 
             ViewHolder vh = new ViewHolder(v);
@@ -145,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
             Album a = mDataset.get(position);
             holder.titleText.setText(a.getTitle());
             holder.detailText.setText(a.getArtist());
+            holder.album = a;
 
             StringBuilder sb = new StringBuilder();
             List<RealmString> songs = a.getSongIds();
@@ -161,6 +191,11 @@ public class MainActivity extends AppCompatActivity {
         public int getItemCount() {
             return mDataset.size();
         }
+    }
+
+    private int dpToPx(int dp){
+        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+        return (int)((dp * displayMetrics.density) + 0.5);
     }
 
 

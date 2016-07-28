@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp"
+    android:paddingStart="35dp"
+    android:paddingEnd="12dp"
+    style="@style/DarkRippleTheme"
+    android:id="@+id/songLayoutRoot">
+
+    <TextView
+        android:text="1"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/trackNumber"
+        android:textAppearance="@android:style/TextAppearance.Material.Large"
+        android:textColor="#aaa"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:text="TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@android:style/TextAppearance.Material.Large"
+        android:id="@+id/trackName"
+        android:textColor="#444"
+        android:layout_marginStart="20dp"
+        tools:ignore="HardcodedText"
+        android:fontFamily="sans-serif" />
+</LinearLayout>

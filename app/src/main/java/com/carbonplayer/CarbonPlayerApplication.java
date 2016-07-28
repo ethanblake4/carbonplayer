@@ -2,6 +2,8 @@ package com.carbonplayer;
 
 import android.app.Application;
 
+import com.carbonplayer.model.entity.Album;
+
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import rx.functions.Action1;
@@ -18,6 +20,9 @@ public final class CarbonPlayerApplication extends Application{
 
     //Static variables (multiple-use version dependent)
     public static String googleUserAgent = "CarbonGSF/0.2";
+
+    //Instance varaibles
+    public Album currentAlbum;
 
     @Override
     public void onCreate() {

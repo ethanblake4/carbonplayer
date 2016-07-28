@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_height="271dp"
+    android:layout_width="match_parent"
+    android:id="@+id/gridLayoutRoot"
+    android:background="#292929"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="2dp"
+    android:layout_marginStart="2dp"
+    android:layout_marginRight="2dp"
+    android:layout_marginLeft="2dp"
+    android:layout_marginEnd="2dp"
+    android:foreground="?attr/selectableItemBackground">
+
+    <ImageView
+        android:layout_width="0dp"
+        android:src="@drawable/unknown_music_track"
+        android:id="@+id/imgthumb"
+        android:layout_height="0dp"
+        tools:ignore="ContentDescription"
+        app:layout_constraintLeft_toLeftOf="@+id/gridLayoutRoot"
+        tools:layout_constraintLeft_creator="1"
+        app:layout_constraintTop_toTopOf="@+id/gridLayoutRoot"
+        tools:layout_constraintTop_creator="1"
+        app:layout_constraintRight_toRightOf="@+id/gridLayoutRoot"
+        tools:layout_constraintRight_creator="1"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintVertical_bias="1.0" />
+
+
+    <TextView
+        android:text="Item Name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/primaryText"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-medium"
+        tools:ignore="HardcodedText"
+        android:scrollHorizontally="true"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:maxWidth="160dp"
+        app:layout_constraintLeft_toLeftOf="@+id/gridLayoutRoot"
+        android:layout_marginStart="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline3" />
+
+    <android.support.constraint.Guideline
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/guideline"
+        android:orientation="horizontal"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="201dp"
+        app:layout_constraintGuide_Percent="75" />
+
+    <TextView
+        android:text="Details"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/detailText"
+        android:textSize="16sp"
+        android:scrollHorizontally="true"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintLeft_toLeftOf="@+id/primaryText"
+        app:layout_constraintTop_toTopOf="@+id/guideline3"
+        android:layout_marginTop="4dp" />
+
+    <android.support.constraint.Guideline
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/guideline3"
+        android:orientation="horizontal"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="236dp"
+        app:layout_constraintGuide_Percent="88" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_more"
+        android:id="@+id/imageButton"
+        android:background="?attr/selectableItemBackground"
+        android:tint="#ccc"
+        android:padding="4dp"
+        app:layout_constraintTop_toBottomOf="@+id/imgthumb"
+        android:layout_marginTop="6dp"
+        app:layout_constraintRight_toRightOf="@+id/gridLayoutRoot"
+        android:layout_marginEnd="2dp" />
+
+</android.support.constraint.ConstraintLayout>

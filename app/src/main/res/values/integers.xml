@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="rapid_animation">120</integer> <!-- github.com/nickbutcher/plaid -->
+    <integer name="fab_expand_duration">368</integer> <!-- github.com/nickbutcher/plaid -->
+</resources>

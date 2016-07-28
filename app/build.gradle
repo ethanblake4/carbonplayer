@@ -11,6 +11,7 @@ android {
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
+        buildConfigField "boolean", "RELEASE", "false"
     }
     buildTypes {
         release {
@@ -18,6 +19,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    productFlavors {
+        prod {
+            buildConfigField "boolean", "RELEASE", "true"
+        }
+        dev {
+        }
+    }
+
 }
 
 dependencies {
@@ -34,4 +43,5 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.4.1'
     compile 'com.squareup.flow:flow:1.0.0-alpha'
     compile 'com.android.support:recyclerview-v7:24.1.0'
+    compile 'com.android.support:palette-v7:24.1.0'
 }
