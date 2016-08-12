@@ -14,7 +14,7 @@
         tools:layout_editor_absoluteHeight="658dp"
         android:visibility="visible"
         app:layout_constraintLeft_toLeftOf="@+id/constraintLayout4"
-        app:layout_constraintTop_toTopOf="@+id/constraintLayout4"></android.support.v4.view.ViewPager>
+        app:layout_constraintTop_toTopOf="@+id/constraintLayout4" />
 
 
     <ImageButton

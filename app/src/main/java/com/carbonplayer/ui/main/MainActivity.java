@@ -50,23 +50,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         //  Declare a new thread to do a preference check
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                SharedPreferences getPrefs = PreferenceManager
-                        .getDefaultSharedPreferences(getBaseContext());
+        Thread t = new Thread(() -> {
+            SharedPreferences getPrefs = PreferenceManager
+                    .getDefaultSharedPreferences(getBaseContext());
 
-                boolean isFirstStart = getPrefs.getBoolean("firstStart", true);
+            boolean isFirstStart = getPrefs.getBoolean("firstStart", true);
 
-                if (isFirstStart) {
-                    Intent i = new Intent(MainActivity.this, IntroActivity.class);
-                    startActivity(i);
-
-                    SharedPreferences.Editor e = getPrefs.edit();
-                    e.putBoolean("firstStart", false);
-
-                    e.apply();
-                }
+            if (isFirstStart) {
+                Intent i = new Intent(MainActivity.this, IntroActivity.class);
+                startActivity(i);
             }
         });
 
@@ -102,12 +94,9 @@ public class MainActivity extends AppCompatActivity {
         }
         final MainActivity context = this;
         albumSubscription = MusicLibrary.getInstance().loadAlbums()
-                .subscribe(new Action1<RealmResults<Album>>() {
-                    @Override
-                    public void call(RealmResults<Album> albums) {
-                        mAdapter = new AlbumAdapter(albums, context);
-                        mainRecycler.setAdapter(mAdapter);
-                    }
+                .subscribe(albums -> {
+                    mAdapter = new AlbumAdapter(albums, context);
+                    mainRecycler.setAdapter(mAdapter);
                 });
     }
 
@@ -131,15 +120,11 @@ public class MainActivity extends AppCompatActivity {
                 thumb = (ImageView)    v.findViewById(R.id.imgthumb);
                 titleText = (TextView) v.findViewById(R.id.primaryText);
                 detailText = (TextView)v.findViewById(R.id.detailText);
-                v.findViewById(R.id.gridLayoutRoot).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        //Toast.makeText(MainActivity.this, songs, Toast.LENGTH_SHORT).show();
-                        CarbonPlayerApplication.getInstance().currentAlbum = album;
-                        Intent i = new Intent(context, AlbumActivity.class);
-                        startActivity(i);
-
-                    }
+                v.findViewById(R.id.gridLayoutRoot).setOnClickListener(view -> {
+                    //Toast.makeText(MainActivity.this, songs, Toast.LENGTH_SHORT).show();
+                    CarbonPlayerApplication.getInstance().currentAlbum = album;
+                    Intent i = new Intent(context, AlbumActivity.class);
+                    startActivity(i);
                 });
 
                 titleText.setMaxWidth((screenWidthPx/2)-(dpToPx(50)));
@@ -148,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
-        public AlbumAdapter(List<Album> myDataset, MainActivity context) {
+        AlbumAdapter(List<Album> myDataset, MainActivity context) {
             mDataset = myDataset;
             this.context = context;
         }
@@ -197,10 +182,4 @@ public class MainActivity extends AppCompatActivity {
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         return (int)((dp * displayMetrics.density) + 0.5);
     }
-
-
-    /*@Override protected void attachBaseContext(Context baseContext) {
-        baseContext = Flow.configure(baseContext, this).install();
-        super.attachBaseContext(baseContext);
-    }*/
 }

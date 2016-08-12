@@ -1,22 +1,28 @@
 package com.carbonplayer.model;
 
-import android.support.annotation.Nullable;
+import android.app.Activity;
 import android.support.annotation.UiThread;
 
 import com.carbonplayer.model.entity.Album;
+import com.carbonplayer.model.entity.ConfigEntry;
+import com.carbonplayer.model.entity.primitive.FinalBool;
+import com.carbonplayer.model.entity.primitive.FinalInt;
 import com.carbonplayer.model.entity.MusicTrack;
-import com.carbonplayer.model.entity.RealmString;
-import com.carbonplayer.model.entity.StdCallback;
+import com.carbonplayer.model.entity.exception.NoNautilusException;
+import com.carbonplayer.model.network.Protocol;
 
 import java.util.LinkedList;
-import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmList;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import rx.Observable;
-import timber.log.Timber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action0;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
+
+import static com.carbonplayer.model.network.Protocol.listTracks;
 
 public final class MusicLibrary {
 
@@ -33,51 +39,58 @@ public final class MusicLibrary {
         return instance;
     }
 
-    public static LinkedList<Album> getAlbumsFromTracks(List<MusicTrack> tracks){
-        final LinkedList<Album> albums = new LinkedList<>();
-        for(MusicTrack track : tracks){
-            if(track.getAlbumId() == null) continue;
+    public void config(Activity context, Action1<Throwable> onError, Action0 onSuccess){
+        final FinalBool failed = new FinalBool();
+        Protocol.getConfig(context)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(entries -> {
+                    for (ConfigEntry e : entries)
+                        if (e.getName().equals("isNautilusUser"))
+                            if (e.getValue().equals("false")) {
+                                failed.set(true);
+                                onError.call(new NoNautilusException());
+                            }
+                },
+                onError,
+                () -> {if (!failed.get()) onSuccess.call();} );
+    }
 
-            Album exists = null;
-            for(Album album : albums){
-                if(track.getAlbumId().equals(album.getId()) ||
-                        (track.getArtist().equals(album.getArtist()) && track.getAlbum().equals(album.getTitle())) ){
-                    exists = album;
-                    break;
+    public void updateMusicLibrary(Activity context, Action1<Throwable> onError, Action1<Integer> onProgress, Action0 onSuccess) {
+        Observable<LinkedList<MusicTrack>> trackObservable = listTracks(context)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+        final FinalInt received = new FinalInt();
+        trackObservable.subscribe(trackList -> {
+            realm.executeTransactionAsync(realm -> {
+                realm.copyToRealmOrUpdate(trackList);
+                Album a = null;
+                for (MusicTrack track : trackList) {
+                    received.increment();
+                    if(albumMatchesTrack(a,track))
+                        a.addSongId(track.getTrackId());
+                    else {
+                        a = realm.where(Album.class).equalTo(Album.ID, track.getAlbumId())
+                                .or().beginGroup()
+                                .equalTo(Album.TITLE, track.getAlbum())
+                                .equalTo(Album.ARTIST, track.getArtist())
+                                .endGroup()
+                                .findFirst();
+                        if (a != null) a.addSongId(track.getTrackId());
+                        else realm.copyToRealm(new Album(track));
+                    }
                 }
-            }
-            if(exists == null){
-                Album a = new Album(track.getAlbumId(), track.getRecentTimestamp(),
-                        track.getAlbum(), track.getArtist(),
-                        track.getComposer(), track.getYear(),
-                        track.getGenre(), track.getAlbumArtURL(),
-                        track.getArtistId(),
-                        new RealmList<>(new RealmString(track.getTrackId()))
-                );
-                albums.addFirst(a);
-            }else{
-                exists.addSongId(track.getTrackId());
-            }
-        }
-        return albums;
+            });
+            onProgress.call(received.value());
+        },
+        onError,
+        onSuccess);
     }
 
-    public void saveTracksAsync(final List<MusicTrack> tracks, @Nullable StdCallback callback){
-        realm.executeTransactionAsync(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.copyToRealm(tracks);
-            }
-        },transactionError(null, "Could not save tracks"));
-    }
-
-    public void saveAlbumsAsync(final List<Album> albums, @Nullable StdCallback callback){
-        realm.executeTransactionAsync(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                realm.copyToRealm(albums);
-            }
-        }, transactionError(null, "Could not save albums"));
+    private static boolean albumMatchesTrack(Album a, MusicTrack t){
+        if(a==null || t == null) return false;
+        return ( t.getAlbumId() != null && a.getId() != null && a.getId().equals(t.getAlbumId()) ) ||
+                (t.getAlbum() != null && a.getArtist().equals(t.getArtist()) && a.getTitle().equals(t.getAlbum()));
     }
 
     /**
@@ -96,40 +109,6 @@ public final class MusicLibrary {
         return realm.where(MusicTrack.class)
                 .equalTo(MusicTrack.ID, id)
                 .findFirst();
-    }
-
-    private Realm.Transaction.OnError transactionError(@Nullable final StdCallback in, final String errMessage){
-        if(in != null){
-            return new Realm.Transaction.OnError() {
-                @Override
-                public void onError(Throwable error) {
-                    in.onError(error);
-                }
-            };
-        }
-        return new Realm.Transaction.OnError() {
-            @Override
-            public void onError(Throwable error) {
-                Timber.e(error, (errMessage == null ? error.toString() : errMessage));
-            }
-        };
-    }
-
-    private Realm.Transaction.OnSuccess transactionSuccess(@Nullable final StdCallback in, final String message){
-        if(in != null){
-            return new Realm.Transaction.OnSuccess() {
-                @Override
-                public void onSuccess() {
-                    in.onSuccess();
-                }
-            };
-        }
-        return new Realm.Transaction.OnSuccess() {
-            @Override
-            public void onSuccess() {
-                Timber.d(message);
-            }
-        };
     }
 
 

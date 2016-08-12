@@ -1,5 +1,6 @@
 package com.carbonplayer.ui.main;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -16,8 +17,7 @@ import java.util.List;
 /**
  * Album / playlist adapter
  */
-
-public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHolder> {
+class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHolder> {
     private List<MusicTrack> mDataset;
     private Activity context;
 
@@ -33,20 +33,16 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
             super(v);
             trackName = (TextView) v.findViewById(R.id.trackName);
             trackNumber = (TextView) v.findViewById(R.id.trackNumber);
-            v.findViewById(R.id.songLayoutRoot).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Toast.makeText(context, trackName.getText(), Toast.LENGTH_SHORT).show();
-                    //Intent i = new Intent(context, AlbumActivity.class);
-                    //startActivity(i);
-
-                }
+            v.findViewById(R.id.songLayoutRoot).setOnClickListener(view -> {
+                Toast.makeText(context, trackName.getText(), Toast.LENGTH_SHORT).show();
+                //Intent i = new Intent(context, AlbumActivity.class);
+                //startActivity(i);
             });
         }
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public SongListAdapter(List<MusicTrack> myDataset, Activity context) {
+    SongListAdapter(List<MusicTrack> myDataset, Activity context) {
         mDataset = myDataset;
         this.context = context;
     }
@@ -60,11 +56,11 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
                 .inflate(R.layout.song_item_layout, parent, false);
         // set the view's size, margins, paddings and layout parameters
 
-        SongListAdapter.ViewHolder vh = new SongListAdapter.ViewHolder(v);
-        return vh;
+        return new SongListAdapter.ViewHolder(v);
     }
 
     // Replace the contents of a view (invoked by the layout manager)
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(SongListAdapter.ViewHolder holder, int position) {
         // - get element from your dataset at this position

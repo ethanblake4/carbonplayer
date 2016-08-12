@@ -6,11 +6,13 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.util.ArrayMap;
 import android.util.Base64;
 import android.util.Log;
 
 import com.carbonplayer.CarbonPlayerApplication;
+import com.carbonplayer.model.entity.primitive.Null;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -35,7 +37,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.HttpsURLConnection;
 
-import timber.log.Timber;
+import rx.Observable;
 
 /**
  * Contains methods used to authenticate to Google services,
@@ -203,7 +205,6 @@ public class GoogleLogin {
 
             if(response == null) return null;
 
-            Timber.d(response.toString().concat(response.get("Token")));
             if(!response.containsKey("Token")) {Log.d("GPS", "issue"); return null; }
             return response.get("Token");
 
@@ -242,7 +243,6 @@ public class GoogleLogin {
             response = loginCall(url, builder);
 
             if(response == null) return null;
-            Timber.d(response.toString());
 
             if(!response.containsKey("Auth")) return null;
             return response.get("Auth");
@@ -254,24 +254,32 @@ public class GoogleLogin {
         return null;
     }
 
-    public static boolean login(Activity context, String email, String password){
+    /**
+     * Simple Observable wrapper of login code
+     * @param context activity context
+     * @param email user email
+     * @param password user password
+     * @return Observable which will produce err
+     */
+    public static Observable<Null> login(@NonNull Activity context, @NonNull String email, @NonNull String password){
+        //TODO Rx-ify
+        return Observable.create(subscriber -> {
+            @SuppressLint("HardwareIds")
+            String androidId = Settings.Secure.getString(context.getContentResolver(),
+                    Settings.Secure.ANDROID_ID);
 
-        @SuppressLint("HardwareIds")
-        String androidId = Settings.Secure.getString(context.getContentResolver(),
-                Settings.Secure.ANDROID_ID);
+            String masterToken = performMasterLogin(email, password, androidId);
+            if(masterToken == null) subscriber.onError(new Exception());
 
-        String masterToken = performMasterLogin(email, password, androidId);
-        if(masterToken == null) return false;
+            String OAuthToken = performOAuth(email, masterToken, androidId);
+            if(OAuthToken == null) subscriber.onError(new Exception());
 
-        String OAuthToken = performOAuth(email, masterToken, androidId);
-        if(OAuthToken == null) return false;
+            SharedPreferences prefs = PreferenceManager
+                    .getDefaultSharedPreferences(context.getBaseContext());
 
-        SharedPreferences prefs = PreferenceManager
-                .getDefaultSharedPreferences(context.getBaseContext());
-
-        prefs.edit().putString("OAuthToken", OAuthToken).apply();
-
-        return true;
+            prefs.edit().putString("OAuthToken", OAuthToken).apply();
+            subscriber.onCompleted();
+        });
 
     }
 }

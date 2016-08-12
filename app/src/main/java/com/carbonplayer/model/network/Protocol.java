@@ -6,16 +6,24 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.util.ArrayMap;
 
 import com.carbonplayer.CarbonPlayerApplication;
+import com.carbonplayer.model.entity.ConfigEntry;
+import com.carbonplayer.model.entity.MusicTrack;
+import com.carbonplayer.model.entity.exception.ResponseCodeException;
+import com.carbonplayer.utils.IdentityUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
 
@@ -25,31 +33,19 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import rx.Observable;
 import timber.log.Timber;
 
 /**
- * Contains methods and classes for interacting with Google Play Music. This
- * is the "backbone" of Carbon Player.
+ * Contains methods for interacting with Google Play Music.
  */
 public class Protocol {
 
     private static final String SJ_URL = "https://mclients.googleapis.com/sj/v2.4/";
-
     private static final MediaType TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
+    private static final int MAX_RESULTS = 250;
 
     public class Call {
-
-        public class ResponseCodeException extends Exception {
-
-            @SuppressWarnings("unused")
-            public ResponseCodeException(){
-                super();
-            }
-
-            public ResponseCodeException(String message){
-                super(message);
-            }
-        }
 
         public class ValidationException extends RuntimeException {
 
@@ -81,7 +77,7 @@ public class Protocol {
         }
 
         private String http(URL url, Map<String,String> headers, Map<String,String> params, String skyjamToken,
-                            String deviceId, RequestBody requestBody) throws IOException, ResponseCodeException{
+                            String deviceId, RequestBody requestBody) throws IOException, ResponseCodeException {
 
             OkHttpClient client = new OkHttpClient();
 
@@ -112,7 +108,7 @@ public class Protocol {
 
         }
 
-        private String perform(URL url, /*String params,*/ Map<String,String> headers, Map<String,String> params, String skyjamToken,
+        private String perform(URL url, Map<String,String> headers, Map<String,String> params, String skyjamToken,
                              String deviceId, RequestBody requestBody) throws IOException, ResponseCodeException{
             return http(url, headers, params, skyjamToken, deviceId, requestBody);
         }
@@ -156,6 +152,95 @@ public class Protocol {
             return null;
 
         }
+    }
+
+    public static Observable<LinkedList<ConfigEntry>> getConfig(@NonNull final Activity context){
+        final OkHttpClient client = new OkHttpClient();
+        final Uri.Builder getParams = new Uri.Builder()
+                .appendQueryParameter("dv", "0")
+                .appendQueryParameter("hl", IdentityUtils.localeCode());
+
+        return Observable.create(subscriber -> {
+            Request request = defaultBuilder(context)
+                    .url(SJ_URL + "config?" + getParams.build().getEncodedQuery())
+                    .build();
+            try {
+                Response r = client.newCall(request).execute();
+                if (!r.isSuccessful()) subscriber.onError(new ResponseCodeException());
+
+                String sR = r.body().string();
+                JSONObject j = new JSONObject(sR);
+
+                LinkedList<ConfigEntry> itemList = new LinkedList<>();
+                JSONArray itemArray = j.getJSONObject("data").getJSONArray("entries");
+                for(int i = 0; i<itemArray.length();i++)
+                    itemList.add(new ConfigEntry(itemArray.getJSONObject(i)));
+
+                subscriber.onNext(itemList);
+            } catch (IOException | JSONException e) {
+                subscriber.onError(e);
+            }
+            subscriber.onCompleted();
+        });
+    }
+
+    public static Observable<LinkedList<MusicTrack>> listTracks(@NonNull final Activity context){
+        final OkHttpClient client = new OkHttpClient();
+        final Uri.Builder getParams = new Uri.Builder()
+                .appendQueryParameter("alt", "json")
+                .appendQueryParameter("hl", IdentityUtils.localeCode())
+                .appendQueryParameter("tier", "aa");
+
+        return Observable.create(subscriber -> {
+            String startToken = "";
+            while(startToken != null) {
+                Timber.d("startToken: %s", startToken);
+                JSONObject requestJson = new JSONObject();
+                try {
+                    requestJson.put("max-results", MAX_RESULTS);
+                    if(!"".equals(startToken)) requestJson.put("start-token", startToken);
+                } catch (JSONException e) {
+                    subscriber.onError(e);
+                }
+                startToken = null;
+
+                Request request = defaultBuilder(context)
+                        .url(SJ_URL + "trackfeed?" + getParams.build().getEncodedQuery())
+                        .header("Content-Type", "application/json")
+                        .post( RequestBody.create(TYPE_JSON, requestJson.toString()) )
+                        .build();
+                try {
+                    Response r = client.newCall(request).execute();
+                    if (!r.isSuccessful()) subscriber.onError(new ResponseCodeException());
+
+                    JSONObject j = new JSONObject(r.body().string());
+                    if(j.has("nextPageToken")) startToken = j.getString("nextPageToken");
+
+                    LinkedList<MusicTrack> list = new LinkedList<>();
+                    JSONArray itemArray = j.getJSONObject("data").getJSONArray("items");
+                    for(int i = 0; i<itemArray.length();i++) {
+                        list.add(new MusicTrack(itemArray.getJSONObject(i)));
+                    }
+                    subscriber.onNext(list);
+
+                } catch (IOException | JSONException e) {
+                    subscriber.onError(e);
+                }
+            }
+            subscriber.onCompleted();
+        });
+    }
+
+    private static String getSkyjamToken(Activity context){
+        return PreferenceManager.getDefaultSharedPreferences(context.getBaseContext())
+                .getString("OAuthToken", "");
+    }
+
+    private static Request.Builder defaultBuilder(Activity context){
+        return new Request.Builder()
+                .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
+                .header("Authorization", "GoogleLogin auth=" + getSkyjamToken(context))
+                .header("X-Device-ID", IdentityUtils.deviceId(context));
     }
 
     public class ListTracksCall extends Call {

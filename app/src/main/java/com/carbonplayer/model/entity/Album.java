@@ -12,6 +12,7 @@ import io.realm.annotations.PrimaryKey;
 public class Album extends RealmObject {
     public static final String ID = "id";
     public static final String TITLE = "title";
+    public static final String ARTIST = "artist";
 
     @PrimaryKey private String id;
     private Date recentTimestamp;
@@ -39,6 +40,19 @@ public class Album extends RealmObject {
         this.albumArtURL = albumArtURL;
         this.artistId = artistId;
         this.songIds = songIds;
+    }
+
+    public Album(MusicTrack track){
+        this.id = track.getAlbumId();
+        this.recentTimestamp = track.getRecentTimestamp();
+        this.title = track.getAlbum();
+        this.artist = track.getArtist();
+        this.composer = track.getComposer();
+        this.year = track.getYear();
+        this.genre = track.getGenre();
+        this.albumArtURL = track.getAlbumArtURL();
+        this.artistId = track.getArtistId();
+        this.songIds = new RealmList<>( new RealmString(track.getTrackId()) );
     }
 
     public String getId() {
