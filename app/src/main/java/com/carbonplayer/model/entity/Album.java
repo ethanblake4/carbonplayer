@@ -27,12 +27,14 @@ public class Album extends RealmObject {
 
     public Album(){}
 
+    @SuppressWarnings("unused")
     public Album(String id, Date recentTimestamp, String title, String artist,
                  String composer, Integer year, String genre, String albumArtURL,
                  RealmList<RealmString> artistId, RealmList<RealmString> songIds) {
         this.id = id;
         this.recentTimestamp = recentTimestamp;
         this.title = title;
+        if(this.title.equals("")) this.title = "Unknown album";
         this.artist = artist;
         this.composer = composer;
         this.year = year;
@@ -46,6 +48,7 @@ public class Album extends RealmObject {
         this.id = track.getAlbumId();
         this.recentTimestamp = track.getRecentTimestamp();
         this.title = track.getAlbum();
+        if(this.title.equals("")) this.title = "Unknown album";
         this.artist = track.getArtist();
         this.composer = track.getComposer();
         this.year = track.getYear();
@@ -77,6 +80,7 @@ public class Album extends RealmObject {
 
     public void setTitle(String title) {
         this.title = title;
+        if(this.title.equals("")) this.title = "Unknown album";
     }
 
     public String getArtist() {

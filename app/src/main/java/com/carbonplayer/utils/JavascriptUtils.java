@@ -49,10 +49,7 @@ public class JavascriptUtils {
      */
     public static void injectJavascript(WebView webview, String javascript) {
         if (webview != null) {
-            webview.evaluateJavascript(javascript, new ValueCallback<String>() {
-                @Override
-                public void onReceiveValue(String value) {}
-            });
+            webview.evaluateJavascript(javascript, value -> {});
         }
     }
 }

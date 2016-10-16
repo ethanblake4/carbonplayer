@@ -13,6 +13,7 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Music track object
  */
+@SuppressWarnings("unused")
 public class MusicTrack extends RealmObject {
 
     public static final String ID = "id";

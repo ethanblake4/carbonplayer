@@ -87,4 +87,9 @@
     <!-- per https://developer.android.com/reference/android/view/ViewGroup.LayoutParams.html#MATCH_PARENT -->
     <item name="match_parent" format="integer" type="dimen">-1</item>
 
+    <dimen name="small_text_2">16sp</dimen>
+    <dimen name="large_text_2">22sp</dimen>
+    <dimen name="small_text_size">18sp</dimen>
+    <dimen name="large_text_size">36sp</dimen>
+
 </resources>

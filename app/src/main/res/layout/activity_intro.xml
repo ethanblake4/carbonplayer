@@ -10,11 +10,11 @@
         android:layout_width="0dp"
         android:id="@+id/introPager"
         android:layout_height="0dp"
-        tools:layout_editor_absoluteWidth="411dp"
-        tools:layout_editor_absoluteHeight="658dp"
         android:visibility="visible"
-        app:layout_constraintLeft_toLeftOf="@+id/constraintLayout4"
-        app:layout_constraintTop_toTopOf="@+id/constraintLayout4" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 
     <ImageButton
@@ -26,9 +26,9 @@
         android:contentDescription="@string/next"
         tools:layout_editor_absoluteWidth="64dp"
         tools:layout_editor_absoluteHeight="64dp"
-        app:layout_constraintRight_toRightOf="@+id/constraintLayout4"
+        app:layout_constraintRight_toRightOf="parent"
         android:layout_marginEnd="32dp"
-        app:layout_constraintBottom_toBottomOf="@+id/constraintLayout4"
+        app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="24dp" />
 
 

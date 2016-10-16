@@ -7,6 +7,7 @@ public class ConfigEntry {
     private String name;
     private String value;
 
+    @SuppressWarnings("unused")
     public ConfigEntry(String name, String value) {
         this.name = name;
         this.value = value;

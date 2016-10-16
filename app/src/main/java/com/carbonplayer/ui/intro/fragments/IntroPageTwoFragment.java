@@ -12,12 +12,15 @@ import com.carbonplayer.ui.intro.IntroActivity;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
 
 /**
  * Sign In screen
  */
 public final class IntroPageTwoFragment extends Fragment {
 
+    Unbinder unbinder;
     @BindView(R.id.introOAuthStart) Button startOAuth;
 
     @Override
@@ -25,15 +28,17 @@ public final class IntroPageTwoFragment extends Fragment {
                              Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(
                 R.layout.intro_fragment_2, container, false);
-        ButterKnife.bind(this, rootView);
+        unbinder = ButterKnife.bind(this, rootView);
 
-        startOAuth.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((IntroActivity) getActivity()).beginOAuth2Authentication();
-            }
-        });
+        startOAuth.setOnClickListener(v ->
+                ((IntroActivity) getActivity()).beginOAuth2Authentication());
 
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView(){
+        super.onDestroyView();
+        unbinder.unbind();
     }
 }

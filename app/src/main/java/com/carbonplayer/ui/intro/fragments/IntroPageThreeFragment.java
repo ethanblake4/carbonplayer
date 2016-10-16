@@ -12,12 +12,14 @@ import com.carbonplayer.R;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
 
 /**
  * Signing in / fetching library screen
  */
 public final class IntroPageThreeFragment extends Fragment {
 
+    Unbinder unbinder;
     @BindView(R.id.nautilusFailedOKButton) Button nautilusFailedOKButton;
 
     @Override
@@ -25,17 +27,19 @@ public final class IntroPageThreeFragment extends Fragment {
                              Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(
                 R.layout.intro_fragment_3, container, false);
-        ButterKnife.bind(this, rootView);
+        unbinder = ButterKnife.bind(this, rootView);
 
-        nautilusFailedOKButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (v.isEnabled()) {
-                    Process.killProcess(Process.myPid());
-                }
-            }
+        nautilusFailedOKButton.setOnClickListener(v -> {
+            if (v.isEnabled())
+                Process.killProcess(Process.myPid());
         });
 
         return rootView;
+    }
+
+    @Override
+    public void onDestroyView(){
+        super.onDestroyView();
+        unbinder.unbind();
     }
 }

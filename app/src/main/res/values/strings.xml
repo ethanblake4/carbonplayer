@@ -24,4 +24,7 @@
     <string name="intro_done">We\'re all set</string>
     <string name="intro_slide4_desc">Tap the checkmark to start listening</string>
     <string name="next">Next</string>
+    <string name="fast_forward">Fast Forward</string>
+    <string name="previous_song">Previous Song</string>
+    <string name="play_pause_button">Play pause button</string>
 </resources>

@@ -14,6 +14,7 @@ import com.carbonplayer.model.network.Protocol;
 import java.util.LinkedList;
 
 import io.realm.Realm;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import rx.Observable;
@@ -21,8 +22,6 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
-
-import static com.carbonplayer.model.network.Protocol.listTracks;
 
 public final class MusicLibrary {
 
@@ -56,30 +55,31 @@ public final class MusicLibrary {
                 () -> {if (!failed.get()) onSuccess.call();} );
     }
 
+    @UiThread
     public void updateMusicLibrary(Activity context, Action1<Throwable> onError, Action1<Integer> onProgress, Action0 onSuccess) {
-        Observable<LinkedList<MusicTrack>> trackObservable = listTracks(context)
+        Observable<LinkedList<MusicTrack>> trackObservable = Protocol.listTracks(context)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
         final FinalInt received = new FinalInt();
         trackObservable.subscribe(trackList -> {
-            realm.executeTransactionAsync(realm -> {
-                realm.copyToRealmOrUpdate(trackList);
-                Album a = null;
-                for (MusicTrack track : trackList) {
-                    received.increment();
-                    if(albumMatchesTrack(a,track))
-                        a.addSongId(track.getTrackId());
-                    else {
-                        a = realm.where(Album.class).equalTo(Album.ID, track.getAlbumId())
-                                .or().beginGroup()
-                                .equalTo(Album.TITLE, track.getAlbum())
-                                .equalTo(Album.ARTIST, track.getArtist())
-                                .endGroup()
-                                .findFirst();
-                        if (a != null) a.addSongId(track.getTrackId());
-                        else realm.copyToRealm(new Album(track));
+            realm.executeTransactionAsync(realm-> {
+                    realm.insertOrUpdate(trackList);
+                    Album a = null;
+                    for (MusicTrack track : trackList) {
+                        received.increment();
+                        if (albumMatchesTrack(a, track))
+                            a.addSongId(track.getTrackId());
+                        else {
+                            a = realm.where(Album.class).equalTo(Album.ID, track.getAlbumId())
+                                    .or().beginGroup()
+                                    .equalTo(Album.TITLE, track.getAlbum())
+                                    .equalTo(Album.ARTIST, track.getArtist())
+                                    .endGroup()
+                                    .findFirst();
+                            if (a != null) a.addSongId(track.getTrackId());
+                            else realm.insert(new Album(track));
+                        }
                     }
-                }
             });
             onProgress.call(received.value());
         },
@@ -88,7 +88,7 @@ public final class MusicLibrary {
     }
 
     private static boolean albumMatchesTrack(Album a, MusicTrack t){
-        if(a==null || t == null) return false;
+        if(a==null || t==null) return false;
         return ( t.getAlbumId() != null && a.getId() != null && a.getId().equals(t.getAlbumId()) ) ||
                 (t.getAlbum() != null && a.getArtist().equals(t.getArtist()) && a.getTitle().equals(t.getAlbum()));
     }
@@ -103,6 +103,12 @@ public final class MusicLibrary {
         return realm.where(Album.class)
                 .findAllSortedAsync(Album.TITLE, Sort.ASCENDING)
                 .asObservable();
+    }
+
+    public RealmResults<MusicTrack> getAllAlbumTracks(String albumId){
+        return realm.where(MusicTrack.class)
+                .equalTo("albumId", albumId)
+                .findAllSorted("trackNumber", Sort.ASCENDING);
     }
 
     public MusicTrack getTrack(String id){

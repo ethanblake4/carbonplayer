@@ -16,9 +16,7 @@ public final class IntroPageOneFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        ViewGroup rootView = (ViewGroup) inflater.inflate(
-                R.layout.intro_fragment_1, container, false);
 
-        return rootView;
+        return inflater.inflate(R.layout.intro_fragment_1, container, false);
     }
 }

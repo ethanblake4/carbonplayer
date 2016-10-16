@@ -1,18 +1,17 @@
 package com.carbonplayer.model.network;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.SharedPreferences;
+import android.content.Context;
 import android.net.Uri;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.util.ArrayMap;
+import android.util.Base64;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.model.entity.ConfigEntry;
 import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.exception.ResponseCodeException;
+import com.carbonplayer.utils.Constants;
 import com.carbonplayer.utils.IdentityUtils;
 
 import org.json.JSONArray;
@@ -20,14 +19,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.LinkedList;
-import java.util.Locale;
-import java.util.Map;
 
-import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -39,120 +36,12 @@ import timber.log.Timber;
 /**
  * Contains methods for interacting with Google Play Music.
  */
-public class Protocol {
+public final class Protocol {
 
-    private static final String SJ_URL = "https://mclients.googleapis.com/sj/v2.4/";
+    private static final String SJ_URL = "https://mclients.googleapis.com/sj/v2.5/";
+    private static final String STREAM_URL = "https://android.clients.google.com/music/mplay";
     private static final MediaType TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
     private static final int MAX_RESULTS = 250;
-
-    public class Call {
-
-        public class ValidationException extends RuntimeException {
-
-            public ValidationException(){
-                super();
-            }
-
-            @SuppressWarnings("unused")
-            public ValidationException(String message){
-                super(message);
-            }
-        }
-
-        protected JSONObject parseResponse(String response, boolean validate) throws JSONException{
-
-            JSONObject json = new JSONObject(response);
-            if(validate){
-                boolean valid = validateResponse(json);
-                if(!valid){
-                    throw new ValidationException();
-                }
-            }
-
-            return json;
-        }
-
-        protected boolean validateResponse(JSONObject response){
-            return response != null;
-        }
-
-        private String http(URL url, Map<String,String> headers, Map<String,String> params, String skyjamToken,
-                            String deviceId, RequestBody requestBody) throws IOException, ResponseCodeException {
-
-            OkHttpClient client = new OkHttpClient();
-
-            Request.Builder builder = new Request.Builder()
-                    .url(url)
-                    .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
-                    .header("Authorization", "GoogleLogin auth="+skyjamToken)
-                    .header("X-Device-ID", deviceId);
-
-            if(headers != null) {
-                for (Map.Entry<String, String> header : headers.entrySet())
-                    builder.header(header.getKey(), header.getValue());
-            }
-
-            if(params != null){
-                FormBody.Builder form = new FormBody.Builder();
-                for (Map.Entry<String, String> param : params.entrySet())
-                    form.add(param.getKey(), param.getValue());
-                builder.post(form.build());
-            }else if(requestBody != null){
-                builder.post(requestBody);
-            }
-
-            Response response = client.newCall(builder.build()).execute();
-            if(!response.isSuccessful()) throw new ResponseCodeException("Unexpected response "+response);
-
-            return response.body().string();
-
-        }
-
-        private String perform(URL url, Map<String,String> headers, Map<String,String> params, String skyjamToken,
-                             String deviceId, RequestBody requestBody) throws IOException, ResponseCodeException{
-            return http(url, headers, params, skyjamToken, deviceId, requestBody);
-        }
-    }
-
-    public class ConfigCall extends Call{
-
-        @Override
-        protected boolean validateResponse(JSONObject response){
-            try {
-                if (response != null && response.getString("kind").equals("sj#configList"))
-                    return true;
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-            return false;
-        }
-
-        public JSONObject execute(Activity context) throws ResponseCodeException, IOException{
-
-            Uri.Builder params = new Uri.Builder();
-
-            params.appendQueryParameter("dv", "0");
-            params.appendQueryParameter("hl", Locale.getDefault().getLanguage() + "_" + Locale.getDefault().getCountry());
-
-
-            @SuppressLint("HardwareIds") String androidId = Settings.Secure.getString(context.getContentResolver(),
-                    Settings.Secure.ANDROID_ID);
-            SharedPreferences prefs = PreferenceManager
-                    .getDefaultSharedPreferences(context.getBaseContext());
-
-            Timber.d(prefs.getString("OAuthToken", ""));
-
-            try {
-                URL url = new URL(SJ_URL + "config?" + params.build().getEncodedQuery());
-                return super.parseResponse(super.perform(url, null, null, prefs.getString("OAuthToken", ""), androidId, null), true);
-            }catch(MalformedURLException | JSONException e){
-                e.printStackTrace();
-            }
-
-            return null;
-
-        }
-    }
 
     public static Observable<LinkedList<ConfigEntry>> getConfig(@NonNull final Activity context){
         final OkHttpClient client = new OkHttpClient();
@@ -161,7 +50,7 @@ public class Protocol {
                 .appendQueryParameter("hl", IdentityUtils.localeCode());
 
         return Observable.create(subscriber -> {
-            Request request = defaultBuilder(context)
+            Request request = defaultBuilder(context.getBaseContext())
                     .url(SJ_URL + "config?" + getParams.build().getEncodedQuery())
                     .build();
             try {
@@ -204,7 +93,7 @@ public class Protocol {
                 }
                 startToken = null;
 
-                Request request = defaultBuilder(context)
+                Request request = defaultBuilder(context.getBaseContext())
                         .url(SJ_URL + "trackfeed?" + getParams.build().getEncodedQuery())
                         .header("Content-Type", "application/json")
                         .post( RequestBody.create(TYPE_JSON, requestJson.toString()) )
@@ -231,72 +120,69 @@ public class Protocol {
         });
     }
 
-    private static String getSkyjamToken(Activity context){
-        return PreferenceManager.getDefaultSharedPreferences(context.getBaseContext())
+    public static Observable<String> getStreamURL(@NonNull final Context context, String song_id){
+        final OkHttpClient client = new OkHttpClient().newBuilder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build();
+        byte[] _s1 = Base64.decode("VzeC4H4h+T2f0VI180nVX8x+Mb5HiTtGnKgH52Otj8ZCGDz9jRW"+
+                "yHb6QXK0JskSiOgzQfwTY5xgLLSdUSreaLVMsVVWfxfa8Rw==", Base64.DEFAULT);
+        byte[] _s2 = Base64.decode("ZAPnhUkYwQ6y5DdQxWThbvhJHN8msQ1rqJw0ggKdufQjelrKuiG" +
+                "GJI30aswkgCWTDyHkTGK9ynlqTkJ5L4CiGGUabGeo8M6JTQ==", Base64.DEFAULT);
+        StringBuilder keyBuilder = new StringBuilder();
+        for (int i=0;i<_s1.length;i++) keyBuilder.append(_s1[i] ^ _s2[i]);
+
+        String key = keyBuilder.toString();
+
+        return Observable.create(subscriber -> {
+            String salt = String.valueOf(new Date().getTime());
+            String digest = "";
+            try {
+                MessageDigest m = MessageDigest.getInstance("SHA-1");
+                m.update(salt.getBytes("UTF-8"));
+                digest = new String(Base64.encode(m.digest(song_id.getBytes("UTF-8")), Base64.URL_SAFE));
+            }catch(NoSuchAlgorithmException | UnsupportedEncodingException e){
+                subscriber.onError(e);
+                subscriber.onCompleted();
+            }
+            final Uri.Builder getParams = new Uri.Builder()
+                    .appendQueryParameter("opt", "360")
+                    .appendQueryParameter("net", "mob")
+                    .appendQueryParameter("pt", "e")
+                    .appendQueryParameter("slt", salt)
+                    .appendQueryParameter("sig", digest);
+
+            if(song_id.startsWith("T")) getParams.appendQueryParameter("mjck", song_id);
+            else getParams.appendQueryParameter("songid", song_id);
+
+            Request request = defaultBuilder(context)
+                    .url(STREAM_URL + "?" + getParams.build().getEncodedQuery())
+                    .build();
+            try{
+                Response r = client.newCall(request).execute();
+                if(r.isRedirect()){
+                    subscriber.onNext(r.body().string());
+                    subscriber.onCompleted();
+                } else subscriber.onError(new Exception());
+            }catch(IOException e){
+                subscriber.onError(e);
+            }
+        });
+    }
+
+    private static String getSkyjamToken(Context context){
+        return PreferenceManager.getDefaultSharedPreferences(context)
                 .getString("OAuthToken", "");
     }
 
-    private static Request.Builder defaultBuilder(Activity context){
+    private static Request.Builder defaultBuilder(Context context){
         return new Request.Builder()
                 .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
                 .header("Authorization", "GoogleLogin auth=" + getSkyjamToken(context))
                 .header("X-Device-ID", IdentityUtils.deviceId(context));
     }
 
-    public class ListTracksCall extends Call {
 
-        @Override
-        protected boolean validateResponse(JSONObject response){
-            try {
-                if (response != null)
-                    return true;
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-            return false;
-        }
-
-        public JSONObject execute(Activity context, String nextPageToken, int maxResults) throws ResponseCodeException, IOException{
-
-            Uri.Builder params = new Uri.Builder();
-            params.appendQueryParameter("alt", "json");
-            params.appendQueryParameter("hl", Locale.getDefault().getLanguage() + "_" + Locale.getDefault().getCountry());
-            params.appendQueryParameter("tier", "aa");
-
-            ArrayMap<String,String> headers = new ArrayMap<>();
-            headers.put("Content-Type", "application/json");
-
-            @SuppressLint("HardwareIds")
-            String androidId = Settings.Secure.getString(context.getContentResolver(),
-                    Settings.Secure.ANDROID_ID);
-
-            SharedPreferences prefs = PreferenceManager
-                    .getDefaultSharedPreferences(context.getBaseContext());
-
-            JSONObject requestJson = new JSONObject();
-
-            try {
-                if (maxResults != 0) requestJson.put("max-results", maxResults);
-                if (nextPageToken != null) requestJson.put("start-token", nextPageToken);
-            }catch (JSONException e){
-                e.printStackTrace();
-            }
-
-            String skyjamToken = prefs.getString("OAuthToken", "");
-
-            try {
-                RequestBody body = RequestBody.create(TYPE_JSON, requestJson.toString());
-                URL url = new URL(SJ_URL + "trackfeed?"+params.build().getEncodedQuery());
-                Timber.d("Posting request: %s", requestJson.toString());
-                return super.parseResponse(super.perform(url, headers, null, skyjamToken, androidId, body), true);
-            }catch(MalformedURLException | JSONException e){
-                e.printStackTrace();
-            }
-
-            return null;
-
-        }
-    }
 
 
 }

@@ -3,8 +3,6 @@ package com.carbonplayer.ui.intro;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -15,7 +13,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.view.Display;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -195,7 +192,6 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
     void slide3Progress(int p){
         ((TextView)findViewById(R.id.introSlide3Desc)).setText(getString(R.string.intro_slide3_desc2, p));
     }
-
 
 }
 

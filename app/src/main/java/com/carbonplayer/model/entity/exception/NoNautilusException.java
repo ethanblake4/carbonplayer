@@ -1,6 +1,6 @@
 package com.carbonplayer.model.entity.exception;
 
-public class NoNautilusException extends Exception {
+public final class NoNautilusException extends Exception {
 
     @SuppressWarnings("unused")
     public NoNautilusException(){

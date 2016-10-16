@@ -1,12 +1,15 @@
 package com.carbonplayer;
-
 import android.app.Application;
-
 import com.carbonplayer.model.entity.Album;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.upstream.HttpDataSource;
+import com.google.android.exoplayer2.util.Util;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
-import rx.functions.Action1;
 import rx.plugins.RxJavaHooks;
 import timber.log.Timber;
 
@@ -30,12 +33,7 @@ public final class CarbonPlayerApplication extends Application{
         mInstance = this;
 
         initializeTimber();
-        RxJavaHooks.setOnError(new Action1<Throwable>() {
-            @Override
-            public void call(Throwable e) {
-                Timber.e(e.toString());
-            }
-        });
+        RxJavaHooks.setOnError(e -> Timber.e(e.toString()));
 
         // Configure default configuration for Realm
         RealmConfiguration realmConfig = new RealmConfiguration.Builder(this).build();
@@ -51,5 +49,14 @@ public final class CarbonPlayerApplication extends Application{
 
     public static CarbonPlayerApplication getInstance() {
         return mInstance;
+    }
+
+    public DataSource.Factory buildDataSourceFactory(DefaultBandwidthMeter bandwidthMeter) {
+        return new DefaultDataSourceFactory(this, bandwidthMeter,
+                buildHttpDataSourceFactory(bandwidthMeter));
+    }
+
+    public HttpDataSource.Factory buildHttpDataSourceFactory(DefaultBandwidthMeter bandwidthMeter) {
+        return new DefaultHttpDataSourceFactory(Util.getUserAgent(this, googleUserAgent), bandwidthMeter);
     }
 }

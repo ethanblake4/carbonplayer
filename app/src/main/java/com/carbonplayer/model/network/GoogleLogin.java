@@ -42,11 +42,16 @@ import rx.Observable;
 /**
  * Contains methods used to authenticate to Google services,
  * as well as to retrieve a Play Music OAuth token.
+ *
+ * TODO update to use OkHTTP
  */
-public class GoogleLogin {
+public final class GoogleLogin {
 
     // The Google public key
-    private static final String googleDefaultPublicKey = "AAAAgMom/1a/v0lblO2Ubrt60J2gcuXSljGFQXgcyZWveWLEwo6prwgi3iJIZdodyhKZQrNWp5nKJ3srRXcUW+F1BD3baEVGcmEgqaLZUNBjm057pKRI16kB0YppeGx5qIQ5QjKzsR8ETQbKLNWgRY0QRNVz34kMJR3P/LgHax/6rmf5AAAAAwEAAQ==";
+    private static final String googleDefaultPublicKey =
+            "AAAAgMom/1a/v0lblO2Ubrt60J2gcuXSljGFQXgcyZWveWLEwo6prwgi3iJIZdodyhKZ" +
+            "QrNWp5nKJ3srRXcUW+F1BD3baEVGcmEgqaLZUNBjm057pKRI16kB0YppeGx5qIQ5QjKz" +
+            "sR8ETQbKLNWgRY0QRNVz34kMJR3P/LgHax/6rmf5AAAAAwEAAQ==";
 
     /**
      * @param login - your mail, should looks like myemail@gmail.com

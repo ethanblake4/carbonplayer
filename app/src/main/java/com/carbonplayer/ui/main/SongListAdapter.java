@@ -14,6 +14,8 @@ import com.carbonplayer.model.entity.MusicTrack;
 
 import java.util.List;
 
+import timber.log.Timber;
+
 /**
  * Album / playlist adapter
  */
