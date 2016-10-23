@@ -74,4 +74,5 @@ dependencies {
     compile 'org.parceler:parceler-api:1.1.5'
     apt 'org.parceler:parceler:1.1.5'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha9'
+    compile 'com.google.android.gms:play-services-auth:9.6.1'
 }

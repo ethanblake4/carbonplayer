@@ -172,6 +172,7 @@ public class AlbumActivity extends AppCompatActivity {
     @OnClick(R.id.play_fab)
     void playFABClicked(){
         nowPlayingHelper.makePlayingScreen(albumart.getDrawable());
+        nowPlayingHelper.newQueue(tracks);
     }
 
     public void setTransformedTextPosition(int transform){

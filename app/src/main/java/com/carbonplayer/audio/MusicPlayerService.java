@@ -58,7 +58,7 @@ import timber.log.Timber;
  */
 public final class MusicPlayerService extends Service implements TrackSelector.EventListener<MappingTrackSelector.MappedTrackInfo>, ExoPlayer.EventListener {
 
-    private ArrayMap<Integer, ParcelableMusicTrack> tracks;
+    private ArrayList<ParcelableMusicTrack> tracks;
     private SimpleExoPlayer player;
 
     private NotificationCompat.Builder notificationBuilder;
@@ -151,7 +151,7 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
         player.addListener(this);
 
         updateNotification(tracks.get(currentTrack));
-
+        updatePlayer();
     }
 
     private void updateNotification(ParcelableMusicTrack track){
@@ -177,7 +177,7 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
                 .setSmallIcon(R.drawable.ic_play)
                 .setContentTitle("Carbon Player")
                 .setContentText("Playing music")
-                .setContent(rv)
+                //.setContent(rv)
                 .setContentIntent(contentIntent)
                 .setOngoing(true)
                 .setPriority( NotificationCompat.PRIORITY_DEFAULT );
@@ -206,18 +206,20 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
     }
 
     private void updatePlayer(){
-        if(isPlaying){
+        Timber.d("updatePlayer called: %s", tracks.get(currentTrack).getId());
+        //if(isPlaying){
             //player = ExoPlayer.Factory.newInstance(1);
             Protocol.getStreamURL(this, tracks.get(currentTrack).getId())
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.from(getMainLooper()))
                     .subscribe(url -> {
+                        Timber.d("Stream Url retrieved: %s", url);
                         MediaSource mediaSource = buildMediaSource(new Uri.Builder().path(url).build(), "");
                         player.prepare(mediaSource, true);
                         //player.prepare();
-                    });
+                    }, error -> Timber.d(error, "getstreamURL"));
             //player.prepare(new ExtractorSampleSource());
-        }
+        //}
     }
 
     @Override

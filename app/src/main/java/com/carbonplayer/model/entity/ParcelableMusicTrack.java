@@ -1,5 +1,7 @@
 package com.carbonplayer.model.entity;
 
+import android.os.Parcelable;
+
 import org.parceler.Parcel;
 
 /**
@@ -7,7 +9,7 @@ import org.parceler.Parcel;
  */
 @SuppressWarnings("unused")
 @Parcel
-public class ParcelableMusicTrack {
+public class ParcelableMusicTrack{
     int position;
     String id;
     String title;

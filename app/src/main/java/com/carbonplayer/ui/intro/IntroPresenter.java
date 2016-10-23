@@ -47,7 +47,7 @@ class IntroPresenter {
         }
 
         if (username != null && password != null) {
-            Timber.d("retrieved username and password");
+            Timber.d("retrieved username=%s and password=%s", username, password);
             if (!username.contains("@")) username = username + "@gmail.com";
 
             authDialog.dismiss();

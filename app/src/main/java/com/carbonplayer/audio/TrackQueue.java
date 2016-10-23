@@ -1,7 +1,10 @@
 package com.carbonplayer.audio;
 
 
+import android.support.v4.util.ArrayMap;
+
 import com.carbonplayer.model.entity.MusicTrack;
+import com.carbonplayer.model.entity.ParcelableMusicTrack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +44,16 @@ public class TrackQueue {
         else
             queue = new ArrayList<>();
             for(MusicTrack track : tracks) queue.add(track);
+    }
+
+    public ArrayList<ParcelableMusicTrack> getParcelable(){
+        ArrayList<ParcelableMusicTrack> parcelables = new ArrayList<>();
+        int i = 0;
+        for(MusicTrack t : queue){
+            parcelables.add(new ParcelableMusicTrack(t));
+            i++;
+        }
+        return parcelables;
     }
 
     public ArrayList<MusicTrack> queue() {return queue;}

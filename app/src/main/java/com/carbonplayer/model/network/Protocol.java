@@ -13,6 +13,8 @@ import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.exception.ResponseCodeException;
 import com.carbonplayer.utils.Constants;
 import com.carbonplayer.utils.IdentityUtils;
+import com.carbonplayer.utils.URLSigning;
+import com.google.common.base.Charsets;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,11 +22,17 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -39,7 +47,7 @@ import timber.log.Timber;
 public final class Protocol {
 
     private static final String SJ_URL = "https://mclients.googleapis.com/sj/v2.5/";
-    private static final String STREAM_URL = "https://android.clients.google.com/music/mplay";
+    private static final String STREAM_URL = "https://mclients.googleapis.com/music/mplay";
     private static final MediaType TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
     private static final int MAX_RESULTS = 250;
 
@@ -47,6 +55,7 @@ public final class Protocol {
         final OkHttpClient client = new OkHttpClient();
         final Uri.Builder getParams = new Uri.Builder()
                 .appendQueryParameter("dv", "0")
+                .appendQueryParameter("tier", "aa")
                 .appendQueryParameter("hl", IdentityUtils.localeCode());
 
         return Observable.create(subscriber -> {
@@ -76,6 +85,7 @@ public final class Protocol {
     public static Observable<LinkedList<MusicTrack>> listTracks(@NonNull final Activity context){
         final OkHttpClient client = new OkHttpClient();
         final Uri.Builder getParams = new Uri.Builder()
+                .appendQueryParameter("dv", "0")
                 .appendQueryParameter("alt", "json")
                 .appendQueryParameter("hl", IdentityUtils.localeCode())
                 .appendQueryParameter("tier", "aa");
@@ -101,8 +111,9 @@ public final class Protocol {
                 try {
                     Response r = client.newCall(request).execute();
                     if (!r.isSuccessful()) subscriber.onError(new ResponseCodeException());
-
                     JSONObject j = new JSONObject(r.body().string());
+                    Timber.d(r.body().string());
+
                     if(j.has("nextPageToken")) startToken = j.getString("nextPageToken");
 
                     LinkedList<MusicTrack> list = new LinkedList<>();
@@ -121,49 +132,70 @@ public final class Protocol {
     }
 
     public static Observable<String> getStreamURL(@NonNull final Context context, String song_id){
+        ArrayList<okhttp3.Protocol> protocols = new ArrayList<>();
+        protocols.add(okhttp3.Protocol.HTTP_1_1);
         final OkHttpClient client = new OkHttpClient().newBuilder()
                 .followRedirects(false)
                 .followSslRedirects(false)
+                .protocols(protocols)
                 .build();
-        byte[] _s1 = Base64.decode("VzeC4H4h+T2f0VI180nVX8x+Mb5HiTtGnKgH52Otj8ZCGDz9jRW"+
-                "yHb6QXK0JskSiOgzQfwTY5xgLLSdUSreaLVMsVVWfxfa8Rw==", Base64.DEFAULT);
-        byte[] _s2 = Base64.decode("ZAPnhUkYwQ6y5DdQxWThbvhJHN8msQ1rqJw0ggKdufQjelrKuiG" +
-                "GJI30aswkgCWTDyHkTGK9ynlqTkJ5L4CiGGUabGeo8M6JTQ==", Base64.DEFAULT);
-        StringBuilder keyBuilder = new StringBuilder();
-        for (int i=0;i<_s1.length;i++) keyBuilder.append(_s1[i] ^ _s2[i]);
-
-        String key = keyBuilder.toString();
-
         return Observable.create(subscriber -> {
             String salt = String.valueOf(new Date().getTime());
             String digest = "";
             try {
-                MessageDigest m = MessageDigest.getInstance("SHA-1");
-                m.update(salt.getBytes("UTF-8"));
-                digest = new String(Base64.encode(m.digest(song_id.getBytes("UTF-8")), Base64.URL_SAFE));
-            }catch(NoSuchAlgorithmException | UnsupportedEncodingException e){
+                digest = URLSigning.sign(song_id, salt);
+            }catch(NoSuchAlgorithmException | UnsupportedEncodingException | InvalidKeyException e){
                 subscriber.onError(e);
                 subscriber.onCompleted();
             }
-            final Uri.Builder getParams = new Uri.Builder()
-                    .appendQueryParameter("opt", "360")
+            final Uri.Builder getParams = new Uri.Builder();
+            try {
+                if (song_id.startsWith("T")) getParams.appendQueryParameter("mjck", song_id);
+                else getParams.appendQueryParameter("songid", song_id);
+            }catch(Exception e){
+                subscriber.onError(e);
+            }
+            getParams
+                    .appendQueryParameter("targetkbps", "5160")
+                    .appendQueryParameter("audio_formats", "mp3")
+                    .appendQueryParameter("dv", "35190")
+                    .appendQueryParameter("p", "1")
+                    .appendQueryParameter("opt", "med")
                     .appendQueryParameter("net", "mob")
                     .appendQueryParameter("pt", "e")
+                    /*.appendQueryParameter("dt", "pc")*/
                     .appendQueryParameter("slt", salt)
-                    .appendQueryParameter("sig", digest);
+                    .appendQueryParameter("sig", digest)
+                    .appendQueryParameter("hl", IdentityUtils.localeCode())
+                    .appendQueryParameter("tier", "aa");
 
-            if(song_id.startsWith("T")) getParams.appendQueryParameter("mjck", song_id);
-            else getParams.appendQueryParameter("songid", song_id);
+            /*final FormBody fb = new FormBody.Builder()
+                    .add("opt", "med")
+                    .add("targetkbps", "5160")
+                    .add("audio_formats", "mp3")
+                    .add("dv", "0")
+                    .add("net", "mob")
+                    .add("pt", "a")
+                    .add("dt", "pc")
+                    .add("slt", salt)
+                    .add("sig", digest)
+                    .build();*/
 
+            String encQuery = getParams.build().getEncodedQuery();
+            Timber.d(encQuery);
+            encQuery = encQuery.substring(0, encQuery.indexOf("%")) + "&hl=" + IdentityUtils.localeCode() + "&tier=aa";
+            Timber.d(encQuery);
             Request request = defaultBuilder(context)
-                    .url(STREAM_URL + "?" + getParams.build().getEncodedQuery())
+                    .url(STREAM_URL + "?" + encQuery)
                     .build();
             try{
                 Response r = client.newCall(request).execute();
                 if(r.isRedirect()){
                     subscriber.onNext(r.body().string());
                     subscriber.onCompleted();
-                } else subscriber.onError(new Exception());
+                } else {
+                    subscriber.onError(new Exception(r.body().string()));
+                }
             }catch(IOException e){
                 subscriber.onError(e);
             }

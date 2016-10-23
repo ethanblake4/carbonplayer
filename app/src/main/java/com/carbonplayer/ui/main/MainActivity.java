@@ -12,10 +12,12 @@ import android.util.DisplayMetrics;
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.ui.intro.IntroActivity;
+import com.carbonplayer.utils.URLSigning;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Subscription;
+import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
 

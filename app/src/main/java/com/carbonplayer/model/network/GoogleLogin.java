@@ -1,5 +1,7 @@
 package com.carbonplayer.model.network;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.SharedPreferences;
@@ -7,12 +9,17 @@ import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.model.entity.primitive.Null;
+import com.google.android.gms.auth.GoogleAuthException;
+import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.auth.UserRecoverableAuthException;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -274,17 +281,37 @@ public final class GoogleLogin {
                     Settings.Secure.ANDROID_ID);
 
             String masterToken = performMasterLogin(email, password, androidId);
-            if(masterToken == null) subscriber.onError(new Exception());
+            if(masterToken == null) {
+                subscriber.onError(new Exception());
+                subscriber.onCompleted();
+            }
 
             String OAuthToken = performOAuth(email, masterToken, androidId);
-            if(OAuthToken == null) subscriber.onError(new Exception());
+            if(OAuthToken == null) {
+                subscriber.onError(new Exception());
+                subscriber.onCompleted();
+            }
+
+            String mAuthToken = "";
+            try {
+                //Account account = new Account(email, "com.google"); TODO not sure if this will work
+                mAuthToken = GoogleAuthUtil.getToken(context, email /*account*/, "oauth2:https://www.googleapis.com/auth/skyjam");
+            } catch (IOException | GoogleAuthException ex) {
+                subscriber.onError(ex);
+            }
 
             SharedPreferences prefs = PreferenceManager
                     .getDefaultSharedPreferences(context.getBaseContext());
 
-            prefs.edit().putString("OAuthToken", OAuthToken).apply();
+            SharedPreferences.Editor edit = prefs.edit();
+            edit.putString("OAuthToken", OAuthToken);
+            edit.putString("BearerAuth", mAuthToken);
+            edit.apply();
+
             subscriber.onCompleted();
         });
 
     }
+
+
 }

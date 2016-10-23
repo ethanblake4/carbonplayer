@@ -14,4 +14,3 @@ public final class FinalBool {
 
     public void flip(){this.value = !this.value;}
 }
-

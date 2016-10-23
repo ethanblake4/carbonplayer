@@ -3,6 +3,7 @@ package com.carbonplayer.ui.helpers;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.support.constraint.ConstraintLayout;
 import android.view.View;
@@ -19,9 +21,12 @@ import android.widget.LinearLayout;
 
 import com.bumptech.glide.Glide;
 import com.carbonplayer.R;
+import com.carbonplayer.audio.MusicPlayerService;
 import com.carbonplayer.audio.TrackQueue;
 import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.utils.Constants;
+
+import org.parceler.Parcels;
 
 import java.util.List;
 
@@ -37,6 +42,8 @@ public final class NowPlayingUIHelper {
     private ConstraintLayout detailsView;
     private ImageView playPause;
 
+    private TrackQueue queue;
+
     public NowPlayingUIHelper(Activity activity){
         mActivity = activity;
 
@@ -49,9 +56,11 @@ public final class NowPlayingUIHelper {
     public ConstraintLayout getDetailsView() { return detailsView; }
 
     public void newQueue(List<MusicTrack> tracks){
+        queue = TrackQueue.instance(tracks, true);
         Glide.with(mActivity)
-                .load(TrackQueue.instance(tracks, true).currentTrack().getAlbumArtURL())
+                .load(queue.currentTrack().getAlbumArtURL())
                 .into(thumb);
+        mActivity.startService(buildServiceIntent());
     }
 
     public void makePlayingScreen(){
@@ -61,6 +70,7 @@ public final class NowPlayingUIHelper {
         anim.setDuration(500);
         anim.setFillAfter(true);
         mainFrame.startAnimation(anim);
+        mActivity.startService(buildServiceIntent());
     }
 
     public void makePlayingScreen(Drawable drawable){
@@ -76,6 +86,13 @@ public final class NowPlayingUIHelper {
     public void updateDrawable(){
         String url = TrackQueue.instance().currentTrack().getAlbumArtURL();
         Glide.with(mActivity).load(url).into(thumb);
+    }
+
+    private Intent buildServiceIntent(){
+        Intent i = new Intent(mActivity, MusicPlayerService.class);
+        i.setAction(Constants.ACTION.START_SERVICE);
+        i.putExtra(Constants.KEY.INITITAL_TRACKS, Parcels.wrap(queue.getParcelable()));
+        return i;
     }
 
     @SuppressLint("HandlerLeak")
