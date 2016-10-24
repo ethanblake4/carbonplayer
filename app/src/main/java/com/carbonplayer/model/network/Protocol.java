@@ -185,7 +185,7 @@ public final class Protocol {
             Timber.d(encQuery);
             encQuery = encQuery.substring(0, encQuery.indexOf("%")) + "&hl=" + IdentityUtils.localeCode() + "&tier=aa";
             Timber.d(encQuery);
-            Request request = defaultBuilder(context)
+            Request request = bearerBuilder(context)
                     .url(STREAM_URL + "?" + encQuery)
                     .build();
             try{
@@ -207,10 +207,23 @@ public final class Protocol {
                 .getString("OAuthToken", "");
     }
 
+    private static String getBearerToken(Context context){
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString("BearerAuth", "");
+    }
+
     private static Request.Builder defaultBuilder(Context context){
         return new Request.Builder()
                 .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
                 .header("Authorization", "GoogleLogin auth=" + getSkyjamToken(context))
+                .header("X-Device-ID", IdentityUtils.deviceId(context));
+    }
+
+    private static Request.Builder bearerBuilder(Context context){
+        Timber.d("Bearer token: %s", getBearerToken(context));
+        return new Request.Builder()
+                .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
+                .header("Authorization", "Bearer " + getBearerToken(context))
                 .header("X-Device-ID", IdentityUtils.deviceId(context));
     }
 

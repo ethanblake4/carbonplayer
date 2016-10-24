@@ -2,6 +2,7 @@ package com.carbonplayer.ui.intro;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -171,6 +172,11 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
             return NUM_PAGES;
         }
 
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        mPresenter.onActivityResult(requestCode, resultCode, data);
     }
 
     void makeLibraryError(@StringRes int desc){

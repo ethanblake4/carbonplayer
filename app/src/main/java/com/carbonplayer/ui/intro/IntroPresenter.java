@@ -1,11 +1,15 @@
 package com.carbonplayer.ui.intro;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.model.entity.exception.NoNautilusException;
 import com.carbonplayer.model.network.GoogleLogin;
+import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
+import com.google.android.gms.auth.UserRecoverableAuthException;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,6 +17,8 @@ import org.json.JSONObject;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import timber.log.Timber;
+
+import static android.app.Activity.RESULT_OK;
 
 /**
  * Presenter for IntroActivity
@@ -24,6 +30,8 @@ class IntroPresenter {
 
     private String username;
     private String password;
+
+    private final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR = 547;
 
     IntroPresenter(@NonNull IntroActivity activity){
         mActivity = activity;
@@ -61,9 +69,50 @@ class IntroPresenter {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 n -> {},
-                e -> mActivity.makeLibraryError(R.string.intro_slide3_issue),
+                this::handleLoginException,
                 this::doConfig
             );
+        }
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR){
+            if (resultCode == RESULT_OK){
+                GoogleLogin.retryGoogleAuth(mActivity, username)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            n->{},
+                            this::handleLoginException,
+                            this::doConfig
+                    );
+            } else {
+                mActivity.makeLibraryError(R.string.intro_slide3_issue);
+            }
+        }
+    }
+
+    private void handleLoginException(Throwable t){
+        if (t instanceof GooglePlayServicesAvailabilityException) {
+            // The Google Play services APK is old, disabled, or not present.
+            // Show a dialog created by Google Play services that allows
+            // the user to update the APK
+            mActivity.runOnUiThread(()-> {
+                int statusCode = ((GooglePlayServicesAvailabilityException) t)
+                        .getConnectionStatusCode();
+                Dialog dialog = GooglePlayServicesUtil.getErrorDialog(statusCode,
+                        mActivity,
+                        REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
+                dialog.show();
+            });
+        } else if (t instanceof UserRecoverableAuthException) {
+            mActivity.runOnUiThread(()-> {
+                Intent intent = ((UserRecoverableAuthException) t).getIntent();
+                mActivity.startActivityForResult(intent,
+                        REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
+            });
+        } else {
+            mActivity.makeLibraryError(R.string.intro_slide3_issue);
         }
     }
 

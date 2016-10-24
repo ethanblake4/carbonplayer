@@ -273,12 +273,17 @@ public final class GoogleLogin {
      * @param password user password
      * @return Observable which will produce err
      */
-    public static Observable<Null> login(@NonNull Activity context, @NonNull String email, @NonNull String password){
+    public static Observable<Null> login(@NonNull Activity context, @NonNull String email, @NonNull String password) {
         //TODO Rx-ify
         return Observable.create(subscriber -> {
             @SuppressLint("HardwareIds")
             String androidId = Settings.Secure.getString(context.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
+
+            SharedPreferences prefs = PreferenceManager
+                    .getDefaultSharedPreferences(context.getBaseContext());
+
+            SharedPreferences.Editor edit = prefs.edit();
 
             String masterToken = performMasterLogin(email, password, androidId);
             if(masterToken == null) {
@@ -291,6 +296,28 @@ public final class GoogleLogin {
                 subscriber.onError(new Exception());
                 subscriber.onCompleted();
             }
+            edit.putString("OAuthToken", OAuthToken);
+
+            String mAuthToken = "";
+            try {
+                //Account account = new Account(email, "com.google"); TODO not sure if this will work
+                mAuthToken = GoogleAuthUtil.getToken(context, email /*account*/, "oauth2:https://www.googleapis.com/auth/skyjam");
+            } catch (IOException | GoogleAuthException ex) {
+                edit.apply();
+                subscriber.onError(ex);
+                subscriber.onCompleted();
+            }
+
+            edit.putString("BearerAuth", mAuthToken);
+            edit.apply();
+
+            subscriber.onCompleted();
+        });
+
+    }
+
+    public static Observable<Null> retryGoogleAuth(@NonNull Activity context, @NonNull String email){
+        return Observable.create(subscriber -> {
 
             String mAuthToken = "";
             try {
@@ -304,13 +331,11 @@ public final class GoogleLogin {
                     .getDefaultSharedPreferences(context.getBaseContext());
 
             SharedPreferences.Editor edit = prefs.edit();
-            edit.putString("OAuthToken", OAuthToken);
             edit.putString("BearerAuth", mAuthToken);
             edit.apply();
 
             subscriber.onCompleted();
         });
-
     }
 
 
