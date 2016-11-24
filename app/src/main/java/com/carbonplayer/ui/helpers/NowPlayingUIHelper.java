@@ -34,6 +34,9 @@ import java.util.List;
  * Manages now playing UI across activities and sends commands to {@link com.carbonplayer.audio.MusicPlayerService}
  */
 public final class NowPlayingUIHelper {
+
+    private static NpUIHelperManager npUIHelperManager;
+
     private Activity mActivity;
     private Messenger mMessenger;
 
@@ -47,11 +50,18 @@ public final class NowPlayingUIHelper {
     public NowPlayingUIHelper(Activity activity){
         mActivity = activity;
 
+        if(npUIHelperManager == null) npUIHelperManager = new NpUIHelperManager();
+
         mainFrame   = (LinearLayout)     mActivity.findViewById(R.id.nowplaying_main);
         thumb       = (ImageView)        mActivity.findViewById(R.id.nowplaying_thumb);
         detailsView = (ConstraintLayout) mActivity.findViewById(R.id.nowplaying_details);
         playPause   = (ImageView)        mActivity.findViewById(R.id.nowplaying_playpause);
+
+        if(npUIHelperManager.uiVisible){
+            mainFrame.setVisibility(View.VISIBLE);
+        }
     }
+
 
     public ConstraintLayout getDetailsView() { return detailsView; }
 
@@ -133,6 +143,11 @@ public final class NowPlayingUIHelper {
             mMessenger = null;
         }
     };
+
+    private class NpUIHelperManager {
+        public boolean uiVisible = false;
+
+    }
 
 
 }

@@ -300,7 +300,7 @@ public final class GoogleLogin {
 
             String mAuthToken = "";
             try {
-                //Account account = new Account(email, "com.google"); TODO not sure if this will work
+                //Account account = new Account(email, "com.google"); TODO fix deprecation, not sure if this will work
                 mAuthToken = GoogleAuthUtil.getToken(context, email /*account*/, "oauth2:https://www.googleapis.com/auth/skyjam");
             } catch (IOException | GoogleAuthException ex) {
                 edit.apply();
@@ -321,7 +321,7 @@ public final class GoogleLogin {
 
             String mAuthToken = "";
             try {
-                //Account account = new Account(email, "com.google"); TODO not sure if this will work
+                //Account account = new Account(email, "com.google"); TODO fix deprecation, not sure if this will work
                 mAuthToken = GoogleAuthUtil.getToken(context, email /*account*/, "oauth2:https://www.googleapis.com/auth/skyjam");
             } catch (IOException | GoogleAuthException ex) {
                 subscriber.onError(ex);

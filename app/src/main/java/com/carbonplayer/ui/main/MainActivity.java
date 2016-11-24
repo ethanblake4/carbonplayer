@@ -11,6 +11,7 @@ import android.util.DisplayMetrics;
 
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
+import com.carbonplayer.ui.helpers.NowPlayingUIHelper;
 import com.carbonplayer.ui.intro.IntroActivity;
 import com.carbonplayer.utils.URLSigning;
 
@@ -25,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     @BindView(R.id.main_recycler) RecyclerView mainRecycler;
+
+    private NowPlayingUIHelper nowPlayingHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
         mainRecycler.setLayoutManager(mLayoutManager);
 
         sectionSelected();
+
+        nowPlayingHelper = new NowPlayingUIHelper(this);
     }
 
     private void sectionSelected() {
