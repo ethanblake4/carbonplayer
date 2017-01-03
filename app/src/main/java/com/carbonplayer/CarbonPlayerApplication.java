@@ -57,6 +57,6 @@ public final class CarbonPlayerApplication extends Application{
     }
 
     public HttpDataSource.Factory buildHttpDataSourceFactory(DefaultBandwidthMeter bandwidthMeter) {
-        return new DefaultHttpDataSourceFactory(Util.getUserAgent(this, googleUserAgent), bandwidthMeter);
+        return new DefaultHttpDataSourceFactory(Util.getUserAgent(this, googleUserAgent));
     }
 }

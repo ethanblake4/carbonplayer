@@ -156,7 +156,7 @@ public final class Protocol {
                 subscriber.onError(e);
             }
             getParams
-                    .appendQueryParameter("targetkbps", "5160")
+                    .appendQueryParameter("targetkbps", "512")
                     .appendQueryParameter("audio_formats", "mp3")
                     .appendQueryParameter("dv", "35190")
                     .appendQueryParameter("p", "1")
@@ -191,7 +191,7 @@ public final class Protocol {
             try{
                 Response r = client.newCall(request).execute();
                 if(r.isRedirect()){
-                    subscriber.onNext(r.body().string());
+                    subscriber.onNext(r.headers().get("Location"));
                     subscriber.onCompleted();
                 } else {
                     subscriber.onError(new Exception(r.body().string()));

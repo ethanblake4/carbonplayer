@@ -31,6 +31,7 @@ class IntroPresenter {
     private String username;
     private String password;
 
+    private boolean jsonCallbackCompleted = false;
     private final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR = 547;
 
     IntroPresenter(@NonNull IntroActivity activity){
@@ -58,7 +59,11 @@ class IntroPresenter {
             Timber.d("retrieved username=%s and password=%s", username, password);
             if (!username.contains("@")) username = username + "@gmail.com";
 
-            authDialog.dismiss();
+            try{
+                authDialog.dismiss();
+            } catch (NullPointerException e) {
+                Timber.e(e.toString());
+            }
             mActivity.enableSwitching = true;
             mActivity.runOnUiThread(() -> mActivity.mPager.setCurrentItem(3));
             mActivity.web = null;
@@ -117,12 +122,15 @@ class IntroPresenter {
     }
 
     private void doConfig(){
-        MusicLibrary.getInstance().config(mActivity,
-            t -> {
-                if(t instanceof NoNautilusException)
-                    mActivity.makeLibraryError(R.string.intro_slide3_no_nautilus);
-                else mActivity.makeLibraryError(R.string.intro_slide3_issue);
-            }, this::getLibrary);
+        if(!jsonCallbackCompleted) {
+            jsonCallbackCompleted = true;
+            MusicLibrary.getInstance().config(mActivity,
+                    t -> {
+                        if (t instanceof NoNautilusException)
+                            mActivity.makeLibraryError(R.string.intro_slide3_no_nautilus);
+                        else mActivity.makeLibraryError(R.string.intro_slide3_issue);
+                    }, this::getLibrary);
+        }
     }
 
     private void getLibrary(){

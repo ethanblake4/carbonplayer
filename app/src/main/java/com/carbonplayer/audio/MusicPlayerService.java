@@ -15,6 +15,7 @@ import android.support.v4.util.ArrayMap;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
@@ -34,6 +35,7 @@ import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveVideoTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
@@ -214,12 +216,14 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
                     .observeOn(AndroidSchedulers.from(getMainLooper()))
                     .subscribe(url -> {
                         Timber.d("Stream Url retrieved: %s", url);
-                        MediaSource mediaSource = buildMediaSource(new Uri.Builder().path(url).build(), "");
+                        MediaSource mediaSource = buildMediaSource(Uri.parse(url), "");
                         player.prepare(mediaSource, true);
+                        player.setPlayWhenReady(true);
                         //player.prepare();
                     }, error -> Timber.d(error, "getstreamURL"));
             //player.prepare(new ExtractorSampleSource());
         //}
+
     }
 
     @Override
@@ -258,7 +262,7 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
 
     @Override
     public void onPlayerError(ExoPlaybackException e) {
-        String errorString = null;
+        String errorString = "Unknown Error";
         if (e.type == ExoPlaybackException.TYPE_RENDERER) {
             Exception cause = e.getRendererException();
             if (cause instanceof MediaCodecRenderer.DecoderInitializationException) {
@@ -268,20 +272,25 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
                 if (decoderInitializationException.decoderName == null) {
                     if (decoderInitializationException.getCause() instanceof MediaCodecUtil.DecoderQueryException) {
                     //    errorString = getString(R.string.error_querying_decoders);
+                        errorString = "Error Querying Decoders";
                     } else if (decoderInitializationException.secureDecoderRequired) {
+                        errorString = "Secure Decoder Required";
                     //    errorString = getString(R.string.error_no_secure_decoder,
                     //            decoderInitializationException.mimeType);
                     } else {
+                        errorString = "No Decoder Found";
                     //    errorString = getString(R.string.error_no_decoder,
                     //            decoderInitializationException.mimeType);
                     }
                 } else {
+                    errorString = "Error Instantiating Decoder";
                     //errorString = getString(R.string.error_instantiating_decoder,
                     //        decoderInitializationException.decoderName);
                 }
             }
         }
         if (errorString != null) {
+            Toast.makeText(this, errorString, Toast.LENGTH_SHORT).show();
             //showToast(errorString);
         }
         //playerNeedsSource = true;
@@ -325,8 +334,13 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
     }
 
     private MediaSource buildMediaSource(Uri uri, String overrideExtension) {
-        int type = Util.inferContentType(!TextUtils.isEmpty(overrideExtension) ? "." + overrideExtension
+
+        return new ExtractorMediaSource(uri, mediaDataSourceFactory, new DefaultExtractorsFactory(),
+                mainHandler, error -> Timber.e("Error", error));
+
+        /*int type = Util.inferContentType(!TextUtils.isEmpty(overrideExtension) ? "." + overrideExtension
                 : uri.getLastPathSegment());
+        type = C.TYPE_OTHER;
         switch (type) {
             /*case C.TYPE_SS:
                 return new SsMediaSource(uri, buildDataSourceFactory(false),
@@ -335,14 +349,14 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
                 return new DashMediaSource(uri, buildDataSourceFactory(false),
                         new DefaultDashChunkSource.Factory(mediaDataSourceFactory), mainHandler, eventLogger);
             case C.TYPE_HLS:
-                return new HlsMediaSource(uri, mediaDataSourceFactory, mainHandler, new ExtractorMediaSource.EventListener());*/
+                return new HlsMediaSource(uri, mediaDataSourceFactory, 1, mainHandler, null);
             case C.TYPE_OTHER:
                 return new ExtractorMediaSource(uri, mediaDataSourceFactory, new DefaultExtractorsFactory(),
                         mainHandler, error -> Timber.e("Error", error));
             default: {
                 throw new IllegalStateException("Unsupported type: " + type);
             }
-        }
+        }*/
     }
 
     @Override

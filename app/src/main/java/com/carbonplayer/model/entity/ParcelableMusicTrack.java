@@ -1,6 +1,5 @@
 package com.carbonplayer.model.entity;
 
-import android.os.Parcelable;
 
 import org.parceler.Parcel;
 
