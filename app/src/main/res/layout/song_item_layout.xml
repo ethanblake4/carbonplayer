@@ -29,4 +29,5 @@
         android:layout_marginStart="20dp"
         tools:ignore="HardcodedText"
         android:fontFamily="sans-serif" />
+
 </LinearLayout>

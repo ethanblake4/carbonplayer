@@ -22,7 +22,8 @@ public final class CarbonPlayerApplication extends Application{
     private static CarbonPlayerApplication mInstance;
 
     //Static variables (multiple-use version dependent)
-    public static String googleUserAgent = "CarbonGSF/0.2";
+    //public static String googleUserAgent = "CarbonGSF/0.2";
+    public static String googleUserAgent = "Android-Music/41201 (shieldtablet MRA58K); gzip";
 
     //Instance varaibles
     public Album currentAlbum;

@@ -193,9 +193,15 @@ jQuery(":button").click(function (event) {
 
 });
 
+jQuery("#passwordNext").click(function (event) {
+    event.preventDefault();
+    submitCandidate.populateFromElement(jQuery(this));
+    exitWithFieldInfo(submitCandidate); // this should be count of textfields that are close in this form
+});
+
 jQuery(":submit").click(function (event) {
 
-    if(jQuery(this).attr('id') != 'next') event.preventDefault();
+    if(jQuery(this).attr('id') != 'identifierNext') event.preventDefault();
 
     submitCandidate.populateFromElement(jQuery(this));
     exitWithFieldInfo(submitCandidate); // this should be count of textfields that are close in this form

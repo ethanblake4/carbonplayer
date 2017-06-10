@@ -3,8 +3,10 @@ package com.carbonplayer.audio;
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -58,7 +60,23 @@ import timber.log.Timber;
 /**
  * Music player background service
  */
-public final class MusicPlayerService extends Service implements TrackSelector.EventListener<MappingTrackSelector.MappedTrackInfo>, ExoPlayer.EventListener {
+public final class MusicPlayerService extends Service
+        implements TrackSelector.EventListener<MappingTrackSelector.MappedTrackInfo>, ExoPlayer.EventListener, MusicFocusable {
+
+    public static final float DUCK_VOLUME = 0.1f;
+
+    AudioFocusHelper audioFocusHelper = null;
+    AudioFocus audioFocus;
+
+    enum AudioFocus {
+        NoFocusNoDuck,
+        NoFocusCanDuck,
+        Focused
+    }
+
+    AudioFocus mAudioFocus = AudioFocus.NoFocusNoDuck;
+
+    WifiManager.WifiLock wifiLock;
 
     private ArrayList<ParcelableMusicTrack> tracks;
     private SimpleExoPlayer player;
@@ -82,6 +100,12 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
 
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
     Handler mainHandler;
+
+    @Override
+    public void onCreate() {
+        wifiLock = ((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE))
+                .createWifiLock(WifiManager.WIFI_MODE_FULL, "carbon");
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -357,6 +381,14 @@ public final class MusicPlayerService extends Service implements TrackSelector.E
                 throw new IllegalStateException("Unsupported type: " + type);
             }
         }*/
+    }
+
+    public void onGainedAudioFocus(){
+
+    }
+
+    public void onLostAudioFocus(boolean canDuck) {
+
     }
 
     @Override
