@@ -32,9 +32,6 @@ proguard/
 # Android Studio captures folder
 captures/
 
-# Intellij
-*.iml
-
 # User-specific stuff:
 .idea/workspace.xml
 .idea/tasks.xml
