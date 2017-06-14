@@ -70,10 +70,10 @@ public final class MusicLibrary {
                         if (albumMatchesTrack(a, track))
                             a.addSong(track.getTrackId());
                         else {
-                            a = realm.where(Album.class).equalTo(Album.Keys.getId(), track.getAlbumId())
+                            a = realm.where(Album.class).equalTo("id", track.getAlbumId())
                                     .or().beginGroup()
-                                    .equalTo(Album.Keys.getTitle(), track.getAlbum())
-                                    .equalTo(Album.Keys.getArtist(), track.getArtist())
+                                    .equalTo("id", track.getAlbum())
+                                    .equalTo("artist", track.getArtist())
                                     .endGroup()
                                     .findFirst();
                             if (a != null) a.addSong(track.getTrackId());
@@ -101,7 +101,7 @@ public final class MusicLibrary {
 
         // Return the data in Realm.
         return realm.where(Album.class)
-                .findAllSortedAsync(Album.Keys.getTitle(), Sort.ASCENDING)
+                .findAllSortedAsync("title", Sort.ASCENDING)
                 .asObservable();
     }
 

@@ -34,35 +34,39 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         //  Declare a new thread to do a preference check
-        Thread t = new Thread(() -> {
-            SharedPreferences getPrefs = PreferenceManager
-                    .getDefaultSharedPreferences(getBaseContext());
+        //Thread t = new Thread(() -> {
+        SharedPreferences getPrefs = PreferenceManager
+                .getDefaultSharedPreferences(getBaseContext());
 
-            boolean isFirstStart = getPrefs.getBoolean("firstStart", true);
+        boolean isFirstStart = getPrefs.getBoolean("firstStart", true);
 
-            if (isFirstStart) {
-                Intent i = new Intent(MainActivity.this, IntroActivity.class);
-                startActivity(i);
-            }
-        });
+        Timber.d("isFirstStart: %b", isFirstStart);
 
-        t.start();
+        if (isFirstStart) {
+            Intent i = new Intent(MainActivity.this, IntroActivity.class);
+            startActivity(i);
+            Timber.d("Started activity");
+        }else {
+            //});
 
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+            //t.start();
+
+            setContentView(R.layout.activity_main);
+            ButterKnife.bind(this);
 
 
-        // use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
-        mainRecycler.setHasFixedSize(true);
+            // use this setting to improve performance if you know that changes
+            // in content do not change the layout size of the RecyclerView
+            mainRecycler.setHasFixedSize(true);
 
-        // use a linear layout manager
-        mLayoutManager = new GridLayoutManager(MainActivity.this, 2);
-        mainRecycler.setLayoutManager(mLayoutManager);
+            // use a linear layout manager
+            mLayoutManager = new GridLayoutManager(MainActivity.this, 2);
+            mainRecycler.setLayoutManager(mLayoutManager);
 
-        sectionSelected();
+            sectionSelected();
 
-        nowPlayingHelper = new NowPlayingUIHelper(this);
+            nowPlayingHelper = new NowPlayingUIHelper(this);
+        }
     }
 
     private void sectionSelected() {

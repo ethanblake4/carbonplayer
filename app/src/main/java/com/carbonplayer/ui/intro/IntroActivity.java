@@ -20,6 +20,7 @@ import android.webkit.WebViewClient;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.webview.GoogleLoginJSInterfaceObject;
 import com.carbonplayer.ui.intro.fragments.IntroPageOneFragment;
@@ -54,13 +55,17 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Icepick.restoreInstanceState(this, savedInstanceState);
 
         mPresenter = new IntroPresenter(this);
 
         setContentView(R.layout.activity_intro);
+
         ButterKnife.bind(this);
 
+        mPager = (ViewPager) findViewById(R.id.introPager);
+        nextButton = (ImageButton) findViewById(R.id.next);
         // Instantiate a ViewPager and a PagerAdapter.
         PagerAdapter mPagerAdapter = new IntroAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
@@ -118,32 +123,39 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
     public void beginOAuth2Authentication() {
 
         Dialog authDialog = new Dialog(IntroActivity.this);
-        authDialog.setContentView(R.layout.auth_dialog);
 
-        mPresenter.setAuthDialog(authDialog);
+        if(CarbonPlayerApplication.useWebAuthDialog) {
+            authDialog.setContentView(R.layout.auth_dialog);
 
-        web = (WebView) authDialog.findViewById(R.id.webv);
+            mPresenter.setAuthDialog(authDialog);
 
-        //Setup WebView
-        web.getSettings().setJavaScriptEnabled(true);
-        web.addJavascriptInterface(new GoogleLoginJSInterfaceObject(this), "Android");
-        web.getSettings().setDisplayZoomControls(false);
-        web.getSettings().setUseWideViewPort(true);
-        web.getSettings().setLoadWithOverviewMode(true);
+            web = (WebView) authDialog.findViewById(R.id.webv);
 
-        web.loadUrl("https://accounts.google.com/AddSession?sacu=1");
-        web.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                Handler handler = new Handler();
-                handler.postDelayed(() -> {
-                    JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/jquery.js");
-                    JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/setUp.js");
-                    JavascriptUtils.injectJavascript(web, "armForNoAccount()");
-                }, 5);
-            }
-        });
+            //Setup WebView
+            web.getSettings().setJavaScriptEnabled(true);
+            web.addJavascriptInterface(new GoogleLoginJSInterfaceObject(this), "Android");
+            web.getSettings().setDisplayZoomControls(false);
+            web.getSettings().setUseWideViewPort(true);
+            web.getSettings().setLoadWithOverviewMode(true);
+
+            web.loadUrl("https://accounts.google.com/AddSession?sacu=1");
+            web.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    super.onPageFinished(view, url);
+                    Handler handler = new Handler();
+                    handler.postDelayed(() -> {
+                        JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/jquery.js");
+                        JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/setUp.js");
+                        JavascriptUtils.injectJavascript(web, "armForNoAccount()");
+                    }, 5);
+                }
+            });
+        } else {
+            //authDialog.setContentView(R.layout.auth_dialog_std);
+            //authDialog.getWindow().getContentScene().getSceneRoot().findViewById(R.id.)
+
+        }
 
         authDialog.show();
         authDialog.setTitle(getString(R.string.intro_signin));

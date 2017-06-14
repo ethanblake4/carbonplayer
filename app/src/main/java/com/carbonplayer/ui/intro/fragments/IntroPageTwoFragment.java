@@ -29,6 +29,7 @@ public final class IntroPageTwoFragment extends Fragment {
         ViewGroup rootView = (ViewGroup) inflater.inflate(
                 R.layout.intro_fragment_2, container, false);
         unbinder = ButterKnife.bind(this, rootView);
+        startOAuth = (Button) rootView.findViewById(R.id.introOAuthStart);
 
         startOAuth.setOnClickListener(v ->
                 ((IntroActivity) getActivity()).beginOAuth2Authentication());

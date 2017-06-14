@@ -24,8 +24,9 @@ public final class CarbonPlayerApplication extends Application{
     //Static variables (multiple-use version dependent)
     //public static String googleUserAgent = "CarbonGSF/0.2";
     public static String googleUserAgent = "Android-Music/41201 (shieldtablet MRA58K); gzip";
+    public static boolean useWebAuthDialog = false;
 
-    //Instance varaibles
+    //Instance variables
     public Album currentAlbum;
 
     @Override
@@ -36,8 +37,9 @@ public final class CarbonPlayerApplication extends Application{
         initializeTimber();
         RxJavaHooks.setOnError(e -> Timber.e(e.toString()));
 
+        Realm.init(this);
         // Configure default configuration for Realm
-        RealmConfiguration realmConfig = new RealmConfiguration.Builder(this).build();
+        RealmConfiguration realmConfig = new RealmConfiguration.Builder().build();
         Realm.setDefaultConfiguration(realmConfig);
     }
 

@@ -29,6 +29,8 @@ public final class IntroPageThreeFragment extends Fragment {
                 R.layout.intro_fragment_3, container, false);
         unbinder = ButterKnife.bind(this, rootView);
 
+        nautilusFailedOKButton = (Button) rootView.findViewById(R.id.nautilusFailedOKButton);
+
         nautilusFailedOKButton.setOnClickListener(v -> {
             if (v.isEnabled())
                 Process.killProcess(Process.myPid());

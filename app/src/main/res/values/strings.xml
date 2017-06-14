@@ -27,4 +27,7 @@
     <string name="fast_forward">Fast Forward</string>
     <string name="previous_song">Previous Song</string>
     <string name="play_pause_button">Play pause button</string>
+    <string name="sign_in_dialog_header">Sign in to your Google Account</string>
+    <string name="username">Username/Email</string>
+    <string name="password">Password</string>
 </resources>

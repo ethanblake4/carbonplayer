@@ -14,7 +14,6 @@ import com.carbonplayer.model.entity.exception.ResponseCodeException;
 import com.carbonplayer.utils.Constants;
 import com.carbonplayer.utils.IdentityUtils;
 import com.carbonplayer.utils.URLSigning;
-import com.google.common.base.Charsets;
 
 import org.json.JSONArray;
 import org.json.JSONException;
