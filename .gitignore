@@ -76,3 +76,7 @@ fabric.properties
 
 # Keystore files
 *.jks
+
+google-services.json
+/app/google-services.json
+/carbonplayer.properties

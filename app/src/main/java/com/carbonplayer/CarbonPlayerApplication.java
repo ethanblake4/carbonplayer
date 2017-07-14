@@ -1,6 +1,7 @@
 package com.carbonplayer;
 import android.app.Application;
 import com.carbonplayer.model.entity.Album;
+import com.carbonplayer.utils.CrashReportingTree;
 import com.carbonplayer.utils.Preferences;
 import com.facebook.stetho.Stetho;
 import com.facebook.stetho.okhttp3.StethoInterceptor;
@@ -13,6 +14,7 @@ import com.google.android.exoplayer2.util.Util;
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider;
 
 import butterknife.ButterKnife;
+import icepick.Icepick;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import okhttp3.OkHttpClient;
@@ -51,14 +53,14 @@ public final class CarbonPlayerApplication extends Application{
             Timber.plant(new Timber.DebugTree());
 
             Stetho.initialize(
-                    Stetho.newInitializerBuilder(this)
-                            .enableDumpapp(Stetho.defaultDumperPluginsProvider(this))
-                            .enableWebKitInspector(RealmInspectorModulesProvider.builder(this).build())
-                            .build());
-
+                Stetho.newInitializerBuilder(this)
+                    .enableDumpapp(Stetho.defaultDumperPluginsProvider(this))
+                    .enableWebKitInspector(RealmInspectorModulesProvider.builder(this).build())
+                    .build());
             ButterKnife.setDebug(true);
+            Icepick.setDebug(true);
         } else {
-            
+            Timber.plant(new CrashReportingTree());
         }
 
         RxJavaHooks.setOnError(e -> Timber.e(e.toString()));
