@@ -1,9 +1,12 @@
 package com.carbonplayer.model.network;
 
+import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Base64;
 
@@ -12,6 +15,7 @@ import com.carbonplayer.model.entity.ConfigEntry;
 import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.exception.ResponseCodeException;
 import com.carbonplayer.utils.Constants;
+import com.carbonplayer.utils.Gservices;
 import com.carbonplayer.utils.IdentityUtils;
 import com.carbonplayer.utils.URLSigning;
 
@@ -46,14 +50,14 @@ import timber.log.Timber;
 public final class Protocol {
 
     private static final String SJ_URL = "https://mclients.googleapis.com/sj/v2.5/";
-    private static final String STREAM_URL = "https://mclients.googleapis.com/music/mplay";
+    private static final String STREAM_URL = "https://android.clients.google.com/music/mplay";
     private static final MediaType TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
     private static final int MAX_RESULTS = 250;
 
     public static Observable<LinkedList<ConfigEntry>> getConfig(@NonNull final Activity context){
-        final OkHttpClient client = new OkHttpClient();
+        final OkHttpClient client = CarbonPlayerApplication.getOkHttpClient();
         final Uri.Builder getParams = new Uri.Builder()
-                .appendQueryParameter("dv", "0")
+                .appendQueryParameter("dv", CarbonPlayerApplication.googleBuildNumber)
                 .appendQueryParameter("tier", "aa")
                 .appendQueryParameter("hl", IdentityUtils.localeCode());
 
@@ -66,6 +70,7 @@ public final class Protocol {
                 if (!r.isSuccessful()) subscriber.onError(new ResponseCodeException());
 
                 String sR = r.body().string();
+                Timber.d(sR);
                 JSONObject j = new JSONObject(sR);
 
                 LinkedList<ConfigEntry> itemList = new LinkedList<>();
@@ -82,9 +87,9 @@ public final class Protocol {
     }
 
     public static Observable<LinkedList<MusicTrack>> listTracks(@NonNull final Activity context){
-        final OkHttpClient client = new OkHttpClient();
+        final OkHttpClient client = CarbonPlayerApplication.getOkHttpClient();
         final Uri.Builder getParams = new Uri.Builder()
-                .appendQueryParameter("dv", "0")
+                .appendQueryParameter("dv", CarbonPlayerApplication.googleBuildNumber)
                 .appendQueryParameter("alt", "json")
                 .appendQueryParameter("hl", IdentityUtils.localeCode())
                 .appendQueryParameter("tier", "aa");
@@ -110,8 +115,9 @@ public final class Protocol {
                 try {
                     Response r = client.newCall(request).execute();
                     if (!r.isSuccessful()) subscriber.onError(new ResponseCodeException());
-                    JSONObject j = new JSONObject(r.body().string());
-                    Timber.d(r.body().string());
+                    String response = r.body().string();
+                    JSONObject j = new JSONObject(response);
+                    //Timber.d(response);
 
                     if(j.has("nextPageToken")) startToken = j.getString("nextPageToken");
 
@@ -133,11 +139,11 @@ public final class Protocol {
     public static Observable<String> getStreamURL(@NonNull final Context context, String song_id){
         ArrayList<okhttp3.Protocol> protocols = new ArrayList<>();
         protocols.add(okhttp3.Protocol.HTTP_1_1);
-        final OkHttpClient client = new OkHttpClient().newBuilder()
-                .followRedirects(false)
-                .followSslRedirects(false)
-                .protocols(protocols)
-                .build();
+        final OkHttpClient client = CarbonPlayerApplication.getOkHttpClient(
+                new OkHttpClient().newBuilder()
+                    .followRedirects(false)
+                    .followSslRedirects(false)
+                    .protocols(protocols));
         return Observable.create(subscriber -> {
             String salt = String.valueOf(new Date().getTime());
             String digest = "";
@@ -149,40 +155,37 @@ public final class Protocol {
             }
             final Uri.Builder getParams = new Uri.Builder();
             try {
-                if (song_id.startsWith("T")) getParams.appendQueryParameter("mjck", song_id);
+                if (song_id.startsWith("T") || song_id.startsWith("D")) getParams.appendQueryParameter("mjck", song_id);
                 else getParams.appendQueryParameter("songid", song_id);
             }catch(Exception e){
                 subscriber.onError(e);
             }
+
+            @SuppressLint("HardwareIds")
+            String androidId = Settings.Secure.getString(context.getContentResolver(),
+                    Settings.Secure.ANDROID_ID);
+            Timber.d("androidId: %s", androidId);
+
+            //Timber.d("newAndroidID: %s", String.valueOf(Gservices.getLong(context.getContentResolver(), "android_id", 0)));
+
             getParams
-                    .appendQueryParameter("targetkbps", "512")
+                    .appendQueryParameter("targetkbps", "384")
                     .appendQueryParameter("audio_formats", "mp3")
-                    .appendQueryParameter("dv", "41201")
-                    .appendQueryParameter("p", "0")
+                    .appendQueryParameter("dv", CarbonPlayerApplication.googleBuildNumber)
+                    .appendQueryParameter("p", IdentityUtils.getDeviceIsSmartphone(context) ? "1" : "0")
                     .appendQueryParameter("opt", "med")
                     .appendQueryParameter("net", "mob")
                     .appendQueryParameter("pt", "e")
-                    /*.appendQueryParameter("dt", "pc")*/
+                    .appendQueryParameter("dt", "pc")
                     .appendQueryParameter("slt", salt)
                     .appendQueryParameter("sig", digest)
                     .appendQueryParameter("hl", IdentityUtils.localeCode())
                     .appendQueryParameter("tier", "aa");
 
-            /*final FormBody fb = new FormBody.Builder()
-                    .add("opt", "med")
-                    .add("targetkbps", "5160")
-                    .add("audio_formats", "mp3")
-                    .add("dv", "0")
-                    .add("net", "mob")
-                    .add("pt", "a")
-                    .add("dt", "pc")
-                    .add("slt", salt)
-                    .add("sig", digest)
-                    .build();*/
 
             String encQuery = getParams.build().getEncodedQuery();
             Timber.d(encQuery);
-            encQuery = encQuery.substring(0, encQuery.indexOf("%")) + "&hl=" + IdentityUtils.localeCode() + "&tier=aa";
+            //encQuery = encQuery/*.substring(0, encQuery.indexOf("%"))*/ + "&hl=" + IdentityUtils.localeCode() + "&tier=aa";
             Timber.d(encQuery);
             Request request = bearerBuilder(context)
                     .url(STREAM_URL + "?" + encQuery)
@@ -220,10 +223,15 @@ public final class Protocol {
 
     private static Request.Builder bearerBuilder(Context context){
         Timber.d("Bearer token: %s", getBearerToken(context));
+
+        String gAndroidID = String.valueOf(Gservices.getLong(context.getContentResolver(), "android_id", 0));
+
         return new Request.Builder()
                 .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
                 .header("Authorization", "Bearer " + getBearerToken(context))
-                .header("X-Device-ID", IdentityUtils.deviceId(context));
+                .header("X-Device-ID", gAndroidID)
+                .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context));
+                //.header("X-Device-ID", IdentityUtils.deviceId(context));
     }
 
 

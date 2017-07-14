@@ -29,11 +29,13 @@ if(project.hasProperty("carbonplayer.properties")
         }
         buildTypes {
             release {
-                minifyEnabled false
-                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                minifyEnabled true
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
                 signingConfig signingConfigs.config
             }
             debug {
+                minifyEnabled true
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
                 signingConfig signingConfigs.config
             }
         }
@@ -62,23 +64,27 @@ if(project.hasProperty("carbonplayer.properties")
 
 repositories {
     maven {url "https://clojars.org/repo/"}
+    maven {
+        url 'https://github.com/uPhyca/stetho-realm/raw/master/maven-repo'
+    }
     mavenCentral()
+    google()
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.12'
-    implementation 'com.android.support:appcompat-v7:25.1.0'
-    implementation 'com.android.support:design:25.1.0'
-    implementation 'com.jakewharton:butterknife:8.5.1'
-    annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
+    implementation 'com.android.support:appcompat-v7:25.3.0'
+    implementation 'com.android.support:design:25.3.0'
+    implementation 'com.jakewharton:butterknife:8.7.0'
+    kapt 'com.jakewharton:butterknife-compiler:8.7.0'
     implementation 'io.reactivex:rxjava:1.1.8'
     implementation 'com.jakewharton.timber:timber:4.1.2'
     implementation 'com.squareup.okhttp3:okhttp:3.7.0'
-    implementation 'com.android.support:recyclerview-v7:25.1.0'
-    implementation 'com.android.support:palette-v7:25.1.0'
+    implementation 'com.android.support:recyclerview-v7:25.3.0'
+    implementation 'com.android.support:palette-v7:25.3.0'
     implementation 'frankiesardo:icepick:3.2.0'
-    annotationProcessor 'frankiesardo:icepick-processor:3.2.0'
+    kapt 'frankiesardo:icepick-processor:3.2.0'
     implementation 'io.reactivex:rxandroid:1.2.1'
     implementation 'com.github.bumptech.glide:glide:3.7.0'
     implementation 'com.google.android.exoplayer:exoplayer:r2.0.1'
@@ -89,10 +95,14 @@ dependencies {
         exclude group: 'glide-parent'
     }
     implementation 'org.parceler:parceler-api:1.1.5'
-    annotationProcessor 'org.parceler:parceler:1.1.5'
+    kapt 'org.parceler:parceler:1.1.5'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-    implementation 'com.google.android.gms:play-services-auth:10.2.1'
+    implementation 'com.google.android.gms:play-services-auth:11.0.2'
+    implementation 'com.facebook.stetho:stetho:1.5.0'
+    implementation 'com.facebook.stetho:stetho-okhttp3:1.5.0'
+    implementation 'com.uphyca:stetho_realm:2.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 }
 
 android {

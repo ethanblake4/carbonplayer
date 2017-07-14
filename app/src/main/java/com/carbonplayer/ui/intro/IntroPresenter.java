@@ -56,31 +56,35 @@ class IntroPresenter {
         }
 
         if (username != null && password != null) {
-            Timber.d("retrieved username=%s and password=%s", username, password);
-            if (!username.contains("@")) username = username + "@gmail.com";
-
-            try{
-                authDialog.dismiss();
-            } catch (NullPointerException e) {
-                Timber.e(e.toString());
-            }
-            mActivity.enableSwitching = true;
-            mActivity.runOnUiThread(() -> mActivity.mPager.setCurrentItem(3));
-            mActivity.web = null;
-            authDialog = null;
-
-            GoogleLogin.login(mActivity, username, password)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                n -> {},
-                this::handleLoginException,
-                this::doConfig
-            );
+            tryLogin(username, password);
         }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    void tryLogin(String username, String password){
+        Timber.d("retrieved username=%s and password=%s", username, password);
+        if (!username.contains("@")) username = username + "@gmail.com";
+
+        try{
+            authDialog.dismiss();
+        } catch (NullPointerException e) {
+            Timber.e(e.toString());
+        }
+        mActivity.enableSwitching = true;
+        mActivity.runOnUiThread(() -> mActivity.mPager.setCurrentItem(3));
+        mActivity.web = null;
+        authDialog = null;
+
+        GoogleLogin.login(mActivity, username, password)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                    n -> {},
+                    this::handleLoginException,
+                    this::doConfig
+            );
+    }
+
+    void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR){
             if (resultCode == RESULT_OK){
                 GoogleLogin.retryGoogleAuth(mActivity, username)
@@ -117,6 +121,7 @@ class IntroPresenter {
                         REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
             });
         } else {
+            t.printStackTrace();
             mActivity.makeLibraryError(R.string.intro_slide3_issue);
         }
     }

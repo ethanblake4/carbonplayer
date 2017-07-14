@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
             //t.start();
 
             setContentView(R.layout.activity_main);
-            ButterKnife.bind(this);
+            mainRecycler = (RecyclerView)findViewById(R.id.main_recycler);
 
 
             // use this setting to improve performance if you know that changes

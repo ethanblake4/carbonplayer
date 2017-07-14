@@ -67,10 +67,12 @@ public final class MusicLibrary {
                     Album a = null;
                     for (MusicTrack track : trackList) {
                         received.increment();
+                        String mAlbumID;
+                        mAlbumID = track.getAlbumId() == null ? "unknownID" : track.getAlbumId();
                         if (albumMatchesTrack(a, track))
                             a.addSong(track.getTrackId());
                         else {
-                            a = realm.where(Album.class).equalTo("id", track.getAlbumId())
+                            a = realm.where(Album.class).equalTo("id", mAlbumID)
                                     .or().beginGroup()
                                     .equalTo("id", track.getAlbum())
                                     .equalTo("artist", track.getArtist())

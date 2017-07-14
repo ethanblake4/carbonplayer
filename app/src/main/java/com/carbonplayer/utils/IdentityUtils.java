@@ -3,13 +3,17 @@ package com.carbonplayer.utils;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Point;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Px;
+import android.support.v4.app.NotificationCompat;
 import android.util.DisplayMetrics;
 import android.view.Display;
 
+import java.security.SecureRandom;
 import java.util.Locale;
 
 /**
@@ -42,6 +46,31 @@ public class IdentityUtils {
     public static String deviceId(@NonNull Context context){
         return Settings.Secure.getString(context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
+    }
+
+    public static boolean getDeviceIsSmartphone(@NonNull Context context){
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+
+        float yInches= metrics.heightPixels/metrics.ydpi;
+        float xInches= metrics.widthPixels/metrics.xdpi;
+        double diagonalInches = Math.sqrt(xInches*xInches + yInches*yInches);
+        if (diagonalInches>=6.5){
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    public static String getLoggingID(Context context){
+        SharedPreferences getPrefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+
+        String loggingID = getPrefs.getString("logging_id", "");
+        if(loggingID.equals("")){
+            loggingID = Long.toHexString(new SecureRandom().nextLong());
+            getPrefs.edit().putString("logging_id", loggingID).apply();
+        }
+        return loggingID;
     }
 
     public static String localeCode(){

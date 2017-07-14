@@ -44,7 +44,7 @@ public class ParcelableMusicTrack{
     }
 
     public ParcelableMusicTrack(MusicTrack source){
-        this.id = source.getTrackId();
+        this.id = source.getMostUsefulID();
         this.title = source.getTitle();
         this.artist = source.getArtist();
         this.album = source.getAlbum();

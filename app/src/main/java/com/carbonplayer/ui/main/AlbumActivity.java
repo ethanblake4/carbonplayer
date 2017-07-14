@@ -92,6 +92,8 @@ public class AlbumActivity extends AppCompatActivity {
 
         mAlbum = CarbonPlayerApplication.getInstance().currentAlbum;
 
+        Timber.d("album %s", mAlbum.getId());
+
         scrollView.getViewTreeObserver().addOnScrollChangedListener(scrollListener);
         layoutRoot.getViewTreeObserver().addOnGlobalLayoutListener(layoutListener);
 
@@ -117,13 +119,19 @@ public class AlbumActivity extends AppCompatActivity {
                     .intoTextColor(primaryText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
                     .intoTextColor(secondaryText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
                     .intoCallBack(palette -> {
-                        if(Color.red(ColorUtils.contrastColor(palette.getVibrantColor(0x555))) > 200) {
-                            fab.setBackgroundTintList(ColorStateList.valueOf(palette.getLightVibrantColor(0xf555)));
-                            nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getLightVibrantColor(0xf555));
+                        if(Color.red(ColorUtils.contrastColor(palette.getVibrantColor(Color.DKGRAY))) > 200) {
+                            Timber.d("red>200");
+                            fab.setBackgroundTintList(ColorStateList.valueOf(palette.getLightVibrantColor(Color.WHITE)));
+                            nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getLightVibrantColor(Color.WHITE));
                         } else {
-                            fab.setBackgroundTintList(ColorStateList.valueOf(palette.getDarkVibrantColor(0xf555)));
-                            fab.setImageTintList(ColorStateList.valueOf(palette.getVibrantColor(0xfddd)));
-                            nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getDarkVibrantColor(0xf555));
+                            Timber.d("not");
+                            ColorStateList s = ColorStateList.valueOf(palette.getDarkVibrantColor(Color.DKGRAY));
+                            ColorStateList t = ColorStateList.valueOf(palette.getVibrantColor(Color.WHITE));
+                            Timber.d(s.toString());
+                            Timber.d(t.toString());
+                            fab.setBackgroundTintList(s);
+                            fab.setImageTintList(t);
+                            nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getDarkVibrantColor(Color.DKGRAY));
                         }
                     })
             )
@@ -135,7 +143,7 @@ public class AlbumActivity extends AppCompatActivity {
             fab.setVisibility(View.VISIBLE);
             ScaleAnimation anim = new ScaleAnimation(0, 1, 0, 1, fab.getPivotX(), albumart.getHeight() - fabOffset);
             anim.setFillAfter(true);
-            anim.setDuration(300);
+            anim.setDuration(310);
             anim.setInterpolator(new FastOutSlowInInterpolator());
             fab.startAnimation(anim);
         }, 600);

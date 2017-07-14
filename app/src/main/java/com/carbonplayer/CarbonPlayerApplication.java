@@ -1,15 +1,21 @@
 package com.carbonplayer;
 import android.app.Application;
 import com.carbonplayer.model.entity.Album;
+import com.carbonplayer.utils.Preferences;
+import com.facebook.stetho.Stetho;
+import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
+import com.uphyca.stetho_realm.RealmInspectorModulesProvider;
 
+import butterknife.ButterKnife;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import okhttp3.OkHttpClient;
 import rx.plugins.RxJavaHooks;
 import timber.log.Timber;
 
@@ -23,8 +29,12 @@ public final class CarbonPlayerApplication extends Application{
 
     //Static variables (multiple-use version dependent)
     //public static String googleUserAgent = "CarbonGSF/0.2";
-    public static String googleUserAgent = "Android-Music/41201 (shieldtablet MRA58K); gzip";
+    public static String googleBuildNumber = "49211";
+    public static String googleUserAgent = "Android-Music/" + googleBuildNumber + " (shieldtablet MRA58K); gzip";
     public static boolean useWebAuthDialog = false;
+    public static boolean useOkHttpForLogin = true;
+
+    public Preferences preferences;
 
     //Instance variables
     public Album currentAlbum;
@@ -34,6 +44,11 @@ public final class CarbonPlayerApplication extends Application{
         super.onCreate();
         mInstance = this;
 
+        preferences = new Preferences(getApplicationContext());
+
+        preferences.save();
+
+
         initializeTimber();
         RxJavaHooks.setOnError(e -> Timber.e(e.toString()));
 
@@ -41,6 +56,14 @@ public final class CarbonPlayerApplication extends Application{
         // Configure default configuration for Realm
         RealmConfiguration realmConfig = new RealmConfiguration.Builder().build();
         Realm.setDefaultConfiguration(realmConfig);
+
+        Stetho.initialize(
+                Stetho.newInitializerBuilder(this)
+                        .enableDumpapp(Stetho.defaultDumperPluginsProvider(this))
+                        .enableWebKitInspector(RealmInspectorModulesProvider.builder(this).build())
+                        .build());
+
+        ButterKnife.setDebug(true);
     }
 
     /**
@@ -52,6 +75,14 @@ public final class CarbonPlayerApplication extends Application{
 
     public static CarbonPlayerApplication getInstance() {
         return mInstance;
+    }
+
+    public static OkHttpClient getOkHttpClient(){
+        return new OkHttpClient.Builder().addNetworkInterceptor(new StethoInterceptor()).build();
+    }
+
+    public static OkHttpClient getOkHttpClient(OkHttpClient.Builder builder){
+        return builder.addNetworkInterceptor(new StethoInterceptor()).build();
     }
 
     public DataSource.Factory buildDataSourceFactory(DefaultBandwidthMeter bandwidthMeter) {

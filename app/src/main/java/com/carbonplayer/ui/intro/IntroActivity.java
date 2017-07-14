@@ -17,6 +17,7 @@ import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -152,8 +153,13 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
                 }
             });
         } else {
-            //authDialog.setContentView(R.layout.auth_dialog_std);
-            //authDialog.getWindow().getContentScene().getSceneRoot().findViewById(R.id.)
+            authDialog.setContentView(R.layout.auth_dialog_std);
+            mPresenter.setAuthDialog(authDialog);
+            authDialog.findViewById(R.id.sign_in_dialog_button).setOnClickListener(v -> {
+                String user = ((EditText)authDialog.findViewById(R.id.sign_in_username_email)).getText().toString();
+                String pass = ((EditText)authDialog.findViewById(R.id.sign_in_dialog_password)).getText().toString();
+                mPresenter.tryLogin(user, pass);
+            });
 
         }
 

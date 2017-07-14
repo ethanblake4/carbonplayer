@@ -24,12 +24,14 @@ import com.google.android.gms.auth.UserRecoverableAuthException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.Buffer;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -44,7 +46,13 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.HttpsURLConnection;
 
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import rx.Observable;
+import timber.log.Timber;
 
 /**
  * Contains methods used to authenticate to Google services,
@@ -59,6 +67,8 @@ public final class GoogleLogin {
             "AAAAgMom/1a/v0lblO2Ubrt60J2gcuXSljGFQXgcyZWveWLEwo6prwgi3iJIZdodyhKZ" +
             "QrNWp5nKJ3srRXcUW+F1BD3baEVGcmEgqaLZUNBjm057pKRI16kB0YppeGx5qIQ5QjKz" +
             "sR8ETQbKLNWgRY0QRNVz34kMJR3P/LgHax/6rmf5AAAAAwEAAQ==";
+
+    private static final String LOGIN_SDK_VERSION = "17";
 
     /**
      * @param login - your mail, should looks like myemail@gmail.com
@@ -152,6 +162,7 @@ public final class GoogleLogin {
         ArrayMap<String, String> response = new ArrayMap<>();
 
         try {
+
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             conn.setReadTimeout(10000);
             conn.setConnectTimeout(15000);
@@ -192,6 +203,32 @@ public final class GoogleLogin {
         return response;
     }
 
+    private static ArrayMap<String, String> okLoginCall(String url, FormBody body){
+        OkHttpClient client = CarbonPlayerApplication.getOkHttpClient();
+        ArrayMap<String, String> response = new ArrayMap<>();
+        Request request = new Request.Builder()
+                .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
+                .url(url)
+                .post(body)
+                .build();
+        try {
+            Response r = client.newCall(request).execute();
+            if(r.isSuccessful()) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(r.body().byteStream()));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] s = line.split("=");
+                    response.put(s[0], s[1]);
+                }
+            } else {
+                return null;
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+        return response;
+    }
+
     private static String performMasterLogin(String email, String password, String androidId){
 
         ArrayMap<String, String> response;
@@ -211,7 +248,7 @@ public final class GoogleLogin {
                     .appendQueryParameter("device_country", "us")
                     .appendQueryParameter("operatorCountry", "us")
                     .appendQueryParameter("lang", "en")
-                    .appendQueryParameter("sdk_version", "17");
+                    .appendQueryParameter("sdk_version", LOGIN_SDK_VERSION);
 
             response = loginCall(url, builder);
 
@@ -226,6 +263,64 @@ public final class GoogleLogin {
 
         return null;
 
+    }
+
+    private static String okPerformMasterLogin(String email, String password, String androidId){
+
+        FormBody body;
+
+        try {
+            body = new FormBody.Builder()
+                    .add("accountType", "HOSTED_OR_GOOGLE")
+                    .add("Email", email)
+                    .add("has_permission", "1")
+                    .add("EncryptedPasswd", encrypt(email, password))
+                    .add("service", "ac2dm")
+                    .add("source", "android")
+                    .add("androidId", androidId)
+                    .add("device_country", "us")
+                    .add("operatorCountry", "us")
+                    .add("lang", "en")
+                    .add("sdk_version", LOGIN_SDK_VERSION)
+                    .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        ArrayMap<String, String> response;
+        response = okLoginCall("https://android.clients.google.com/auth", body);
+
+        if(response == null) return null;
+
+        if(!response.containsKey("Token")) {Log.d("GPS", "issue"); return null; }
+        return response.get("Token");
+    }
+
+    private static String okPerformOAuth(String email, String masterToken, String androidId){
+        FormBody body = new FormBody.Builder()
+                .add("accountType", "HOSTED_OR_GOOGLE")
+                .add("Email", email)
+                .add("has_permission", "1")
+                .add("add_account", "1")
+                .add("EncryptedPasswd", masterToken)
+                .add("service", "sj")
+                .add("source", "android")
+                .add("androidId", androidId)
+                .add("app", "com.google.android.music")
+                .add("client_sig", "38918a453d07199354f8b19af05ec6562ced5788")
+                .add("device_country", "us")
+                .add("operatorCountry", "us")
+                .add("lang", "en")
+                .add("sdk_version", LOGIN_SDK_VERSION)
+                .build();
+        ArrayMap<String, String> response;
+        response = okLoginCall("https://android.clients.google.com/auth", body);
+
+        if(response == null) return null;
+
+        if(!response.containsKey("Auth")) return null;
+        return response.get("Auth");
     }
 
     private static String performOAuth(String email, String masterToken, String androidId){
@@ -250,7 +345,7 @@ public final class GoogleLogin {
                     .appendQueryParameter("device_country", "us")
                     .appendQueryParameter("operatorCountry", "us")
                     .appendQueryParameter("lang", "en")
-                    .appendQueryParameter("sdk_version", "17" );
+                    .appendQueryParameter("sdk_version", LOGIN_SDK_VERSION);
 
             response = loginCall(url, builder);
 
@@ -285,13 +380,18 @@ public final class GoogleLogin {
 
             SharedPreferences.Editor edit = prefs.edit();
 
-            String masterToken = performMasterLogin(email, password, androidId);
+            String masterToken = CarbonPlayerApplication.useOkHttpForLogin ?
+                    okPerformMasterLogin(email, password, androidId) :
+                    performMasterLogin(email, password, androidId);
             if(masterToken == null) {
                 subscriber.onError(new Exception());
                 subscriber.onCompleted();
             }
 
-            String OAuthToken = performOAuth(email, masterToken, androidId);
+            String OAuthToken = CarbonPlayerApplication.useOkHttpForLogin ?
+                    okPerformOAuth(email, masterToken, androidId) :
+                    performOAuth(email, masterToken, androidId);
+
             if(OAuthToken == null) {
                 subscriber.onError(new Exception());
                 subscriber.onCompleted();
@@ -299,8 +399,18 @@ public final class GoogleLogin {
             edit.putString("OAuthToken", OAuthToken);
 
             String mAuthToken = "";
+            Account[] accounts = AccountManager.get(context).getAccounts();
+            try{
+                for(Account a: accounts){
+                    Timber.d(a.name);
+                    Timber.d(a.type);
+                }
+                //mAuthToken = GoogleAuthUtil.getToken(context, AccountManager.get(context).getAccounts()[0], "oauth2:https://www.googleapis.com/auth/skyjam");
+            } catch (Exception ex) {
+                subscriber.onError(ex);
+            }
+
             try {
-                //Account account = new Account(email, "com.google"); TODO fix deprecation, not sure if this will work
                 mAuthToken = GoogleAuthUtil.getToken(context, email /*account*/, "oauth2:https://www.googleapis.com/auth/skyjam");
             } catch (IOException | GoogleAuthException ex) {
                 edit.apply();
@@ -321,8 +431,12 @@ public final class GoogleLogin {
 
             String mAuthToken = "";
             try {
-                //Account account = new Account(email, "com.google"); TODO fix deprecation, not sure if this will work
-                mAuthToken = GoogleAuthUtil.getToken(context, email /*account*/, "oauth2:https://www.googleapis.com/auth/skyjam");
+                Account[] accounts = AccountManager.get(context).getAccounts();
+                for(Account a: accounts){
+                    Timber.d(a.name);
+                    Timber.d(a.type);
+                }
+                mAuthToken = GoogleAuthUtil.getToken(context, AccountManager.get(context).getAccounts()[0], "oauth2:https://www.googleapis.com/auth/skyjam");
             } catch (IOException | GoogleAuthException ex) {
                 subscriber.onError(ex);
             }
@@ -337,6 +451,5 @@ public final class GoogleLogin {
             subscriber.onCompleted();
         });
     }
-
 
 }

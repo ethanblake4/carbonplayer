@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.net.UrlQuerySanitizer;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -51,6 +52,8 @@ import com.google.android.exoplayer2.util.Util;
 import org.parceler.Parcels;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import rx.android.schedulers.AndroidSchedulers;
@@ -98,6 +101,8 @@ public final class MusicPlayerService extends Service
     private MappingTrackSelector trackSelector;
     private DataSource.Factory mediaDataSourceFactory;
 
+    private long mCurrentExpireTimestamp;
+
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
     Handler mainHandler;
 
@@ -122,7 +127,7 @@ public final class MusicPlayerService extends Service
                 isPlaying = !isPlaying;
                 emit(isPlaying ? Event.Play : Event.Pause);
                 updateNotification(tracks.get(currentTrack));
-                updatePlayer();
+                updatePlayer(true);
                 break;
             case Constants.ACTION.NEXT:
                 Timber.i("Clicked Next");
@@ -177,7 +182,7 @@ public final class MusicPlayerService extends Service
         player.addListener(this);
 
         updateNotification(tracks.get(currentTrack));
-        updatePlayer();
+        updatePlayer(true);
     }
 
     private void updateNotification(ParcelableMusicTrack track){
@@ -231,7 +236,7 @@ public final class MusicPlayerService extends Service
         }
     }
 
-    private void updatePlayer(){
+    private void updatePlayer(boolean resetPosition){
         Timber.d("updatePlayer called: %s", tracks.get(currentTrack).getId());
         //if(isPlaying){
             //player = ExoPlayer.Factory.newInstance(1);
@@ -240,8 +245,18 @@ public final class MusicPlayerService extends Service
                     .observeOn(AndroidSchedulers.from(getMainLooper()))
                     .subscribe(url -> {
                         Timber.d("Stream Url retrieved: %s", url);
+
+                        UrlQuerySanitizer sanitizer = new UrlQuerySanitizer();
+                        try {
+                            Uri uri=Uri.parse(url);
+                            mCurrentExpireTimestamp = Long.parseLong(uri.getQueryParameter("expire")); // get your value
+                        } catch(Exception e) {
+                            e.printStackTrace();
+                            mCurrentExpireTimestamp = (System.currentTimeMillis()/1000) + 100;
+                        }
+
                         MediaSource mediaSource = buildMediaSource(Uri.parse(url), "");
-                        player.prepare(mediaSource, true);
+                        player.prepare(mediaSource, resetPosition);
                         player.setPlayWhenReady(true);
                         //player.prepare();
                     }, error -> Timber.d(error, "getstreamURL"));
@@ -335,7 +350,7 @@ public final class MusicPlayerService extends Service
             default:
                 msg = Message.obtain(null, e.ordinal());
         }
-        for (Messenger m : clients) {
+        for (Messenger m: clients) {
             try {
                 m.send(msg);
             } catch (RemoteException exception) {
@@ -360,7 +375,14 @@ public final class MusicPlayerService extends Service
     private MediaSource buildMediaSource(Uri uri, String overrideExtension) {
 
         return new ExtractorMediaSource(uri, mediaDataSourceFactory, new DefaultExtractorsFactory(),
-                mainHandler, error -> Timber.e("Error", error));
+                mainHandler, error -> {
+                    Timber.e("Error", error);
+                    Timber.d("mcurrentexpireTimestamp: %d vs time: %d", mCurrentExpireTimestamp, System.currentTimeMillis()/1000);
+                    if(mCurrentExpireTimestamp <= System.currentTimeMillis()/1000) {
+                        updatePlayer(false);
+                    }
+
+        });
 
         /*int type = Util.inferContentType(!TextUtils.isEmpty(overrideExtension) ? "." + overrideExtension
                 : uri.getLastPathSegment());

@@ -19,6 +19,7 @@ public class MusicTrack extends RealmObject {
     public static final String ID = "id";
 
     @PrimaryKey private String id;
+    private String clientId;
     private Date recentTimestamp;
     private boolean deleted; //?
     private String title;
@@ -37,15 +38,17 @@ public class MusicTrack extends RealmObject {
     private int estimatedSize;
     private String albumId;
     private RealmList<RealmString> artistId;
+    private String nid;
 
     public MusicTrack(){}
 
     public MusicTrack(String id, Date recentTimestamp, boolean deleted, String title, String artist, String composer,
                       String album, Integer year, String comment, Integer trackNumber, String genre, int durationMillis,
                       Integer beatsPerMinute, String albumArtURL, int playCount, String rating, int estimatedSize,
-                      String albumId, RealmList<RealmString> artistId) {
+                      String albumId, RealmList<RealmString> artistId, String clientId, String nid) {
         this.id = id;
         this.recentTimestamp = recentTimestamp;
+        this.clientId = clientId;
         this.deleted = deleted;
         this.title = title;
         this.artist = artist;
@@ -63,6 +66,7 @@ public class MusicTrack extends RealmObject {
         this.estimatedSize = estimatedSize;
         this.albumId = albumId;
         this.artistId = artistId;
+        this.nid = nid;
     }
 
 
@@ -70,6 +74,8 @@ public class MusicTrack extends RealmObject {
         if(!trackJson.getString("kind").equals("sj#track")) return;
 
         id = trackJson.getString("id");
+        if(trackJson.has("clientId"))
+            clientId = trackJson.getString("clientId");
         recentTimestamp = new Date(Long.parseLong(trackJson.getString("recentTimestamp").substring(0,10)));
         deleted = trackJson.getBoolean("deleted");
         title = trackJson.getString("title");
@@ -101,6 +107,7 @@ public class MusicTrack extends RealmObject {
             artistId = new RealmList<>();
             for (int i = 0; i < artist_ids.length(); i++) artistId.add(new RealmString(artist_ids.getString(i)));
         }
+        if(trackJson.has("nid")) nid = trackJson.getString("nid");
     }
 
     public String getTrackId() {
@@ -110,6 +117,10 @@ public class MusicTrack extends RealmObject {
     public void setTrackId(String id) {
         this.id = id;
     }
+
+    public String getClientId() {return clientId;}
+
+    public void setClientId(String clientId) {this.clientId = clientId;}
 
     public Date getRecentTimestamp() {
         return recentTimestamp;
@@ -253,6 +264,16 @@ public class MusicTrack extends RealmObject {
 
     public void setArtistId(RealmList<RealmString> artistId) {
         this.artistId = artistId;
+    }
+
+    public String getNid() {return nid;}
+
+    public void setNid(String nid) { this.nid = nid; }
+
+    public String getMostUsefulID(){
+        if(nid != null) return nid;
+        if(clientId != null) return clientId;
+        return id;
     }
 
     @Override

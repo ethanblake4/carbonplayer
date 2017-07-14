@@ -26,10 +26,10 @@ open class Album(
 
 ) : RealmObject() {
 
-    constructor(track: MusicTrack) : this(track.albumId, track.recentTimestamp,
-            if (track.album != "") track.album else "Unknown album", track.artist,
-            track.composer, track.year, track.genre, track.albumArtURL,
-            track.artistId, RealmList(RealmString(track.trackId)))
+    constructor(track: MusicTrack) : this(track.albumId?: "unknownID", track.recentTimestamp,
+            if (track.album != "") (track.album?: "") else "Unknown album", track.artist?: "",
+            track.composer?: "", track.year?: 0, track.genre?: "", track.albumArtURL?: "",
+            track.artistId?: RealmList(), RealmList(RealmString(track.trackId)))
 
 
     var title = _title
