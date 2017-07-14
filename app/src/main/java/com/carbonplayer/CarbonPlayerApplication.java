@@ -45,32 +45,28 @@ public final class CarbonPlayerApplication extends Application{
         mInstance = this;
 
         preferences = new Preferences(getApplicationContext());
+        preferences.load();
 
-        preferences.save();
+        if(BuildConfig.DEBUG){
+            Timber.plant(new Timber.DebugTree());
 
+            Stetho.initialize(
+                    Stetho.newInitializerBuilder(this)
+                            .enableDumpapp(Stetho.defaultDumperPluginsProvider(this))
+                            .enableWebKitInspector(RealmInspectorModulesProvider.builder(this).build())
+                            .build());
 
-        initializeTimber();
+            ButterKnife.setDebug(true);
+        } else {
+            
+        }
+
         RxJavaHooks.setOnError(e -> Timber.e(e.toString()));
 
         Realm.init(this);
         // Configure default configuration for Realm
         RealmConfiguration realmConfig = new RealmConfiguration.Builder().build();
         Realm.setDefaultConfiguration(realmConfig);
-
-        Stetho.initialize(
-                Stetho.newInitializerBuilder(this)
-                        .enableDumpapp(Stetho.defaultDumperPluginsProvider(this))
-                        .enableWebKitInspector(RealmInspectorModulesProvider.builder(this).build())
-                        .build());
-
-        ButterKnife.setDebug(true);
-    }
-
-    /**
-     * Initialize Timber logging
-     */
-    private void initializeTimber() {
-        Timber.plant(new Timber.DebugTree());
     }
 
     public static CarbonPlayerApplication getInstance() {
