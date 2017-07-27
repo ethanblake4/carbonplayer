@@ -11,6 +11,8 @@ import org.parceler.Parcel;
 public class ParcelableMusicTrack{
     int position;
     String id;
+    String clientId;
+    String nid;
     String title;
     String artist;
     String album;
@@ -44,7 +46,9 @@ public class ParcelableMusicTrack{
     }
 
     public ParcelableMusicTrack(MusicTrack source){
-        this.id = source.getMostUsefulID();
+        this.id = source.getTrackId();
+        this.clientId = source.getClientId();
+        this.nid = source.getNid();
         this.title = source.getTitle();
         this.artist = source.getArtist();
         this.album = source.getAlbum();
@@ -63,6 +67,22 @@ public class ParcelableMusicTrack{
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public String getNid() {
+        return nid;
+    }
+
+    public void setNid(String nid) {
+        this.nid = nid;
     }
 
     public String getTitle() {

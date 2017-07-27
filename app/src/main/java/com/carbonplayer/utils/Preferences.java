@@ -4,10 +4,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import com.carbonplayer.model.entity.constants.StreamQuality;
+import com.carbonplayer.model.entity.enums.StreamQuality;
 
 import java.lang.reflect.Field;
 
+import okhttp3.CookieJar;
 import timber.log.Timber;
 
 /**
@@ -21,11 +22,35 @@ public class Preferences {
     /*Shared Variables**/
 
     //Device
-    public StreamQuality preferredStreamQualityWifi;
+    public String userEmail;
 
+    public StreamQuality preferredStreamQualityWifi;
+    public StreamQuality preferredStreamQualityMobile;
+
+    public String BearerAuth;
+    public String OAuthToken;
+
+    public int maxAudioCacheSizeMB = 1024;
 
     public Preferences(Context context){
         appContext = context;
+    }
+
+    public StreamQuality getPreferredStreamQuality(Context context){
+        switch(IdentityUtils.networkType(context)) {
+            case WIFI:
+            case ETHER:
+                return preferredStreamQualityWifi;
+            case MOBILE:
+            default:
+                return preferredStreamQualityMobile;
+        }
+    }
+
+    public int getTargetKbps(){
+        if (preferredStreamQualityWifi == StreamQuality.HIGH) return 320;
+        if (preferredStreamQualityWifi == StreamQuality.MEDIUM) return 160;
+        return 128;
     }
 
     public void load(){

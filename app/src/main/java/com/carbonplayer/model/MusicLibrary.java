@@ -6,9 +6,9 @@ import android.support.annotation.UiThread;
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.model.entity.ConfigEntry;
 import com.carbonplayer.model.entity.primitive.FinalBool;
-import com.carbonplayer.model.entity.primitive.FinalInt;
 import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.exception.NoNautilusException;
+import com.carbonplayer.model.entity.primitive.RealmInteger;
 import com.carbonplayer.model.network.Protocol;
 
 import java.util.LinkedList;
@@ -60,7 +60,7 @@ public final class MusicLibrary {
         Observable<LinkedList<MusicTrack>> trackObservable = Protocol.listTracks(context)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
-        final FinalInt received = new FinalInt();
+        final RealmInteger received = new RealmInteger();
         trackObservable.subscribe(trackList -> {
             realm.executeTransactionAsync(realm-> {
                     realm.insertOrUpdate(trackList);

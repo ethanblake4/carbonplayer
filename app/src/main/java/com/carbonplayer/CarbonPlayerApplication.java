@@ -1,5 +1,7 @@
 package com.carbonplayer;
 import android.app.Application;
+import android.os.Build;
+
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.utils.CrashReportingTree;
 import com.carbonplayer.utils.Preferences;
@@ -32,7 +34,7 @@ public final class CarbonPlayerApplication extends Application{
     //Static variables (multiple-use version dependent)
     //public static String googleUserAgent = "CarbonGSF/0.2";
     public static String googleBuildNumber = "49211";
-    public static String googleUserAgent = "Android-Music/" + googleBuildNumber + " (shieldtablet MRA58K); gzip";
+    public static String googleUserAgent = "Android-Music/" + googleBuildNumber + " ("+Build.PRODUCT+" "+Build.ID+"); gzip";
     public static boolean useWebAuthDialog = false;
     public static boolean useOkHttpForLogin = true;
 
@@ -75,6 +77,8 @@ public final class CarbonPlayerApplication extends Application{
         return mInstance;
     }
 
+    public static Preferences preferences() {return mInstance.preferences;}
+
     public static OkHttpClient getOkHttpClient(){
         return new OkHttpClient.Builder().addNetworkInterceptor(new StethoInterceptor()).build();
     }
@@ -86,6 +90,8 @@ public final class CarbonPlayerApplication extends Application{
     public DataSource.Factory buildDataSourceFactory(DefaultBandwidthMeter bandwidthMeter) {
         return new DefaultDataSourceFactory(this, bandwidthMeter,
                 buildHttpDataSourceFactory(bandwidthMeter));
+
+
     }
 
     public HttpDataSource.Factory buildHttpDataSourceFactory(DefaultBandwidthMeter bandwidthMeter) {

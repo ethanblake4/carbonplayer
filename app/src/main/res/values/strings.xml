@@ -30,4 +30,13 @@
     <string name="sign_in_dialog_header">Sign in to your Google Account</string>
     <string name="username">Username/Email</string>
     <string name="password">Password</string>
+
+    <string name="serverrejectionexception_another_stream_being_played">Another stream is being played.</string>
+    <string name="serverrejectionexception_stream_rate_limit_reached">Rate limit reached for streaming.</string>
+    <string name="serverrejectionexception_device_not_authorized">Device not authorized.</string>
+    <string name="serverrejectionexception_track_not_in_subscription">Track is not available to your subscription level.</string>
+    <string name="serverrejectionexception_device_version_blacklisted">This device or app version is blacklisted.</string>
+
+    <string name="error_internal_error">Internal error.</string>
+    <string name="error_unknown_error">Internal error.</string>
 </resources>

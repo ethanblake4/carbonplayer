@@ -4,8 +4,10 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -17,6 +19,9 @@ import android.widget.Toast;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.model.entity.primitive.Null;
+import com.carbonplayer.utils.Constants;
+import com.carbonplayer.utils.IdentityUtils;
+import com.carbonplayer.utils.Preferences;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.UserRecoverableAuthException;
@@ -68,7 +73,7 @@ public final class GoogleLogin {
             "QrNWp5nKJ3srRXcUW+F1BD3baEVGcmEgqaLZUNBjm057pKRI16kB0YppeGx5qIQ5QjKz" +
             "sR8ETQbKLNWgRY0QRNVz34kMJR3P/LgHax/6rmf5AAAAAwEAAQ==";
 
-    private static final String LOGIN_SDK_VERSION = "17";
+    private static final String LOGIN_SDK_VERSION = String.valueOf(Build.VERSION.SDK_INT);
 
     /**
      * @param login - your mail, should looks like myemail@gmail.com
@@ -148,7 +153,6 @@ public final class GoogleLogin {
     * Function credits - Dima Kovalenko (http://codedigging.com/blog/2014-06-09-about-encryptedpasswd/)
     */
     private static int readInt(byte[] arrayOfByte, int start) {
-        //return 0x0 | (0xFF & arrayOfByte[start]) << 24 | (0xFF & arrayOfByte[(start + 1)]) << 16 | (0xFF & arrayOfByte[(start + 2)]) << 8 | 0xFF & arrayOfByte[(start + 3)];
         return (0xFF & arrayOfByte[start]) << 24 | (0xFF & arrayOfByte[(start + 1)]) << 16 | (0xFF & arrayOfByte[(start + 2)]) << 8 | 0xFF & arrayOfByte[(start + 3)];
     }
 
@@ -245,9 +249,9 @@ public final class GoogleLogin {
                     .appendQueryParameter("service", "ac2dm")
                     .appendQueryParameter("source", "android")
                     .appendQueryParameter("androidId", androidId)
-                    .appendQueryParameter("device_country", "us")
-                    .appendQueryParameter("operatorCountry", "us")
-                    .appendQueryParameter("lang", "en")
+                    .appendQueryParameter("device_country", IdentityUtils.getDeviceCountryCode())
+                    .appendQueryParameter("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.getInstance()))
+                    .appendQueryParameter("lang", IdentityUtils.getDeviceLanguage())
                     .appendQueryParameter("sdk_version", LOGIN_SDK_VERSION);
 
             response = loginCall(url, builder);
@@ -278,9 +282,9 @@ public final class GoogleLogin {
                     .add("service", "ac2dm")
                     .add("source", "android")
                     .add("androidId", androidId)
-                    .add("device_country", "us")
-                    .add("operatorCountry", "us")
-                    .add("lang", "en")
+                    .add("device_country", IdentityUtils.getDeviceCountryCode())
+                    .add("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.getInstance()))
+                    .add("lang", IdentityUtils.getDeviceLanguage())
                     .add("sdk_version", LOGIN_SDK_VERSION)
                     .build();
         } catch (Exception e) {
@@ -342,9 +346,9 @@ public final class GoogleLogin {
                     .appendQueryParameter("androidId", androidId)
                     .appendQueryParameter("app", "com.google.android.music")
                     .appendQueryParameter("client_sig", "38918a453d07199354f8b19af05ec6562ced5788")
-                    .appendQueryParameter("device_country", "us")
-                    .appendQueryParameter("operatorCountry", "us")
-                    .appendQueryParameter("lang", "en")
+                    .appendQueryParameter("device_country", IdentityUtils.getDeviceCountryCode())
+                    .appendQueryParameter("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.getInstance()))
+                    .appendQueryParameter("lang", IdentityUtils.getDeviceLanguage())
                     .appendQueryParameter("sdk_version", LOGIN_SDK_VERSION);
 
             response = loginCall(url, builder);
@@ -375,81 +379,86 @@ public final class GoogleLogin {
             String androidId = Settings.Secure.getString(context.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
 
-            SharedPreferences prefs = PreferenceManager
-                    .getDefaultSharedPreferences(context.getBaseContext());
-
-            SharedPreferences.Editor edit = prefs.edit();
-
             String masterToken = CarbonPlayerApplication.useOkHttpForLogin ?
                     okPerformMasterLogin(email, password, androidId) :
                     performMasterLogin(email, password, androidId);
+
             if(masterToken == null) {
                 subscriber.onError(new Exception());
                 subscriber.onCompleted();
             }
 
-            String OAuthToken = CarbonPlayerApplication.useOkHttpForLogin ?
+            String oAuthToken = CarbonPlayerApplication.useOkHttpForLogin ?
                     okPerformOAuth(email, masterToken, androidId) :
                     performOAuth(email, masterToken, androidId);
 
-            if(OAuthToken == null) {
+            if(oAuthToken == null) {
                 subscriber.onError(new Exception());
                 subscriber.onCompleted();
             }
-            edit.putString("OAuthToken", OAuthToken);
 
-            String mAuthToken = "";
-            Account[] accounts = AccountManager.get(context).getAccounts();
-            try{
-                for(Account a: accounts){
-                    Timber.d(a.name);
-                    Timber.d(a.type);
-                }
-                //mAuthToken = GoogleAuthUtil.getToken(context, AccountManager.get(context).getAccounts()[0], "oauth2:https://www.googleapis.com/auth/skyjam");
-            } catch (Exception ex) {
-                subscriber.onError(ex);
-            }
+            CarbonPlayerApplication.preferences().OAuthToken = oAuthToken;
 
+            String mAuthToken = null;
             try {
-                mAuthToken = GoogleAuthUtil.getToken(context, email /*account*/, "oauth2:https://www.googleapis.com/auth/skyjam");
+                Account[] accounts = AccountManager.get(context).getAccounts();
+                for(Account a: accounts){
+                    Timber.d("|%s|",a.name);
+                    Timber.d(a.type);
+                    if(a.type.equals("com.google") && a.name.equals(email)){
+                        mAuthToken = GoogleAuthUtil.getToken(context, a, "oauth2:https://www.googleapis.com/auth/skyjam");
+                    }
+                }
+                if(mAuthToken==null){
+                    //noinspection deprecation
+                    mAuthToken = GoogleAuthUtil.getToken(context, email, "oauth2:https://www.googleapis.com/auth/skyjam");
+                }
+
             } catch (IOException | GoogleAuthException ex) {
-                edit.apply();
+                CarbonPlayerApplication.preferences().save();
                 subscriber.onError(ex);
                 subscriber.onCompleted();
             }
 
-            edit.putString("BearerAuth", mAuthToken);
-            edit.apply();
+            CarbonPlayerApplication.preferences().BearerAuth = mAuthToken;
+            CarbonPlayerApplication.preferences().save();
 
             subscriber.onCompleted();
         });
 
     }
 
-    public static Observable<Null> retryGoogleAuth(@NonNull Activity context, @NonNull String email){
+    public static Observable<Null> retryGoogleAuth(@NonNull Context context, @NonNull String email){
         return Observable.create(subscriber -> {
 
-            String mAuthToken = "";
+            String mAuthToken = null;
             try {
                 Account[] accounts = AccountManager.get(context).getAccounts();
                 for(Account a: accounts){
-                    Timber.d(a.name);
+                    Timber.d("|%s|", a.name);
                     Timber.d(a.type);
+                    if(a.type.equals("com.google") && a.name.equals(email)){
+                        mAuthToken = GoogleAuthUtil.getToken(context, a, "oauth2:https://www.googleapis.com/auth/skyjam");
+                    }
                 }
-                mAuthToken = GoogleAuthUtil.getToken(context, AccountManager.get(context).getAccounts()[0], "oauth2:https://www.googleapis.com/auth/skyjam");
+                if(mAuthToken==null){
+                    //noinspection deprecation
+                    mAuthToken = GoogleAuthUtil.getToken(context, email, "oauth2:https://www.googleapis.com/auth/skyjam");
+                }
+
             } catch (IOException | GoogleAuthException ex) {
                 subscriber.onError(ex);
             }
 
-            SharedPreferences prefs = PreferenceManager
-                    .getDefaultSharedPreferences(context.getBaseContext());
-
-            SharedPreferences.Editor edit = prefs.edit();
-            edit.putString("BearerAuth", mAuthToken);
-            edit.apply();
+            CarbonPlayerApplication.preferences().BearerAuth = mAuthToken;
+            CarbonPlayerApplication.preferences().save();
 
             subscriber.onCompleted();
         });
+    }
+
+    public static Observable<Null> retryGoogleAuth(@NonNull Context context){
+        return retryGoogleAuth(context, CarbonPlayerApplication.preferences().userEmail);
     }
 
 }

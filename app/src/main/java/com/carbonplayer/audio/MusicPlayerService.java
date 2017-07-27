@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.PlaybackParams;
 import android.net.Uri;
 import android.net.UrlQuerySanitizer;
 import android.net.wifi.WifiManager;
@@ -23,7 +24,9 @@ import android.widget.Toast;
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.ParcelableMusicTrack;
+import com.carbonplayer.model.entity.exception.ServerRejectionException;
 import com.carbonplayer.model.network.Protocol;
+import com.carbonplayer.model.network.StreamManager;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.utils.Constants;
 import com.google.android.exoplayer2.C;
@@ -56,7 +59,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 import timber.log.Timber;
 
@@ -70,6 +75,8 @@ public final class MusicPlayerService extends Service
 
     AudioFocusHelper audioFocusHelper = null;
     AudioFocus audioFocus;
+
+    private StreamManager streamManager;
 
     enum AudioFocus {
         NoFocusNoDuck,
@@ -171,6 +178,13 @@ public final class MusicPlayerService extends Service
 
         currentTrack = 0;
 
+        try {
+            streamManager = new StreamManager(tracks);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Timber.e(e, "Exception while creating StreamManager");
+        }
+
         // 1. Create a default TrackSelector
         mediaDataSourceFactory = buildDataSourceFactory(true);
         mainHandler = new Handler();
@@ -179,6 +193,7 @@ public final class MusicPlayerService extends Service
         trackSelector = new DefaultTrackSelector(mainHandler, videoTrackSelectionFactory);
         trackSelector.addListener(this);
         player = ExoPlayerFactory.newSimpleInstance(this, trackSelector, new DefaultLoadControl());
+
         player.addListener(this);
 
         updateNotification(tracks.get(currentTrack));
@@ -240,13 +255,55 @@ public final class MusicPlayerService extends Service
         Timber.d("updatePlayer called: %s", tracks.get(currentTrack).getId());
         //if(isPlaying){
             //player = ExoPlayer.Factory.newInstance(1);
+        streamManager.getLocalStreamUrlForCurrentTrack(this)
+                .subscribeOn(Schedulers.io())
+                /*.retry((retries, throwable) -> {
+                    if(throwable instanceof ServerRejectionException) {
+                        ServerRejectionException exception = (ServerRejectionException) throwable;
+                        switch(exception.getRejectionReason()){
+                            case DEVICE_NOT_AUTHORIZED:
+                                if (retries < 2) return true;
+                            default: {}
+                        }
+                    }
+                    return false;
+                })*/
+                .observeOn(AndroidSchedulers.from(getMainLooper()))
+                .subscribe(pair -> {
+                    String url = pair.first;
+                    pair.second.subscribe(f -> Timber.d("Progress: %d", f));
+                    Timber.d("Local stream Url retrieved: %s", url);
+
+                    /*try {
+                        Uri uri=Uri.parse(url);
+                        //mCurrentExpireTimestamp = Long.parseLong(uri.getQueryParameter("expire")); // get your value
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                        //mCurrentExpireTimestamp = (System.currentTimeMillis()/1000) + 100;
+                    }*/
+
+                    MediaSource mediaSource = buildMediaSource(Uri.parse(url), "");
+                    player.prepare(mediaSource, resetPosition);
+                    if(resetPosition) player.setPlayWhenReady(true);
+                }, error -> emit(Event.Error, error));
+        /*
             Protocol.getStreamURL(this, tracks.get(currentTrack).getId())
                     .subscribeOn(Schedulers.io())
+                    .retry((retries, throwable) -> {
+                        if(throwable instanceof ServerRejectionException) {
+                            ServerRejectionException exception = (ServerRejectionException) throwable;
+                            switch(exception.getRejectionReason()){
+                                case DEVICE_NOT_AUTHORIZED:
+                                    if (retries < 2) return true;
+                                default: {}
+                            }
+                        }
+                        return false;
+                    })
                     .observeOn(AndroidSchedulers.from(getMainLooper()))
                     .subscribe(url -> {
                         Timber.d("Stream Url retrieved: %s", url);
 
-                        UrlQuerySanitizer sanitizer = new UrlQuerySanitizer();
                         try {
                             Uri uri=Uri.parse(url);
                             mCurrentExpireTimestamp = Long.parseLong(uri.getQueryParameter("expire")); // get your value
@@ -257,12 +314,8 @@ public final class MusicPlayerService extends Service
 
                         MediaSource mediaSource = buildMediaSource(Uri.parse(url), "");
                         player.prepare(mediaSource, resetPosition);
-                        player.setPlayWhenReady(true);
-                        //player.prepare();
-                    }, error -> Timber.d(error, "getstreamURL"));
-            //player.prepare(new ExtractorSampleSource());
-        //}
-
+                        if(resetPosition) player.setPlayWhenReady(true);
+                    }, error -> emit(Event.Error, error));*/
     }
 
     @Override
@@ -338,23 +391,26 @@ public final class MusicPlayerService extends Service
     }
 
     enum Event {
-        NextSong, PrevSong, Play, Pause, SendQueue
+        NextSong, PrevSong, Play, Pause, SendQueue, Error
     }
 
     private void emit(Event e) {
-        Message msg;
         switch(e) {
             case SendQueue:
-                msg = Message.obtain(null, e.ordinal(), tracks);
+                emit(e, tracks);
                 break;
-            default:
-                msg = Message.obtain(null, e.ordinal());
+            default: emit(e, null);
         }
+
+    }
+
+    private void emit(Event e, Object obj){
         for (Messenger m: clients) {
             try {
-                m.send(msg);
+                if(obj == null) m.send(Message.obtain(null, e.ordinal()));
+                else m.send(Message.obtain(null, e.ordinal(), obj));
             } catch (RemoteException exception) {
-            /* The client must've died */
+                /* The client must've died */
                 clients.remove(m);
             }
         }
@@ -374,35 +430,16 @@ public final class MusicPlayerService extends Service
 
     private MediaSource buildMediaSource(Uri uri, String overrideExtension) {
 
-        return new ExtractorMediaSource(uri, mediaDataSourceFactory, new DefaultExtractorsFactory(),
+        ExtractorMediaSource mm = new ExtractorMediaSource(uri, mediaDataSourceFactory, new DefaultExtractorsFactory(),
                 mainHandler, error -> {
                     Timber.e("Error", error);
                     Timber.d("mcurrentexpireTimestamp: %d vs time: %d", mCurrentExpireTimestamp, System.currentTimeMillis()/1000);
                     if(mCurrentExpireTimestamp <= System.currentTimeMillis()/1000) {
                         updatePlayer(false);
                     }
-
         });
 
-        /*int type = Util.inferContentType(!TextUtils.isEmpty(overrideExtension) ? "." + overrideExtension
-                : uri.getLastPathSegment());
-        type = C.TYPE_OTHER;
-        switch (type) {
-            /*case C.TYPE_SS:
-                return new SsMediaSource(uri, buildDataSourceFactory(false),
-                        new DefaultSsChunkSource.Factory(mediaDataSourceFactory), mainHandler, eventLogger);
-            case C.TYPE_DASH:
-                return new DashMediaSource(uri, buildDataSourceFactory(false),
-                        new DefaultDashChunkSource.Factory(mediaDataSourceFactory), mainHandler, eventLogger);
-            case C.TYPE_HLS:
-                return new HlsMediaSource(uri, mediaDataSourceFactory, 1, mainHandler, null);
-            case C.TYPE_OTHER:
-                return new ExtractorMediaSource(uri, mediaDataSourceFactory, new DefaultExtractorsFactory(),
-                        mainHandler, error -> Timber.e("Error", error));
-            default: {
-                throw new IllegalStateException("Unsupported type: " + type);
-            }
-        }*/
+        return mm;
     }
 
     public void onGainedAudioFocus(){

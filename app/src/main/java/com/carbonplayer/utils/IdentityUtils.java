@@ -5,13 +5,18 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Point;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Px;
 import android.support.v4.app.NotificationCompat;
+import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
+
+import com.carbonplayer.model.entity.enums.NetworkType;
 
 import java.security.SecureRandom;
 import java.util.Locale;
@@ -19,7 +24,7 @@ import java.util.Locale;
 /**
  * Utilities for identifying device and device details
  */
-public class IdentityUtils {
+public final class IdentityUtils {
 
     public static @Px int displayWidth(@NonNull Activity context){
         Display display = context.getWindowManager().getDefaultDisplay();
@@ -75,5 +80,33 @@ public class IdentityUtils {
 
     public static String localeCode(){
         return Locale.getDefault().getLanguage() + "_" + Locale.getDefault().getCountry();
+    }
+
+    public static String getDeviceLanguage(){
+        return Locale.getDefault().getLanguage();
+    }
+
+    public static String getDeviceCountryCode(){
+        return Locale.getDefault().getCountry().toLowerCase();
+    }
+
+    public static String getOperatorCountryCode(Context context){
+        TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+        return tm.getSimCountryIso().toLowerCase();
+    }
+
+    public static NetworkType networkType(Context context) {
+        NetworkInfo activeNetwork = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+
+        if (activeNetwork != null && activeNetwork.isConnectedOrConnecting()) {
+            switch (activeNetwork.getType()) {
+                case ConnectivityManager.TYPE_MOBILE: return NetworkType.MOBILE;
+                case ConnectivityManager.TYPE_WIFI: return NetworkType.WIFI;
+                case ConnectivityManager.TYPE_ETHERNET: return NetworkType.ETHER;
+                default: return NetworkType.UNKNOWN;
+            }
+        }
+
+        return NetworkType.DISCONNECTED;
     }
 }

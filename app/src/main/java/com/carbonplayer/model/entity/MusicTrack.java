@@ -1,5 +1,8 @@
 package com.carbonplayer.model.entity;
 
+import com.carbonplayer.model.entity.enums.PlaySource;
+import com.carbonplayer.model.entity.primitive.RealmLong;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,13 +42,15 @@ public class MusicTrack extends RealmObject {
     private String albumId;
     private RealmList<RealmString> artistId;
     private String nid;
+    private RealmList<RealmLong> localPlays;
+    private long localTrackSizeBytes;
 
     public MusicTrack(){}
 
     public MusicTrack(String id, Date recentTimestamp, boolean deleted, String title, String artist, String composer,
                       String album, Integer year, String comment, Integer trackNumber, String genre, int durationMillis,
                       Integer beatsPerMinute, String albumArtURL, int playCount, String rating, int estimatedSize,
-                      String albumId, RealmList<RealmString> artistId, String clientId, String nid) {
+                      String albumId, RealmList<RealmString> artistId, String clientId, String nid, long localTrackSizeBytes) {
         this.id = id;
         this.recentTimestamp = recentTimestamp;
         this.clientId = clientId;
@@ -67,6 +72,7 @@ public class MusicTrack extends RealmObject {
         this.albumId = albumId;
         this.artistId = artistId;
         this.nid = nid;
+        this.localTrackSizeBytes = localTrackSizeBytes;
     }
 
 
@@ -108,6 +114,7 @@ public class MusicTrack extends RealmObject {
             for (int i = 0; i < artist_ids.length(); i++) artistId.add(new RealmString(artist_ids.getString(i)));
         }
         if(trackJson.has("nid")) nid = trackJson.getString("nid");
+        localTrackSizeBytes = 0;
     }
 
     public String getTrackId() {
@@ -269,6 +276,43 @@ public class MusicTrack extends RealmObject {
     public String getNid() {return nid;}
 
     public void setNid(String nid) { this.nid = nid; }
+
+    public void addPlay() {
+        localPlays.add(new RealmLong(System.currentTimeMillis()));
+    }
+
+    public void setLocalTrackSizeBytes(long localTrackSizeBytes) {this.localTrackSizeBytes = localTrackSizeBytes;}
+
+    public long getLocalTrackSizeBytes() {return localTrackSizeBytes;}
+
+    public long getCacheImportance(PlaySource source) {
+        int cacheImportance;
+        cacheImportance = Math.max(0, (int) Math.round(Math.log((double) playCount) * 8.0));
+        for (RealmLong play : localPlays) {
+            cacheImportance += Math.max(0, (int) Math.round(10 - Math.pow(((System.currentTimeMillis() - play.get()) / 864000000L), 2)));
+        }
+        switch(source){
+            case RECENTS:
+                cacheImportance += 20;
+                break;
+            case ALBUM:
+            case PLAYLIST:
+                cacheImportance += 18;
+                break;
+            case ARTIST:
+                cacheImportance += 16;
+                break;
+            case SONGS:
+            case EXTERNAL:
+                cacheImportance += 10;
+                break;
+            case RADIO:
+            default:
+                cacheImportance += 0;
+                break;
+        }
+        return cacheImportance;
+    }
 
     public String getMostUsefulID(){
         if(nid != null) return nid;

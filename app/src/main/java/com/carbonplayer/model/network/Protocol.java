@@ -1,20 +1,18 @@
 package com.carbonplayer.model.network;
 
-import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.util.Base64;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.model.entity.ConfigEntry;
 import com.carbonplayer.model.entity.MusicTrack;
+import com.carbonplayer.model.entity.enums.StreamQuality;
 import com.carbonplayer.model.entity.exception.ResponseCodeException;
-import com.carbonplayer.utils.Constants;
+import com.carbonplayer.model.entity.exception.ServerRejectionException;
 import com.carbonplayer.utils.Gservices;
 import com.carbonplayer.utils.IdentityUtils;
 import com.carbonplayer.utils.URLSigning;
@@ -26,16 +24,13 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Locale;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
-import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -149,7 +144,7 @@ public final class Protocol {
             String digest = "";
             try {
                 digest = URLSigning.sign(song_id, salt);
-            }catch(NoSuchAlgorithmException | UnsupportedEncodingException | InvalidKeyException e){
+            } catch(NoSuchAlgorithmException | UnsupportedEncodingException | InvalidKeyException e){
                 subscriber.onError(e);
                 subscriber.onCompleted();
             }
@@ -157,7 +152,7 @@ public final class Protocol {
             try {
                 if (song_id.startsWith("T") || song_id.startsWith("D")) getParams.appendQueryParameter("mjck", song_id);
                 else getParams.appendQueryParameter("songid", song_id);
-            }catch(Exception e){
+            } catch(Exception e){
                 subscriber.onError(e);
             }
 
@@ -169,18 +164,19 @@ public final class Protocol {
             //Timber.d("newAndroidID: %s", String.valueOf(Gservices.getLong(context.getContentResolver(), "android_id", 0)));
 
             getParams
-                    .appendQueryParameter("targetkbps", "384")
-                    .appendQueryParameter("audio_formats", "mp3")
-                    .appendQueryParameter("dv", CarbonPlayerApplication.googleBuildNumber)
-                    .appendQueryParameter("p", IdentityUtils.getDeviceIsSmartphone(context) ? "1" : "0")
-                    .appendQueryParameter("opt", "med")
-                    .appendQueryParameter("net", "mob")
-                    .appendQueryParameter("pt", "e")
-                    .appendQueryParameter("dt", "pc")
-                    .appendQueryParameter("slt", salt)
-                    .appendQueryParameter("sig", digest)
-                    .appendQueryParameter("hl", IdentityUtils.localeCode())
-                    .appendQueryParameter("tier", "aa");
+                .appendQueryParameter("targetkbps", "2048")
+                .appendQueryParameter("audio_formats", "mp3")
+                .appendQueryParameter("dv", CarbonPlayerApplication.googleBuildNumber)
+                .appendQueryParameter("p", IdentityUtils.getDeviceIsSmartphone(context) ? "1" : "0")
+                .appendQueryParameter("opt", getStreamQualityHeader(context))
+                .appendQueryParameter("net", getNetHeader(context))
+                .appendQueryParameter("pt", "e")
+                .appendQueryParameter("adaptive", "true")
+                //.appendQueryParameter("dt", "pc")
+                .appendQueryParameter("slt", salt)
+                .appendQueryParameter("sig", digest)
+                .appendQueryParameter("hl", IdentityUtils.localeCode())
+                .appendQueryParameter("tier", "aa");
 
 
             String encQuery = getParams.build().getEncodedQuery();
@@ -196,6 +192,41 @@ public final class Protocol {
                     subscriber.onNext(r.headers().get("Location"));
                     subscriber.onCompleted();
                 } else {
+                    if(r.code() == 401 || r.code() == 402 || r.code() == 403){
+                        String rejectionReason = r.header("X-Rejected-Reason");
+                        if(rejectionReason != null){
+                            try {
+                                ServerRejectionException.RejectionReason rejectionReasonEnum =
+                                        ServerRejectionException.RejectionReason.valueOf(rejectionReason.toUpperCase());
+                                Timber.e(new ServerRejectionException(rejectionReasonEnum), "getStreamURL: serverRejected");
+                                switch(rejectionReasonEnum) {
+                                    case DEVICE_NOT_AUTHORIZED:
+                                        GoogleLogin.retryGoogleAuth(context);
+                                    case ANOTHER_STREAM_BEING_PLAYED:
+                                    case STREAM_RATE_LIMIT_REACHED:
+                                    case TRACK_NOT_IN_SUBSCRIPTION:
+                                    case WOODSTOCK_SESSION_TOKEN_INVALID:
+                                    case WOODSTOCK_ENTRY_ID_INVALID:
+                                    case WOODSTOCK_ENTRY_ID_EXPIRED:
+                                    case WOODSTOCK_ENTRY_ID_TOO_EARLY:
+                                    case DEVICE_VERSION_BLACKLISTED:
+                                        subscriber.onError(new ServerRejectionException(rejectionReasonEnum));
+                                        subscriber.onCompleted();
+                                }
+                            } catch (IllegalArgumentException e){
+                                GoogleLogin.retryGoogleAuth(context);
+                                subscriber.onError(new ServerRejectionException(ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED));
+                                subscriber.onCompleted();
+                            }
+                        } else {
+                            GoogleLogin.retryGoogleAuth(context);
+                            subscriber.onError(new ServerRejectionException(ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED));
+                            subscriber.onCompleted();
+                        }
+                    } else if (r.code() >= 200 && r.code() < 300){
+                        subscriber.onError(new ResponseCodeException(String.format(Locale.getDefault(),"Unexpected response code %d", r.code())));
+                        subscriber.onCompleted();
+                    }
                     subscriber.onError(new Exception(r.body().string()));
                 }
             }catch(IOException e){
@@ -204,32 +235,64 @@ public final class Protocol {
         });
     }
 
-    private static String getSkyjamToken(Context context){
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString("OAuthToken", "");
+    private static String getNetHeader(Context context){
+        switch (IdentityUtils.networkType(context)){
+            case WIFI: return "wifi";
+            case ETHER: return "ether";
+            case MOBILE: return "mob";
+            default: return "";
+        }
+    }
+
+    private static String getStreamQualityHeader(Context context){
+        StreamQuality streamQuality;
+        switch (IdentityUtils.networkType(context)){
+            case WIFI:
+            case ETHER:
+                streamQuality = CarbonPlayerApplication.preferences().preferredStreamQualityWifi;
+                break;
+            case MOBILE:
+            default:
+                streamQuality = CarbonPlayerApplication.preferences().preferredStreamQualityMobile;
+                break;
+        }
+        switch (streamQuality) {
+            case HIGH: return "hi";
+            case MEDIUM: return "med";
+            case LOW: return "low";
+        }
+        return "";
+    }
+
+    private static String getSkyjamToken(Context context) {
+        return CarbonPlayerApplication.preferences().OAuthToken;
     }
 
     private static String getBearerToken(Context context){
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString("BearerAuth", "");
+        return CarbonPlayerApplication.preferences().BearerAuth;
     }
 
     private static Request.Builder defaultBuilder(Context context){
         return new Request.Builder()
                 .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
                 .header("Authorization", "GoogleLogin auth=" + getSkyjamToken(context))
-                .header("X-Device-ID", IdentityUtils.deviceId(context));
+                .header("X-Device-ID", IdentityUtils.deviceId(context))
+                .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context));
     }
 
     private static Request.Builder bearerBuilder(Context context){
         Timber.d("Bearer token: %s", getBearerToken(context));
 
-        String gAndroidID = String.valueOf(Gservices.getLong(context.getContentResolver(), "android_id", 0));
+        String deviceId = String.valueOf(Gservices.getLong(context.getContentResolver(), "android_id", 0));
+
+        if(deviceId.equals(String.valueOf(0))){
+            deviceId = IdentityUtils.deviceId(context);
+        }
 
         return new Request.Builder()
                 .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
                 .header("Authorization", "Bearer " + getBearerToken(context))
-                .header("X-Device-ID", gAndroidID)
+                .header("X-Device-ID", deviceId)
                 .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context));
                 //.header("X-Device-ID", IdentityUtils.deviceId(context));
     }
