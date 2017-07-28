@@ -78,9 +78,8 @@ class IntroPresenter {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
-                    n -> {},
-                    this::handleLoginException,
-                    this::doConfig
+                    this::doConfig,
+                    this::handleLoginException
             );
     }
 
@@ -91,9 +90,8 @@ class IntroPresenter {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
-                            n->{},
-                            this::handleLoginException,
-                            this::doConfig
+                            this::doConfig,
+                            this::handleLoginException
                     );
             } else {
                 mActivity.makeLibraryError(R.string.intro_slide3_issue);

@@ -56,6 +56,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import rx.Completable;
 import rx.Observable;
 import timber.log.Timber;
 
@@ -372,9 +373,9 @@ public final class GoogleLogin {
      * @param password user password
      * @return Observable which will produce err
      */
-    public static Observable<Null> login(@NonNull Activity context, @NonNull String email, @NonNull String password) {
+    public static Completable login(@NonNull Activity context, @NonNull String email, @NonNull String password) {
         //TODO Rx-ify
-        return Observable.create(subscriber -> {
+        return Completable.create(subscriber -> {
             @SuppressLint("HardwareIds")
             String androidId = Settings.Secure.getString(context.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
@@ -398,6 +399,7 @@ public final class GoogleLogin {
             }
 
             CarbonPlayerApplication.preferences().OAuthToken = oAuthToken;
+            CarbonPlayerApplication.preferences().userEmail = email;
 
             String mAuthToken = null;
             try {
@@ -428,8 +430,8 @@ public final class GoogleLogin {
 
     }
 
-    public static Observable<Null> retryGoogleAuth(@NonNull Context context, @NonNull String email){
-        return Observable.create(subscriber -> {
+    public static Completable retryGoogleAuth(@NonNull Context context, @NonNull String email){
+        return Completable.create(subscriber -> {
 
             String mAuthToken = null;
             try {
@@ -457,7 +459,27 @@ public final class GoogleLogin {
         });
     }
 
-    public static Observable<Null> retryGoogleAuth(@NonNull Context context){
+    public static void retryGoogleAuthSync(@NonNull Context context) throws IOException, GoogleAuthException{
+        String mAuthToken = null;
+        String email = CarbonPlayerApplication.preferences().userEmail;
+        Account[] accounts = AccountManager.get(context).getAccounts();
+        for(Account a: accounts){
+            Timber.d("|%s|", a.name);
+            Timber.d(a.type);
+            if(a.type.equals("com.google") && a.name.equals(email)){
+                mAuthToken = GoogleAuthUtil.getToken(context, a, "oauth2:https://www.googleapis.com/auth/skyjam");
+            }
+        }
+        if(mAuthToken==null){
+            //noinspection deprecation
+            mAuthToken = GoogleAuthUtil.getToken(context, email, "oauth2:https://www.googleapis.com/auth/skyjam");
+        }
+
+        CarbonPlayerApplication.preferences().BearerAuth = mAuthToken;
+        CarbonPlayerApplication.preferences().save();
+    }
+
+    public static Completable retryGoogleAuth(@NonNull Context context){
         return retryGoogleAuth(context, CarbonPlayerApplication.preferences().userEmail);
     }
 

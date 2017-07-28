@@ -271,7 +271,7 @@ public final class MusicPlayerService extends Service
                 .observeOn(AndroidSchedulers.from(getMainLooper()))
                 .subscribe(pair -> {
                     String url = pair.first;
-                    pair.second.subscribe(f -> Timber.d("Progress: %d", f));
+                    pair.second.subscribe(f -> Timber.d("Progress: %f", f));
                     Timber.d("Local stream Url retrieved: %s", url);
 
                     /*try {
@@ -282,7 +282,7 @@ public final class MusicPlayerService extends Service
                         //mCurrentExpireTimestamp = (System.currentTimeMillis()/1000) + 100;
                     }*/
 
-                    MediaSource mediaSource = buildMediaSource(Uri.parse(url), "");
+                    MediaSource mediaSource = buildMediaSource(Uri.parse(url), "mp3");
                     player.prepare(mediaSource, resetPosition);
                     if(resetPosition) player.setPlayWhenReady(true);
                 }, error -> emit(Event.Error, error));
@@ -435,7 +435,7 @@ public final class MusicPlayerService extends Service
                     Timber.e("Error", error);
                     Timber.d("mcurrentexpireTimestamp: %d vs time: %d", mCurrentExpireTimestamp, System.currentTimeMillis()/1000);
                     if(mCurrentExpireTimestamp <= System.currentTimeMillis()/1000) {
-                        updatePlayer(false);
+                        //updatePlayer(false);
                     }
         });
 

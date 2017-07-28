@@ -41,9 +41,10 @@ public class TrackQueue {
     public void replace(List<MusicTrack> tracks){
         if(tracks instanceof ArrayList)
             queue = (ArrayList<MusicTrack>)tracks;
-        else
+        else {
             queue = new ArrayList<>();
-            for(MusicTrack track : tracks) queue.add(track);
+            queue.addAll(tracks);
+        }
     }
 
     public ArrayList<ParcelableMusicTrack> getParcelable(){

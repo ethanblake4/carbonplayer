@@ -37,6 +37,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import rx.Observable;
+import rx.Single;
 import timber.log.Timber;
 
 /**
@@ -131,7 +132,7 @@ public final class Protocol {
         });
     }
 
-    public static Observable<String> getStreamURL(@NonNull final Context context, String song_id){
+    public static Single<String> getStreamURL(@NonNull final Context context, String song_id){
         ArrayList<okhttp3.Protocol> protocols = new ArrayList<>();
         protocols.add(okhttp3.Protocol.HTTP_1_1);
         final OkHttpClient client = CarbonPlayerApplication.getOkHttpClient(
@@ -139,14 +140,13 @@ public final class Protocol {
                     .followRedirects(false)
                     .followSslRedirects(false)
                     .protocols(protocols));
-        return Observable.create(subscriber -> {
+        return Single.create(subscriber -> {
             String salt = String.valueOf(new Date().getTime());
             String digest = "";
             try {
                 digest = URLSigning.sign(song_id, salt);
             } catch(NoSuchAlgorithmException | UnsupportedEncodingException | InvalidKeyException e){
                 subscriber.onError(e);
-                subscriber.onCompleted();
             }
             final Uri.Builder getParams = new Uri.Builder();
             try {
@@ -164,7 +164,7 @@ public final class Protocol {
             //Timber.d("newAndroidID: %s", String.valueOf(Gservices.getLong(context.getContentResolver(), "android_id", 0)));
 
             getParams
-                .appendQueryParameter("targetkbps", "2048")
+                .appendQueryParameter("targetkbps", "180")
                 .appendQueryParameter("audio_formats", "mp3")
                 .appendQueryParameter("dv", CarbonPlayerApplication.googleBuildNumber)
                 .appendQueryParameter("p", IdentityUtils.getDeviceIsSmartphone(context) ? "1" : "0")
@@ -189,8 +189,7 @@ public final class Protocol {
             try{
                 Response r = client.newCall(request).execute();
                 if(r.isRedirect()){
-                    subscriber.onNext(r.headers().get("Location"));
-                    subscriber.onCompleted();
+                    subscriber.onSuccess(r.headers().get("Location"));
                 } else {
                     if(r.code() == 401 || r.code() == 402 || r.code() == 403){
                         String rejectionReason = r.header("X-Rejected-Reason");
@@ -211,21 +210,25 @@ public final class Protocol {
                                     case WOODSTOCK_ENTRY_ID_TOO_EARLY:
                                     case DEVICE_VERSION_BLACKLISTED:
                                         subscriber.onError(new ServerRejectionException(rejectionReasonEnum));
-                                        subscriber.onCompleted();
                                 }
                             } catch (IllegalArgumentException e){
-                                GoogleLogin.retryGoogleAuth(context);
+                                try {
+                                    GoogleLogin.retryGoogleAuthSync(context);
+                                } catch (Exception s) {
+                                    Timber.e(e, "Exception retrying Google Auth");
+                                }
                                 subscriber.onError(new ServerRejectionException(ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED));
-                                subscriber.onCompleted();
                             }
                         } else {
-                            GoogleLogin.retryGoogleAuth(context);
+                            try {
+                                GoogleLogin.retryGoogleAuthSync(context);
+                            } catch (Exception e) {
+                                Timber.e(e, "Exception retrying Google Auth");
+                            }
                             subscriber.onError(new ServerRejectionException(ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED));
-                            subscriber.onCompleted();
                         }
                     } else if (r.code() >= 200 && r.code() < 300){
                         subscriber.onError(new ResponseCodeException(String.format(Locale.getDefault(),"Unexpected response code %d", r.code())));
-                        subscriber.onCompleted();
                     }
                     subscriber.onError(new Exception(r.body().string()));
                 }
@@ -256,6 +259,8 @@ public final class Protocol {
                 streamQuality = CarbonPlayerApplication.preferences().preferredStreamQualityMobile;
                 break;
         }
+        if(streamQuality == null)
+            streamQuality = StreamQuality.MEDIUM;
         switch (streamQuality) {
             case HIGH: return "hi";
             case MEDIUM: return "med";

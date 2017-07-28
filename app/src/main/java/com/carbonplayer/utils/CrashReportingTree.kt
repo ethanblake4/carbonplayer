@@ -5,7 +5,7 @@ import com.google.firebase.crash.FirebaseCrash
 import timber.log.Timber
 
 /**
- * Created by ethanelshyeb on 7/13/17.
+ * Firebase Crash report
  */
 class CrashReportingTree : Timber.Tree() {
     override fun log(priority: Int, tag: String, message: String, throwable: Throwable?) {
@@ -13,9 +13,9 @@ class CrashReportingTree : Timber.Tree() {
             return
         }
 
-        FirebaseCrash.logcat(priority, tag, message)
-        if(throwable != null) {
-            FirebaseCrash.logcat(priority, tag, "Exception "+ throwable.localizedMessage + ": stack trace: \n" + throwable.stackTrace.contentToString())
+        FirebaseCrash.logcat(priority, tag, obfuscate(message))
+        throwable?.let {
+            FirebaseCrash.logcat(priority, tag, "Exception "+ it.localizedMessage + ": stack trace: \n" + it.stackTrace.contentToString())
         }
     }
 

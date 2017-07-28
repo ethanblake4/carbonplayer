@@ -15,7 +15,7 @@ import javax.crypto.spec.SecretKeySpec;
 import timber.log.Timber;
 
 /**
- * Signs streaming URLs. 2nd most complicated piece of code in the app
+ * Signs streaming URLs.
  */
 
 public class URLSigning {
@@ -31,13 +31,9 @@ public class URLSigning {
             _key[i] = (byte) (_s1[i] ^ _s2[i]);
         }
 
-        //Timber.d("key: byte[] -> str(ASCII): %s", _new String(key, "ASCII"));
-
-        //String salt = String.valueOf(new Date().getTime());
-
         Timber.d("salt: %s", salt);
 
-        String digest = "";
+        String digest;
         Mac mac = Mac.getInstance("HmacSHA1");
         mac.init(new SecretKeySpec(_key, mac.getAlgorithm()));
         mac.update(EncodingUtils.getAsciiBytes(song_id));

@@ -72,6 +72,7 @@ public final class StreamServer {
 
     private String generateAndSetUri(StreamingContent streamingContent) {
         String id = streamingContent.getId().getId();
+        if(streams == null) streams = new HashMap<>();
         if(!streams.containsKey(id)) {
             streams.put(id, streamingContent);
             newContent.onNext(streamingContent);

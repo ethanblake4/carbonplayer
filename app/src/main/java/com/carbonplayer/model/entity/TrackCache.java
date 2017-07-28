@@ -3,6 +3,7 @@ package com.carbonplayer.model.entity;
 
 import android.content.Context;
 
+import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.model.entity.enums.StreamQuality;
 import com.carbonplayer.model.entity.primitive.Null;
 
@@ -76,8 +77,15 @@ public class TrackCache extends RealmObject {
         return maxQ;
     }
 
-    public static File getTrackFile(Context context, SongID id){
-        return removeLowerQualities(context, id);
+    public static File getTrackFile(Context context, SongID id, StreamQuality newQuality) {
+        File existingFile = removeLowerQualities(context, id);
+        if (existingFile != null) return existingFile;
+
+        if(newQuality == null) {
+            newQuality = CarbonPlayerApplication.preferences().getPreferredStreamQuality(context);
+        }
+
+        return new File(context.getCacheDir(), id.getId() + "--" + String.valueOf(newQuality.ordinal()));
     }
 
 }

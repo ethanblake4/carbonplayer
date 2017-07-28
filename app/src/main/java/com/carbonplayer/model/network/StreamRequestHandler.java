@@ -49,8 +49,10 @@ public class StreamRequestHandler implements HttpRequestHandler {
         if (lastSlash == -1) {
             throw new IllegalArgumentException("Unknown URL requested: " + path);
         }
+        Timber.d("Found url");
         try {
             streamingContent = streams.get(path.substring(lastSlash + 1, path.length()));
+            Timber.d("Found streamingContent %s", streamingContent);
             if (streamingContent == null) {
                 Timber.wtf("Requesting file which is not allowed to be streamed: %s", this.streams);
                 response.setStatusCode(HttpStatus.HTTP_NOT_FOUND);
@@ -71,14 +73,15 @@ public class StreamRequestHandler implements HttpRequestHandler {
             try {
                 streamingContent.initialize(null);
                 contentType = streamingContent.getContentType();
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 Timber.e("Failed to retrieve content type");
             }
             startRangeByte += streamingContent.getStartReadPoint();
             if (contentType == null) {
-                Timber.e("Missing content type - exiting content=%s", streamingContent);
+                contentType = "audio/mpeg";
+                /*Timber.e("Missing content type - exiting content=%s", streamingContent);
                 response.setStatusCode(HttpStatus.HTTP_NOT_FOUND);
-                return;
+                return;*/
             }
             Timber.d("The content type is: %s", contentType);
 

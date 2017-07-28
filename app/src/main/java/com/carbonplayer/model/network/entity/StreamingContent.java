@@ -11,6 +11,8 @@ import com.carbonplayer.model.entity.SongID;
 import com.carbonplayer.model.entity.TrackCache;
 import com.carbonplayer.model.entity.enums.StorageType;
 import com.carbonplayer.model.entity.enums.StreamQuality;
+import com.carbonplayer.model.entity.exception.ServerRejectionException;
+import com.carbonplayer.model.network.Protocol;
 import com.carbonplayer.utils.DownloadUtils;
 
 import java.io.File;
@@ -25,9 +27,12 @@ import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
 import okio.Source;
+import rx.Completable;
 import rx.Observable;
+import rx.Single;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.exceptions.Exceptions;
+import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import timber.log.Timber;
@@ -44,29 +49,37 @@ public class StreamingContent {
     private long extraChunkSize = 0;
     private String filepath;
     private boolean isInitialized = false;
-    private boolean waitAllowed = false;
+    private boolean waitAllowed = true;
     private final SongID songID;
     private volatile long startReadPoint = 0;
     private String url;
     private long lastWait;
+    private long len;
 
     public StreamingContent(Context context, SongID songId, String trackTitle, StreamQuality quality) {
 
-        if(!TrackCache.has(context, songId, quality)) {
-            downloadRequest =
-                    new DownloadRequest(songId, trackTitle, 100,
-                            0, new FileLocation(StorageType.CACHE, TrackCache.getTrackFile(context, songId)),
-                            true, quality, StreamQuality.UNDEFINED);
-            this.filepath = TrackCache.getTrackFile(context, songId).getAbsolutePath();
-        } else {
-            this.filepath = TrackCache.getTrackFile(context, songId).getAbsolutePath();
-            this.downloadRequest = null;
-            downloadProgress.onNext(1.0f);
-            initDownload();
-        }
         this.context = context;
         this.songID = songId;
         this.quality = quality;
+
+        if(!TrackCache.has(context, songId, quality)) {
+            Timber.i("Creating new DownloadRequest");
+            downloadRequest =
+                    new DownloadRequest(songId, trackTitle, 100,
+                            0, new FileLocation(StorageType.CACHE, TrackCache.getTrackFile(context, songId, quality)),
+                            true, quality, StreamQuality.UNDEFINED);
+            this.filepath = TrackCache.getTrackFile(context, songId, quality).getAbsolutePath();
+            initDownload();
+        } else {
+            Timber.i("File already exists");
+            File file = TrackCache.getTrackFile(context, songId, quality);
+            this.filepath = file.getAbsolutePath();
+            this.downloadRequest = null;
+            downloadProgress.onNext(1.0f);
+            completed = file.length();
+
+        }
+
     }
 
     private void initDownload(){
@@ -83,10 +96,15 @@ public class StreamingContent {
                             .build();
                 }));
 
-        com.carbonplayer.model.network.Protocol.getStreamURL(context, songID.getNautilusID())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.from(Looper.getMainLooper()))
-                .subscribe(url -> {
+        Protocol.getStreamURL(context, songID.getNautilusID())
+                .retry((tries, err) -> {
+                    if (!(err instanceof ServerRejectionException)) return false;
+                    if (((ServerRejectionException) err).getRejectionReason() !=
+                            ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED)
+                        return false;
+                    return tries < 3;
+                })
+                .flatMap(url -> Completable.create(subscriber -> {
                     try {
                         Response response = client.newCall(new Request.Builder()
                                 .url(url).build()).execute();
@@ -95,25 +113,29 @@ public class StreamingContent {
                         BufferedSink sink = Okio.buffer(Okio.sink(new File(filepath)));
                         Source source = response.body().source();
 
-                        long len = response.body().contentLength();
+                        len = response.body().contentLength();
                         long writ = 0;
 
                         while(writ < len) {
-                            sink.write(source, 2048);
-                            writ += 2048;
+                            sink.write(source, Math.min(2048, len-writ));
+                            writ += Math.min(2048, len-writ);
                             synchronized (StreamingContent.this) {
                                 notifyAll();
                             }
                         }
                         sink.close();
-                        downloadRequest.setState(DownloadRequest.State.COMPLETED);
                     } catch (IOException e) {
                         throw Exceptions.propagate(e);
                     }
-                }, error -> {
+                }).toSingle(() -> ""))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.from(Looper.getMainLooper()))
+                .subscribe(x -> downloadRequest.setState(DownloadRequest.State.COMPLETED), error -> {
                     Timber.e(error, "Exception getting stream URL");
                     downloadRequest.setState(DownloadRequest.State.FAILED);
                 });
+
+        downloadProgress.subscribe(val -> completed = (long)((len/10000f) * val) * 10000L);
     }
 
     public String toString() {
@@ -131,23 +153,28 @@ public class StreamingContent {
         return songID;
     }
 
-    public synchronized void initialize(String httpContentType) throws InterruptedException {
+    public synchronized void initialize(String httpContentType)/* throws InterruptedException*/ {
         isInitialized = true;
         contentType = httpContentType;
-        if (downloadRequest == null){
+        Timber.d("Initializing");
+        /*if (downloadRequest == null){
             MusicTrack track = MusicLibrary.getInstance().getTrack(songID.getId());
-            File location = TrackCache.getTrackFile(context, songID);
+            File location = TrackCache.getTrackFile(context, songID, quality);
             if(location == null) {
                 Timber.e("Failed to resolve path for initialize");
                 return;
             }
+            Timber.d("Resolved path");
             String extension = DownloadUtils.getFileExtension(location);
             if (extension == null) {
+                extension = "mp3";
                 Timber.e("Failed to parse file extension for location: %s", location.getAbsolutePath());
-                return;
+             //   return;
             }
+            Timber.d("Parsed File rxtension");
             contentType = DownloadUtils.ExtensionToMimeMap.get(extension);
-            completed = track.getLocalTrackSizeBytes();
+            if(contentType == null) contentType = DownloadUtils.ExtensionToMimeMap.get("mp3");
+            //completed = track.getLocalTrackSizeBytes();
             filepath = location.getAbsolutePath();
             if (seekMs != 0) {
                 this.startReadPoint = (long) ((((float) this.completed) * ((float) seekMs)) / ((float) track.getDurationMillis()));
@@ -159,14 +186,15 @@ public class StreamingContent {
             if (track == null) {
                 Timber.e("Failed to load music file for %s", downloadRequest);
             } else {
-                File location = TrackCache.getTrackFile(context, new SongID(track));
+                File location = TrackCache.getTrackFile(context, new SongID(track), quality);
                 if (location == null) {
                     Timber.w("Failed to resolve path for request: %s", downloadRequest);
                     return;
                 }
                 String extension = DownloadUtils.getFileExtension(location);
                 if (extension == null) {
-                    Timber.e("Failed to parse file extension for location: %s", location.getAbsolutePath());
+                    extension = "mp3";
+                    //Timber.e("Failed to parse file extension for location: %s", location.getAbsolutePath());
                     return;
                 }
                 contentType = DownloadUtils.ExtensionToMimeMap.get(extension);
@@ -178,10 +206,11 @@ public class StreamingContent {
                 Timber.d("contentType=%s completed=%d fileName=%s", contentType, completed, filepath);
                 Timber.d("contentType: %s for request %s", contentType, downloadRequest);
             }
-        }
+        }*/
     }
 
     public synchronized void waitForData(long amount) throws InterruptedException {
+        //Timber.d("Waiting for %d", amount);
         while (!isFinished() && this.completed < this.extraChunkSize + amount && this.waitAllowed) {
             long uptimeMs = SystemClock.uptimeMillis();
             if (lastWait + 10000 < uptimeMs) {
@@ -190,6 +219,7 @@ public class StreamingContent {
             }
             wait();
         }
+        Timber.d("Wait completed");
     }
 
     public synchronized RandomAccessFile getStreamFile(long offset) throws IOException {
@@ -200,12 +230,14 @@ public class StreamingContent {
         } else if(downloadRequest != null){
             location = downloadRequest.getFileLocation().getFullPath();
         }
+        Timber.d("StreamFile: location: %s", location);
         if (location == null) {
             streamFile = null;
         } else {
             streamFile = new RandomAccessFile(location, "r");
             streamFile.seek(offset);
         }
+
         return streamFile;
     }
 
@@ -241,6 +273,7 @@ public class StreamingContent {
     }
 
     public synchronized boolean isFinished() {
+        if(downloadRequest == null) return true;
         DownloadRequest.State state = downloadRequest.getState();
         return state == DownloadRequest.State.COMPLETED || state == DownloadRequest.State.CANCELED || state == DownloadRequest.State.FAILED;
     }

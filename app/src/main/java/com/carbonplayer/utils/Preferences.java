@@ -24,8 +24,8 @@ public class Preferences {
     //Device
     public String userEmail;
 
-    public StreamQuality preferredStreamQualityWifi;
-    public StreamQuality preferredStreamQualityMobile;
+    public StreamQuality preferredStreamQualityWifi = StreamQuality.MEDIUM;
+    public StreamQuality preferredStreamQualityMobile = StreamQuality.MEDIUM;
 
     public String BearerAuth;
     public String OAuthToken;
@@ -37,14 +37,18 @@ public class Preferences {
     }
 
     public StreamQuality getPreferredStreamQuality(Context context){
+        StreamQuality preferred;
         switch(IdentityUtils.networkType(context)) {
             case WIFI:
             case ETHER:
-                return preferredStreamQualityWifi;
+                preferred = preferredStreamQualityWifi;
+                break;
             case MOBILE:
             default:
-                return preferredStreamQualityMobile;
+                preferred = preferredStreamQualityMobile;
         }
+        if(preferred == null) preferred = StreamQuality.MEDIUM;
+        return preferred;
     }
 
     public int getTargetKbps(){
