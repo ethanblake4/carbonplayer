@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.model.entity.enums.StreamQuality;
 
 import java.lang.reflect.Field;
@@ -17,9 +18,9 @@ import timber.log.Timber;
 
 public class Preferences {
 
-    private Context appContext;
-
     /*Shared Variables**/
+
+    public boolean firstStart = true;
 
     //Device
     public String userEmail;
@@ -31,10 +32,6 @@ public class Preferences {
     public String OAuthToken;
 
     public int maxAudioCacheSizeMB = 1024;
-
-    public Preferences(Context context){
-        appContext = context;
-    }
 
     public StreamQuality getPreferredStreamQuality(Context context){
         StreamQuality preferred;
@@ -58,7 +55,7 @@ public class Preferences {
     }
 
     public void load(){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(CarbonPlayerApplication.Companion.getInstance());
 
         for (Field f : getClass().getDeclaredFields()) {
             String name = f.getName();
@@ -93,7 +90,7 @@ public class Preferences {
     }
 
     public void save(){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(CarbonPlayerApplication.Companion.getInstance());
         SharedPreferences.Editor edit = prefs.edit();
         //Write all variables to database
         for (Field f : getClass().getDeclaredFields()) {

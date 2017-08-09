@@ -33,7 +33,7 @@ public class StreamManager {
     }
 
     private StreamManager() throws IOException {
-        server = new StreamServer(CarbonPlayerApplication.getInstance());
+        server = new StreamServer(CarbonPlayerApplication.Companion.getInstance());
     }
 
     public StreamManager(List<ParcelableMusicTrack> tracks) throws IOException {
@@ -46,8 +46,8 @@ public class StreamManager {
     }
 
     public Single<Pair<String, Observable<Float>>> getLocalStreamUrlForCurrentTrack(Context context){
-        StreamQuality quality = CarbonPlayerApplication.preferences()
-                .getPreferredStreamQuality(CarbonPlayerApplication.getInstance());
+        StreamQuality quality = CarbonPlayerApplication.Companion.getInstance().getPreferences()
+                .getPreferredStreamQuality(CarbonPlayerApplication.Companion.getInstance());
         SongID id = new SongID(tracks.get(0));
 
         StreamingContent content = new StreamingContent(context, id, tracks.get(0).getTitle(), quality);

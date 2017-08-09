@@ -51,9 +51,9 @@ public final class Protocol {
     private static final int MAX_RESULTS = 250;
 
     public static Observable<LinkedList<ConfigEntry>> getConfig(@NonNull final Activity context){
-        final OkHttpClient client = CarbonPlayerApplication.getOkHttpClient();
+        final OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient();
         final Uri.Builder getParams = new Uri.Builder()
-                .appendQueryParameter("dv", CarbonPlayerApplication.googleBuildNumber)
+                .appendQueryParameter("dv", CarbonPlayerApplication.Companion.getInstance().getGoogleBuildNumber())
                 .appendQueryParameter("tier", "aa")
                 .appendQueryParameter("hl", IdentityUtils.localeCode());
 
@@ -83,9 +83,9 @@ public final class Protocol {
     }
 
     public static Observable<LinkedList<MusicTrack>> listTracks(@NonNull final Activity context){
-        final OkHttpClient client = CarbonPlayerApplication.getOkHttpClient();
+        final OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient();
         final Uri.Builder getParams = new Uri.Builder()
-                .appendQueryParameter("dv", CarbonPlayerApplication.googleBuildNumber)
+                .appendQueryParameter("dv", CarbonPlayerApplication.Companion.getInstance().getGoogleBuildNumber())
                 .appendQueryParameter("alt", "json")
                 .appendQueryParameter("hl", IdentityUtils.localeCode())
                 .appendQueryParameter("tier", "aa");
@@ -135,7 +135,7 @@ public final class Protocol {
     public static Single<String> getStreamURL(@NonNull final Context context, String song_id){
         ArrayList<okhttp3.Protocol> protocols = new ArrayList<>();
         protocols.add(okhttp3.Protocol.HTTP_1_1);
-        final OkHttpClient client = CarbonPlayerApplication.getOkHttpClient(
+        final OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient(
                 new OkHttpClient().newBuilder()
                     .followRedirects(false)
                     .followSslRedirects(false)
@@ -166,7 +166,7 @@ public final class Protocol {
             getParams
                 .appendQueryParameter("targetkbps", "180")
                 .appendQueryParameter("audio_formats", "mp3")
-                .appendQueryParameter("dv", CarbonPlayerApplication.googleBuildNumber)
+                .appendQueryParameter("dv", CarbonPlayerApplication.Companion.getInstance().getGoogleBuildNumber())
                 .appendQueryParameter("p", IdentityUtils.getDeviceIsSmartphone(context) ? "1" : "0")
                 .appendQueryParameter("opt", getStreamQualityHeader(context))
                 .appendQueryParameter("net", getNetHeader(context))
@@ -252,11 +252,11 @@ public final class Protocol {
         switch (IdentityUtils.networkType(context)){
             case WIFI:
             case ETHER:
-                streamQuality = CarbonPlayerApplication.preferences().preferredStreamQualityWifi;
+                streamQuality = CarbonPlayerApplication.Companion.getInstance().getPreferences().preferredStreamQualityWifi;
                 break;
             case MOBILE:
             default:
-                streamQuality = CarbonPlayerApplication.preferences().preferredStreamQualityMobile;
+                streamQuality = CarbonPlayerApplication.Companion.getInstance().getPreferences().preferredStreamQualityMobile;
                 break;
         }
         if(streamQuality == null)
@@ -270,16 +270,16 @@ public final class Protocol {
     }
 
     private static String getSkyjamToken(Context context) {
-        return CarbonPlayerApplication.preferences().OAuthToken;
+        return CarbonPlayerApplication.Companion.getInstance().getPreferences().OAuthToken;
     }
 
     private static String getBearerToken(Context context){
-        return CarbonPlayerApplication.preferences().BearerAuth;
+        return CarbonPlayerApplication.Companion.getInstance().getPreferences().BearerAuth;
     }
 
     private static Request.Builder defaultBuilder(Context context){
         return new Request.Builder()
-                .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
+                .header("User-Agent", CarbonPlayerApplication.Companion.getInstance().getGoogleUserAgent())
                 .header("Authorization", "GoogleLogin auth=" + getSkyjamToken(context))
                 .header("X-Device-ID", IdentityUtils.deviceId(context))
                 .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context));
@@ -295,7 +295,7 @@ public final class Protocol {
         }
 
         return new Request.Builder()
-                .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
+                .header("User-Agent", CarbonPlayerApplication.Companion.getInstance().getGoogleUserAgent())
                 .header("Authorization", "Bearer " + getBearerToken(context))
                 .header("X-Device-ID", deviceId)
                 .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context));

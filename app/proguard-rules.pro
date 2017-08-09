@@ -108,3 +108,6 @@
 -keep class org.apache.http.** { *; }
 -dontwarn org.apache.http.**
 -dontwarn android.net.**
+
+-keepclassmembers class com.carbonplayer.ui.transition.**
+-dontwarn com.carbonplayer.**

@@ -39,4 +39,16 @@
 
     <string name="error_internal_error">Internal error.</string>
     <string name="error_unknown_error">Internal error.</string>
+
+    <string name="settings_opt_general">General</string>
+    <string name="settings_opt_general_desc">Change preferences for streaming, downloads, and more</string>
+    <string name="settings_opt_appearance">Appearance</string>
+    <string name="settings_opt_appearance_desc">Customize the look and feel of Carbon</string>
+    <string name="settings_opt_account">Account</string>
+    <string name="settings_opt_account_desc">Manage your connected Google account</string>
+    <string name="settings_opt_about">About</string>
+    <string name="settings_opt_about_desc">View info about this application and open-source licenses</string>
+    <string name="top_charts">Top Charts</string>
+    <string name="home">Home</string>
+    <string name="library">Library</string>
 </resources>

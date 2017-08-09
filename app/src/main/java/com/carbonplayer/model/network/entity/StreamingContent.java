@@ -5,15 +5,12 @@ import android.os.Looper;
 import android.os.SystemClock;
 
 import com.carbonplayer.CarbonPlayerApplication;
-import com.carbonplayer.model.MusicLibrary;
-import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.SongID;
 import com.carbonplayer.model.entity.TrackCache;
 import com.carbonplayer.model.entity.enums.StorageType;
 import com.carbonplayer.model.entity.enums.StreamQuality;
 import com.carbonplayer.model.entity.exception.ServerRejectionException;
 import com.carbonplayer.model.network.Protocol;
-import com.carbonplayer.utils.DownloadUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +26,6 @@ import okio.Okio;
 import okio.Source;
 import rx.Completable;
 import rx.Observable;
-import rx.Single;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.exceptions.Exceptions;
 import rx.functions.Func2;
@@ -87,7 +83,7 @@ public class StreamingContent {
                 downloadProgress.onNext((float)((bytesRead/100.0)/(contentLength/100.0)));
         ArrayList<okhttp3.Protocol> protocols = new ArrayList<>();
         protocols.add(okhttp3.Protocol.HTTP_1_1);
-        OkHttpClient client = CarbonPlayerApplication.getOkHttpClient(new OkHttpClient.Builder()
+        OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient(new OkHttpClient.Builder()
                 .protocols(protocols)
                 .addNetworkInterceptor(chain -> {
                     Response originalResponse = chain.proceed(chain.request());
@@ -157,56 +153,6 @@ public class StreamingContent {
         isInitialized = true;
         contentType = httpContentType;
         Timber.d("Initializing");
-        /*if (downloadRequest == null){
-            MusicTrack track = MusicLibrary.getInstance().getTrack(songID.getId());
-            File location = TrackCache.getTrackFile(context, songID, quality);
-            if(location == null) {
-                Timber.e("Failed to resolve path for initialize");
-                return;
-            }
-            Timber.d("Resolved path");
-            String extension = DownloadUtils.getFileExtension(location);
-            if (extension == null) {
-                extension = "mp3";
-                Timber.e("Failed to parse file extension for location: %s", location.getAbsolutePath());
-             //   return;
-            }
-            Timber.d("Parsed File rxtension");
-            contentType = DownloadUtils.ExtensionToMimeMap.get(extension);
-            if(contentType == null) contentType = DownloadUtils.ExtensionToMimeMap.get("mp3");
-            //completed = track.getLocalTrackSizeBytes();
-            filepath = location.getAbsolutePath();
-            if (seekMs != 0) {
-                this.startReadPoint = (long) ((((float) this.completed) * ((float) seekMs)) / ((float) track.getDurationMillis()));
-            }
-            Timber.d("contentType=%s completed=%d fileName=%s", contentType, completed, filepath);
-            Timber.d("contentType: %s", contentType);
-        } else if (this.contentType == null && this.downloadRequest.getState() == DownloadRequest.State.COMPLETED) {
-            MusicTrack track = MusicLibrary.getInstance().getTrack(downloadRequest.getId().getId());
-            if (track == null) {
-                Timber.e("Failed to load music file for %s", downloadRequest);
-            } else {
-                File location = TrackCache.getTrackFile(context, new SongID(track), quality);
-                if (location == null) {
-                    Timber.w("Failed to resolve path for request: %s", downloadRequest);
-                    return;
-                }
-                String extension = DownloadUtils.getFileExtension(location);
-                if (extension == null) {
-                    extension = "mp3";
-                    //Timber.e("Failed to parse file extension for location: %s", location.getAbsolutePath());
-                    return;
-                }
-                contentType = DownloadUtils.ExtensionToMimeMap.get(extension);
-                completed = track.getLocalTrackSizeBytes();
-                filepath = location.getAbsolutePath();
-                if (seekMs != 0) {
-                    this.startReadPoint = (long) ((((float) this.completed) * ((float) seekMs)) / ((float) track.getDurationMillis()));
-                }
-                Timber.d("contentType=%s completed=%d fileName=%s", contentType, completed, filepath);
-                Timber.d("contentType: %s for request %s", contentType, downloadRequest);
-            }
-        }*/
     }
 
     public synchronized void waitForData(long amount) throws InterruptedException {
@@ -219,7 +165,6 @@ public class StreamingContent {
             }
             wait();
         }
-        Timber.d("Wait completed");
     }
 
     public synchronized RandomAccessFile getStreamFile(long offset) throws IOException {

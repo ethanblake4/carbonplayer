@@ -176,7 +176,7 @@ public final class GoogleLogin {
             String query = builder.build().getEncodedQuery();
 
             conn.setRequestProperty("Content-Length", String.valueOf(query.length()));
-            conn.setRequestProperty("User-Agent", CarbonPlayerApplication.googleUserAgent);
+            conn.setRequestProperty("User-Agent", CarbonPlayerApplication.Companion.getInstance().getGoogleUserAgent());
             conn.setDoInput(true);
             conn.setDoOutput(true);
 
@@ -209,10 +209,10 @@ public final class GoogleLogin {
     }
 
     private static ArrayMap<String, String> okLoginCall(String url, FormBody body){
-        OkHttpClient client = CarbonPlayerApplication.getOkHttpClient();
+        OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient();
         ArrayMap<String, String> response = new ArrayMap<>();
         Request request = new Request.Builder()
-                .header("User-Agent", CarbonPlayerApplication.googleUserAgent)
+                .header("User-Agent", CarbonPlayerApplication.Companion.getInstance().getGoogleUserAgent())
                 .url(url)
                 .post(body)
                 .build();
@@ -251,7 +251,7 @@ public final class GoogleLogin {
                     .appendQueryParameter("source", "android")
                     .appendQueryParameter("androidId", androidId)
                     .appendQueryParameter("device_country", IdentityUtils.getDeviceCountryCode())
-                    .appendQueryParameter("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.getInstance()))
+                    .appendQueryParameter("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
                     .appendQueryParameter("lang", IdentityUtils.getDeviceLanguage())
                     .appendQueryParameter("sdk_version", LOGIN_SDK_VERSION);
 
@@ -284,7 +284,7 @@ public final class GoogleLogin {
                     .add("source", "android")
                     .add("androidId", androidId)
                     .add("device_country", IdentityUtils.getDeviceCountryCode())
-                    .add("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.getInstance()))
+                    .add("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
                     .add("lang", IdentityUtils.getDeviceLanguage())
                     .add("sdk_version", LOGIN_SDK_VERSION)
                     .build();
@@ -348,7 +348,7 @@ public final class GoogleLogin {
                     .appendQueryParameter("app", "com.google.android.music")
                     .appendQueryParameter("client_sig", "38918a453d07199354f8b19af05ec6562ced5788")
                     .appendQueryParameter("device_country", IdentityUtils.getDeviceCountryCode())
-                    .appendQueryParameter("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.getInstance()))
+                    .appendQueryParameter("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
                     .appendQueryParameter("lang", IdentityUtils.getDeviceLanguage())
                     .appendQueryParameter("sdk_version", LOGIN_SDK_VERSION);
 
@@ -380,7 +380,7 @@ public final class GoogleLogin {
             String androidId = Settings.Secure.getString(context.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
 
-            String masterToken = CarbonPlayerApplication.useOkHttpForLogin ?
+            String masterToken = CarbonPlayerApplication.Companion.getInstance().getUseOkHttpForLogin() ?
                     okPerformMasterLogin(email, password, androidId) :
                     performMasterLogin(email, password, androidId);
 
@@ -389,7 +389,7 @@ public final class GoogleLogin {
                 subscriber.onCompleted();
             }
 
-            String oAuthToken = CarbonPlayerApplication.useOkHttpForLogin ?
+            String oAuthToken = CarbonPlayerApplication.Companion.getInstance().getUseOkHttpForLogin() ?
                     okPerformOAuth(email, masterToken, androidId) :
                     performOAuth(email, masterToken, androidId);
 
@@ -398,8 +398,8 @@ public final class GoogleLogin {
                 subscriber.onCompleted();
             }
 
-            CarbonPlayerApplication.preferences().OAuthToken = oAuthToken;
-            CarbonPlayerApplication.preferences().userEmail = email;
+            CarbonPlayerApplication.Companion.getInstance().getPreferences().OAuthToken = oAuthToken;
+            CarbonPlayerApplication.Companion.getInstance().getPreferences().userEmail = email;
 
             String mAuthToken = null;
             try {
@@ -417,13 +417,13 @@ public final class GoogleLogin {
                 }
 
             } catch (IOException | GoogleAuthException ex) {
-                CarbonPlayerApplication.preferences().save();
+                CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
                 subscriber.onError(ex);
                 subscriber.onCompleted();
             }
 
-            CarbonPlayerApplication.preferences().BearerAuth = mAuthToken;
-            CarbonPlayerApplication.preferences().save();
+            CarbonPlayerApplication.Companion.getInstance().getPreferences().BearerAuth = mAuthToken;
+            CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
 
             subscriber.onCompleted();
         });
@@ -452,8 +452,8 @@ public final class GoogleLogin {
                 subscriber.onError(ex);
             }
 
-            CarbonPlayerApplication.preferences().BearerAuth = mAuthToken;
-            CarbonPlayerApplication.preferences().save();
+            CarbonPlayerApplication.Companion.getInstance().getPreferences().BearerAuth = mAuthToken;
+            CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
 
             subscriber.onCompleted();
         });
@@ -461,7 +461,7 @@ public final class GoogleLogin {
 
     public static void retryGoogleAuthSync(@NonNull Context context) throws IOException, GoogleAuthException{
         String mAuthToken = null;
-        String email = CarbonPlayerApplication.preferences().userEmail;
+        String email = CarbonPlayerApplication.Companion.getInstance().getPreferences().userEmail;
         Account[] accounts = AccountManager.get(context).getAccounts();
         for(Account a: accounts){
             Timber.d("|%s|", a.name);
@@ -475,12 +475,12 @@ public final class GoogleLogin {
             mAuthToken = GoogleAuthUtil.getToken(context, email, "oauth2:https://www.googleapis.com/auth/skyjam");
         }
 
-        CarbonPlayerApplication.preferences().BearerAuth = mAuthToken;
-        CarbonPlayerApplication.preferences().save();
+        CarbonPlayerApplication.Companion.getInstance().getPreferences().BearerAuth = mAuthToken;
+        CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
     }
 
     public static Completable retryGoogleAuth(@NonNull Context context){
-        return retryGoogleAuth(context, CarbonPlayerApplication.preferences().userEmail);
+        return retryGoogleAuth(context, CarbonPlayerApplication.Companion.getInstance().getPreferences().userEmail);
     }
 
 }

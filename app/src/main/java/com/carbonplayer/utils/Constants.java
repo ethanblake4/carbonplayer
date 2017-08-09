@@ -23,6 +23,16 @@ public final class Constants {
         int CLICK_NEXT = 2;
     }
 
+    public interface EVENT {
+        int NextSong = 0;
+        int PrevSong = 1;
+        int Play = 2;
+        int Pause = 3;
+        int SendQueue = 4;
+        int BufferProgress = 5;
+        int Error = 6;
+    }
+
     public interface KEY {
         //Constant keys for key-value pairs
         String INITITAL_TRACKS = "INITIAL_TRACKS";

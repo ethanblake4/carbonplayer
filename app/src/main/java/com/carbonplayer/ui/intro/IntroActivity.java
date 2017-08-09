@@ -125,7 +125,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
         Dialog authDialog = new Dialog(IntroActivity.this);
 
-        if(CarbonPlayerApplication.useWebAuthDialog) {
+        if(CarbonPlayerApplication.Companion.getInstance().getUseWebAuthDialog()) {
             authDialog.setContentView(R.layout.auth_dialog);
 
             mPresenter.setAuthDialog(authDialog);

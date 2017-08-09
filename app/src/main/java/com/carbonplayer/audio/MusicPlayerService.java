@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -101,7 +102,7 @@ public final class MusicPlayerService extends Service
     private int currentTrack;
     private boolean isPlaying = false;
 
-    public ArrayList<Messenger> clients;
+    public ArrayList<Messenger> clients = new ArrayList<>();
 
     final Messenger mMessenger = new Messenger(new IncomingHandler());
 
@@ -127,22 +128,22 @@ public final class MusicPlayerService extends Service
                 break;
             case Constants.ACTION.PREVIOUS:
                 Timber.i("Clicked Previous");
-                emit(Event.PrevSong);
+                emit(Constants.EVENT.PrevSong);
                 break;
             case Constants.ACTION.PLAYPAUSE:
                 Timber.i("Clicked Play/Pause");
                 isPlaying = !isPlaying;
-                emit(isPlaying ? Event.Play : Event.Pause);
+                emit(isPlaying ? Constants.EVENT.Play : Constants.EVENT.Pause);
                 updateNotification(tracks.get(currentTrack));
                 updatePlayer(true);
                 break;
             case Constants.ACTION.NEXT:
                 Timber.i("Clicked Next");
-                emit(Event.NextSong);
+                emit(Constants.EVENT.NextSong);
                 break;
             case Constants.ACTION.SEND_QUEUE:
                 Timber.i("Sending Queue");
-                emit(Event.SendQueue);
+                emit(Constants.EVENT.SendQueue);
             case Constants.ACTION.STOP_SERVICE:
                 Timber.i("Received Stop Foreground Intent");
                 stopForeground(true);
@@ -271,7 +272,9 @@ public final class MusicPlayerService extends Service
                 .observeOn(AndroidSchedulers.from(getMainLooper()))
                 .subscribe(pair -> {
                     String url = pair.first;
-                    pair.second.subscribe(f -> Timber.d("Progress: %f", f));
+                    pair.second
+                            .debounce(16, TimeUnit.MILLISECONDS)
+                            .subscribe(f -> emit(Constants.EVENT.BufferProgress, f));
                     Timber.d("Local stream Url retrieved: %s", url);
 
                     /*try {
@@ -285,7 +288,7 @@ public final class MusicPlayerService extends Service
                     MediaSource mediaSource = buildMediaSource(Uri.parse(url), "mp3");
                     player.prepare(mediaSource, resetPosition);
                     if(resetPosition) player.setPlayWhenReady(true);
-                }, error -> emit(Event.Error, error));
+                }, error -> emit(Constants.EVENT.Error, error));
         /*
             Protocol.getStreamURL(this, tracks.get(currentTrack).getId())
                     .subscribeOn(Schedulers.io())
@@ -390,13 +393,9 @@ public final class MusicPlayerService extends Service
         //showControls();
     }
 
-    enum Event {
-        NextSong, PrevSong, Play, Pause, SendQueue, Error
-    }
-
-    private void emit(Event e) {
+    private void emit(int e) {
         switch(e) {
-            case SendQueue:
+            case Constants.EVENT.SendQueue:
                 emit(e, tracks);
                 break;
             default: emit(e, null);
@@ -404,11 +403,11 @@ public final class MusicPlayerService extends Service
 
     }
 
-    private void emit(Event e, Object obj){
+    private void emit(int e, Object obj){
         for (Messenger m: clients) {
             try {
-                if(obj == null) m.send(Message.obtain(null, e.ordinal()));
-                else m.send(Message.obtain(null, e.ordinal(), obj));
+                if(obj == null) m.send(Message.obtain(null, e));
+                else m.send(Message.obtain(null, e, obj));
             } catch (RemoteException exception) {
                 /* The client must've died */
                 clients.remove(m);

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_topcharts"
+        android:icon="@drawable/ic_show_chart_white_24dp"
+        android:title="@string/top_charts"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_home"
+        android:icon="@drawable/ic_home_white_24dp"
+        android:title="@string/home"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_library"
+        android:icon="@drawable/ic_library_music_white_24dp"
+        android:title="@string/library"
+        app:showAsAction="ifRoom" />
+</menu>

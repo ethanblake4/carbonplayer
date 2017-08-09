@@ -24,8 +24,8 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
@@ -33,6 +33,7 @@ import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.RealmString;
+import com.carbonplayer.model.entity.SongID;
 import com.carbonplayer.ui.helpers.NowPlayingUIHelper;
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback;
 import com.carbonplayer.ui.widget.ParallaxScrimageView;
@@ -53,6 +54,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.realm.RealmList;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import timber.log.Timber;
 
 /**
@@ -90,7 +93,7 @@ public class AlbumActivity extends AppCompatActivity {
 
         nowPlayingHelper = new NowPlayingUIHelper(this);
 
-        mAlbum = CarbonPlayerApplication.getInstance().currentAlbum;
+        mAlbum = CarbonPlayerApplication.Companion.getInstance().getCurrentAlbum();
 
         Timber.d("album %s", mAlbum.getId());
 
@@ -110,8 +113,7 @@ public class AlbumActivity extends AppCompatActivity {
 
         //noinspection SuspiciousNameCombination
         Glide.with(this).load(mAlbum.getAlbumArtURL())
-            .override(preImageWidth, preImageWidth)
-            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth).diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
             .listener(
                 GlidePalette.with(mAlbum.getAlbumArtURL())
                     .use(GlidePalette.Profile.VIBRANT)
@@ -135,7 +137,6 @@ public class AlbumActivity extends AppCompatActivity {
                         }
                     })
             )
-            .dontAnimate()
             .into(albumart);
 
         fab.setVisibility(View.INVISIBLE);
@@ -172,9 +173,19 @@ public class AlbumActivity extends AppCompatActivity {
         ViewGroup.LayoutParams params = songList.getLayoutParams();
         params.height = tracks.size() * MathUtils.dpToPx(this, 67);
 
-        mAdapter = new SongListAdapter(tracks, this);
+        mAdapter = new SongListAdapter(tracks, songID -> {
+            nowPlayingHelper.makePlayingScreen(albumart.getDrawable());
+            nowPlayingHelper.newQueue(tracks);
+            return Unit.INSTANCE;
+        });
         songList.setAdapter(mAdapter);
 
+    }
+
+    @Override
+    public void onBackPressed(){
+        fab.hide();
+        super.onBackPressed();
     }
 
     @OnClick(R.id.play_fab)

@@ -5,19 +5,27 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorInt;
 import android.support.v7.widget.RecyclerView;
+import android.transition.Fade;
 import android.util.Pair;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.animation.AlphaAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.GenericTransitionOptions;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
+import com.bumptech.glide.TransitionOptions;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
@@ -36,10 +44,11 @@ import butterknife.ButterKnife;
  * Displays albums in variable-size grid view
  */
 
-class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> {
+class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
     private List<Album> mDataset;
     private MainActivity context;
     private int screenWidthPx;
+    private RequestManager requestManager;
 
     class ViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.gridLayoutRoot) View layoutRoot;
@@ -57,7 +66,7 @@ class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> {
 
             layoutRoot.setOnClickListener(view -> {
                 //Toast.makeText(MainActivity.this, songs, Toast.LENGTH_SHORT).show();
-                CarbonPlayerApplication.getInstance().currentAlbum = album;
+                CarbonPlayerApplication.Companion.getInstance().setCurrentAlbum(album);
                 Intent i = new Intent(context, AlbumActivity.class);
 
                 ActivityOptions options = ActivityOptions
@@ -81,9 +90,10 @@ class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> {
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    AlbumAdapter(List<Album> myDataset, MainActivity context) {
+    AlbumAdapterJ(List<Album> myDataset, MainActivity context, RequestManager requestManager) {
         mDataset = myDataset;
         this.context = context;
+        this.requestManager = requestManager;
         Display display = context.getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
@@ -92,12 +102,12 @@ class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> {
 
     @Override
     public void onViewRecycled(ViewHolder v){
-        Glide.clear(v.thumb);
+        requestManager.clear(v.thumb);
     }
 
     // Create new views (invoked by the layout manager)
     @Override
-    public AlbumAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
+    public AlbumAdapterJ.ViewHolder onCreateViewHolder(ViewGroup parent,
                                                       int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
@@ -127,8 +137,9 @@ class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> {
         holder.album = a;
 
         if(a.getAlbumArtURL() != null && !a.getAlbumArtURL().equals("")) {
-            Glide.with(context).load(a.getAlbumArtURL())
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+            requestManager.load(a.getAlbumArtURL())
+                    .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
+                    .transition(DrawableTransitionOptions.withCrossFade(200))
                     .listener(
                             GlidePalette.with(a.getAlbumArtURL())
                                     .use(GlidePalette.Profile.VIBRANT)
@@ -140,7 +151,7 @@ class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.ViewHolder> {
                     .into(holder.thumb);
 
         } else {
-            Glide.clear(holder.thumb);
+            requestManager.clear(holder.thumb);
             holder.thumb.setImageResource(R.drawable.unknown_music_track);
         }
 

@@ -3,6 +3,7 @@ package com.carbonplayer.ui.helpers;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
@@ -29,6 +30,8 @@ import com.carbonplayer.utils.Constants;
 import org.parceler.Parcels;
 
 import java.util.List;
+
+import timber.log.Timber;
 
 /**
  * Manages now playing UI across activities and sends commands to {@link com.carbonplayer.audio.MusicPlayerService}
@@ -102,6 +105,7 @@ public final class NowPlayingUIHelper {
         Intent i = new Intent(mActivity, MusicPlayerService.class);
         i.setAction(Constants.ACTION.START_SERVICE);
         i.putExtra(Constants.KEY.INITITAL_TRACKS, Parcels.wrap(queue.getParcelable()));
+        mActivity.bindService(i, mConnection, Context.BIND_DEBUG_UNBIND);
         return i;
     }
 
@@ -110,11 +114,14 @@ public final class NowPlayingUIHelper {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case Constants.UIACTION.CLICK_PREVIOUS:
+                case Constants.EVENT.BufferProgress:
+                    Timber.d("Received bufferProgress %f", (Float) msg.obj);
+                    break;
+                case Constants.EVENT.NextSong:
                     TrackQueue.instance().prevtrack();
                     updateDrawable();
                     break;
-                case Constants.UIACTION.CLICK_NEXT:
+                case Constants.EVENT.PrevSong:
                     TrackQueue.instance().nexttrack();
                     updateDrawable();
                     break;

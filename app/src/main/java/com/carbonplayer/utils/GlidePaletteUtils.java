@@ -13,7 +13,7 @@ import com.bumptech.glide.util.Util;
 
 public class GlidePaletteUtils {
 
-    public class PaletteBitmap {
+    /*public class PaletteBitmap {
         public final Palette palette;
         public final Bitmap bitmap;
 
@@ -62,5 +62,5 @@ public class GlidePaletteUtils {
         @Override public String getId() {
             return PaletteBitmapTranscoder.class.getName();
         }
-    }
+    }*/
 }

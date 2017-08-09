@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <transitionSet xmlns:android="http://schemas.android.com/apk/res/android">
-    <changeBounds/>
-    <changeImageTransform/>
+    <changeBounds
+        android:interpolator="@android:interpolator/fast_out_slow_in"/>
+    <changeImageTransform
+        android:interpolator="@android:interpolator/fast_out_slow_in"/>
     <transitionSet>
         <targets>
             <target android:targetId="@id/primaryText" />
         </targets>
-        <transition class="com.carbonplayer.ui.transition.TextResize" />
+        <transition class="com.carbonplayer.ui.transition.TextResize"
+            android:interpolator="@android:interpolator/fast_out_slow_in"/>
         <changeBounds />
     </transitionSet>
 
