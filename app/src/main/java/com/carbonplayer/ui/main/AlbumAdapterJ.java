@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorInt;
+import android.support.annotation.Nullable;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.transition.Fade;
 import android.util.Pair;
@@ -39,6 +41,8 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function1;
 
 /**
  * Displays albums in variable-size grid view
@@ -59,6 +63,7 @@ class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
         String songs;
         Album album;
         int size;
+        int mainColor;
 
         ViewHolder(View v) {
             super(v);
@@ -66,7 +71,7 @@ class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
 
             layoutRoot.setOnClickListener(view -> {
                 //Toast.makeText(MainActivity.this, songs, Toast.LENGTH_SHORT).show();
-                CarbonPlayerApplication.Companion.getInstance().setCurrentAlbum(album);
+                /*CarbonPlayerApplication.Companion.getInstance().setCurrentAlbum(album);
                 Intent i = new Intent(context, AlbumActivity.class);
 
                 ActivityOptions options = ActivityOptions
@@ -75,7 +80,16 @@ class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
                                 Pair.create(contentRoot, "albumdetails"),
                                 Pair.create(titleText, "albumName"),
                                 Pair.create(detailText, "artistName"));
-                context.startActivity(i, options.toBundle());
+                context.startActivity(i, options.toBundle());*/
+
+                thumb.setTransitionName(album.getId() + "i");
+                contentRoot.setTransitionName(album.getId() + "cr");
+                titleText.setTransitionName(album.getId()+"t");
+                detailText.setTransitionName(album.getId()+"d");
+
+
+
+                context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(), mainColor, titleText);
             });
 
             ViewTreeObserver vto = thumb.getViewTreeObserver();
@@ -146,6 +160,14 @@ class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
                                     .intoBackground(holder.contentRoot)
                                     .intoTextColor(holder.titleText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
                                     .intoTextColor(holder.detailText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
+                                    .intoCallBack(palette -> {
+                                        if(palette != null) {
+                                            Palette.Swatch vibra = palette.getVibrantSwatch();
+                                            if (vibra != null)
+                                                holder.mainColor = palette.getVibrantSwatch().getRgb();
+                                            else holder.mainColor = Color.parseColor("#ff333333");
+                                        }
+                                    })
                                     .crossfade(true, 500)
                     )
                     .into(holder.thumb);

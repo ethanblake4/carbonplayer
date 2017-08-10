@@ -29,6 +29,7 @@ if(project.hasProperty("carbonplayer.properties")
             versionName "1.0"
             buildConfigField "boolean", "RELEASE", "false"
             signingConfig signingConfigs.config
+            multiDexEnabled true
         }
         buildTypes {
             release {
@@ -109,8 +110,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-crash:11.0.2'
     implementation 'com.google.guava:guava:22.0-android'
     implementation 'com.android.support:mediarouter-v7:25.4.0'
-    implementation 'com.bluelinelabs:conductor:2.1.4'
-    implementation 'com.bluelinelabs:conductor-support:2.1.4'
+    implementation 'com.github.ksoichiro:android-observablescrollview:1.6.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

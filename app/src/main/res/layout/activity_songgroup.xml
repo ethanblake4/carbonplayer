@@ -8,10 +8,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:focusableInTouchMode="true"
+    android:background="@android:color/transparent"
     tools:context=".ui.main.AlbumActivity">
 
     <com.carbonplayer.ui.widget.ParallaxScrimageView
-        android:id="@+id/main.backdrop"
+        android:id="@+id/main_backdrop"
         android:transitionName="imgthumb"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -23,15 +24,17 @@
         app:parallaxFactor="-0.5"
         />
 
-    <ScrollView
-        android:id="@+id/songgroup.scrollview"
+    <com.github.ksoichiro.android.observablescrollview.ObservableScrollView
+        android:id="@+id/songgroup_scrollview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:nestedScrollingEnabled="true">
+        android:nestedScrollingEnabled="true"
+        android:background="@android:color/transparent">
 
-        <include layout="@layout/songgroup_details" />
+        <include layout="@layout/songgroup_details"
+            />
 
-    </ScrollView>
+    </com.github.ksoichiro.android.observablescrollview.ObservableScrollView>
 
     <include layout="@layout/now_playing_overlay" />
 

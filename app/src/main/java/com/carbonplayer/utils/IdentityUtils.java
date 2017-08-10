@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -31,6 +32,23 @@ public final class IdentityUtils {
         Point size = new Point();
         display.getSize(size);
         return size.x;
+    }
+
+    public static int getStatusBarHeight(Resources res) {
+        int result = 0;
+        int resourceId = res.getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = res.getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
+
+    public static int getNavbarHeight(Resources res) {
+        int resourceId = res.getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return res.getDimensionPixelSize(resourceId);
+        }
+        return 0;
     }
 
      public static @Px int displayHeight(@NonNull Activity context){

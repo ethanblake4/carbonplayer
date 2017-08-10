@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.carbonplayer.ui.main.AlbumActivity;
+import com.carbonplayer.ui.main.AlbumFragment;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,13 +20,31 @@ public class DetailSharedElementEnterCallback extends SharedElementCallback {
 
     private final TransitionSet mTransitionSet;
     private final AlbumActivity mActivity;
+    private final AlbumFragment fragment;
 
     public Map<TextView, Pair<Integer, Integer>> textViewList = new HashMap<>();
+
+    public DetailSharedElementEnterCallback(AlbumFragment frag) {
+        fragment = frag;
+        mActivity = null;
+
+        Transition transitionWindow = fragment.getSharedElementEnterTransition();
+
+        if (!(transitionWindow instanceof TransitionSet)) {
+            mTransitionSet = new TransitionSet();
+            mTransitionSet.addTransition(transitionWindow);
+        } else {
+            mTransitionSet = (TransitionSet) transitionWindow;
+        }
+
+        fragment.setEnterSharedElementCallback(this);
+    }
 
 
     public DetailSharedElementEnterCallback(AlbumActivity activity) {
 
         mActivity = activity;
+        fragment = null;
 
         Transition transitionWindow = activity.getWindow().getSharedElementEnterTransition();
 
@@ -43,7 +62,7 @@ public class DetailSharedElementEnterCallback extends SharedElementCallback {
 
     public void addTextViewSizeResource(TextView tv, int sizeBegin, int sizeEnd) {
 
-        Resources res = mActivity.getResources();
+        Resources res = fragment == null ? mActivity.getResources() : fragment.getResources();
         addTextView(tv,
                 res.getDimensionPixelSize(sizeBegin),
                 res.getDimensionPixelSize(sizeEnd));
@@ -106,7 +125,8 @@ public class DetailSharedElementEnterCallback extends SharedElementCallback {
                     textView.getRight() + widthDiff, textView.getBottom() + heightDiff);
 
             if(!h) {
-                mActivity.setTransformedTextPosition(heightDiff);
+                if(fragment == null) mActivity.setTransformedTextPosition(heightDiff);
+                else fragment.setTransformedTextPosition(heightDiff);
                 h = true;
             }
         }

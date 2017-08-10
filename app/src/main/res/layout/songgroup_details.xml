@@ -57,7 +57,7 @@
             android:background="#fff"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/songgroup.recycler"/>
+            android:id="@+id/songgroup_recycler"/>
 
     </LinearLayout>
 

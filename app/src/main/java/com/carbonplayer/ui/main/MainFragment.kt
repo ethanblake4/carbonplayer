@@ -1,28 +1,25 @@
 package com.carbonplayer.ui.main
 
+import android.app.Fragment
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.bluelinelabs.conductor.Controller
-import com.bluelinelabs.conductor.RouterTransaction
 import com.carbonplayer.R
 import kotlinx.android.synthetic.main.controller_main.view.*
 
 /**
  * Created by ethanelshyeb on 8/8/17.
  */
-class MainController: Controller() {
+class MainFragment: Fragment() {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
+    /*override fun onCreateView(inflater: LayoutInflater, container: ViewGroup, savedState: Bundle?): View {
         val view = inflater.inflate(R.layout.controller_main, container, false)
 
-        getChildRouter(view.main_controller_container).run {
-            if(!hasRootController())
-                setRoot(RouterTransaction.with(AlbumPageController()))
-        }
+        childFragmentManager.beginTransaction().add(R.id.main_controller_container, AlbumPageFragment()).commit()
 
         view.bottom_nav.selectedItemId = R.id.action_home
         return view
-    }
+    }*/
 
 }
