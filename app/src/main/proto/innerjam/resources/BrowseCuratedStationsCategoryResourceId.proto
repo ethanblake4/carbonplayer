@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.resources";
+option java_outer_classname = "BrowseCuratedStationsCategoryResourceIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "identifiers/BrowseCuratedStationsCategoryId.proto";
+
+message BrowseCuratedStationsCategoryResourceId {
+    BrowseCuratedStationsCategoryId browseCuratedStationsCategoryId = 1;
+}

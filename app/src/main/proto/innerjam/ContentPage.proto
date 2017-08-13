@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam";
+option java_outer_classname = "ContentPageV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/ExpirationPolicy.proto";
+import "innerjam/HomePage.proto";
+
+message ContentPage {
+
+    ExpirationPolicy expirationPolicy = 1;
+    oneof pageType {
+        HomePage homePage = 2;
+    }
+    string pageToken = 4;
+
+}

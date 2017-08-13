@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "PlayableItemNowCardV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/elements/TitleSection.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "identifiers/PlayableItemId.proto";
+import "innerjam/elements/PlayButton.proto";
+import "identifiers/ExplicitnessIconType.proto";
+import "ads/AdInfo.proto";
+
+message PlayableItemNowCardDescriptor {
+    PlayableItemId itemId = 1;
+    ImageReference imageReference = 2;
+    TitleSection titleSection = 3;
+    string allYText = 4;
+    PlayButton playButton = 5;
+    ExplicitnessIconType explicitnessIconType = 6;
+    AdInfo adInfo = 7;
+}

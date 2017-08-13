@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "ModuleNowCardV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/RenderContext.proto";
+import "innerjam/elements/TitleSection.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "identifiers/PlayableItemId.proto";
+import "innerjam/elements/NumberedDescriptionSection.proto";
+import "innerjam/elements/PlayButton.proto";
+import "innerjam/visuals/Color.proto";
+import "innerjam/visuals/AttributedText.proto";
+import "identifiers/ExplicitnessIconType.proto";
+import "innerjam/elements/ActionList.proto";
+import "ads/AdInfo.proto";
+
+message ModuleNowCardDescriptor {
+    string moduleToken = 1;
+    TitleSection moduleTitleSection = 2;
+    string moduleAllYText = 3;
+    ImageReference moduleImageReference = 4;
+    PlayableItemId itemId = 5;
+    ImageReference itemImageReference = 6;
+    oneof itemTitleSectionType {
+        TitleSection itemTitleSection = 7;
+        NumberedDescriptionSection itemNumberedDescriptionSection = 15;
+    }
+    string itemAllYText = 8;
+    PlayButton playButton = 9;
+    Color moduleScrimColor = 10;
+    RenderContext moduleRenderContext = 11;
+    AttributedText itemDescription = 12;
+    ExplicitnessIconType explicitnessIconType = 13;
+    repeated ActionList.Action moduleClickActions = 14;
+    Color moduleTitleUnderlineColor = 16;
+    AdInfo adInfo = 17;
+}

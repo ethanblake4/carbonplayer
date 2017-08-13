@@ -87,9 +87,7 @@ class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
                 titleText.setTransitionName(album.getId()+"t");
                 detailText.setTransitionName(album.getId()+"d");
 
-
-
-                context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(), mainColor, titleText);
+                context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(), mainColor, titleText, detailText);
             });
 
             ViewTreeObserver vto = thumb.getViewTreeObserver();

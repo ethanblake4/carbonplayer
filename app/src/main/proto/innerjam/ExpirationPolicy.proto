@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam";
+option java_outer_classname = "ExpirationPolicyV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "google/protobuf/duration.proto";
+
+message ExpirationPolicy {
+
+    google.protobuf.Duration pollInterval = 1;
+    google.protobuf.Duration ttlDuration = 2;
+
+}

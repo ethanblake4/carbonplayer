@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "CeDeviceModuleV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/Color.proto";
+import "innerjam/renderers/RenderContext.proto";
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/renderers/FullBleedModule.proto";
+import "innerjam/renderers/NumberedItem.proto";
+import "innerjam/renderers/CeDeviceCard.proto";
+
+message CeDeviceModuleList {
+    repeated CeDeviceModule modules = 1;
+}
+
+message CeDeviceModule {
+
+    RenderContext renderContext = 1;
+    string allYText = 2;
+    AttributedText moduleTitle = 3;
+    CeDeviceSection section = 4;
+    string moduleToken = 5;
+
+}
+
+message CeDeviceSection {
+    oneof content {
+        ClientRecents recents = 1;
+        ClientLibrary library = 2;
+        CeDeviceCardList squarePlayableCardList = 3;
+        ClientBrowse browse = 4;
+    }
+}
+
+message ClientBrowse {}
+message ClientLibrary {}
+message ClientRecents {}

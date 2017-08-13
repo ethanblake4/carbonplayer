@@ -18,9 +18,13 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 
 import com.carbonplayer.model.entity.enums.NetworkType;
+import com.google.protobuf.Duration;
 
 import java.security.SecureRandom;
+import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Utilities for identifying device and device details
@@ -94,6 +98,11 @@ public final class IdentityUtils {
             getPrefs.edit().putString("logging_id", loggingID).apply();
         }
         return loggingID;
+    }
+
+    public static Duration getTimezoneOffsetProtoDuration() {
+        return Duration.newBuilder()
+                .setSeconds(TimeUnit.MILLISECONDS.toSeconds(TimeZone.getDefault().getOffset(new Date().getTime()))).build();
     }
 
     public static String localeCode(){

@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.identifiers";
+option java_outer_classname = "CapabilityIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+message CapabilityId {
+
+    enum CapabilityType {
+        CAPABILITY_TYPE_UNSPECIFIED = 0;
+        QUICKPLAY = 1;
+        ANDROID_AUTO_DEPRECATED = 2;
+        INNERJAM_WIDE_PLAYABLE_CARD = 3;
+        INNERJAM_TALL_PLAYABLE_CARD = 4;
+        USER_LOCATION_REPORTING = 5;
+        FINE_GRAINED_LOCATION_PERMISSION = 6;
+        USER_LOCATION_HISTORY = 7;
+        THRILLER_NOW_MODULE = 8;
+        THUMBNAILED_MODULE_NOW_CARDS = 9;
+        NUMBERED_MODULE_NOW_CARDS = 10;
+        THRILLER_NOW_COLOR_BLOCKS = 11;
+        THRILLER_USER_PLAYLISTS = 12;
+        TRACK_RADIO = 13;
+        ARTIST_SHUFFLE = 14;
+        IM_FEELING_LUCKY = 15;
+        LOCAL_LIBRARY_PLAYLIST_PLAYABLE_ITEMS = 16;
+        SHARED_PLAYLIST_PLAYABLE_ITEMS = 17;
+        SERVER_RECENTS_MODULE = 18;
+        SERVER_RECENTS_SECTION = 19;
+    }
+
+    CapabilityType type = 1;
+
+}

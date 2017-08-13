@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.identifiers";
+option java_outer_classname = "RadioSeedIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "identifiers/AlbumReleaseId.proto";
+import "identifiers/ArtistId.proto";
+import "identifiers/AudioListId.proto";
+import "identifiers/GenreId.proto";
+import "identifiers/TrackId.proto";
+
+message FeelingLuckySeedId {
+    enum FeelingLucky {
+        FEELING_LUCKY_UNSPECIFIED = 0;
+        IFL = 1;
+    }
+
+    FeelingLucky feelingLucky = 1;
+}
+message RadioSeedId {
+    oneof type {
+        AlbumReleaseId albumRelease = 1;
+        ArtistId artist = 2;
+        CuratedPlaylistId curated = 4;
+        FeelingLuckySeedId feelingLucky = 5;
+        GenreId genre = 6;
+        LockerPlaylistId lockerPlaylist = 7;
+        TrackId track = 8;
+    }
+}

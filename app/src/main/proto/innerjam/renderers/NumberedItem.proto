@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "NumberedItemV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/Color.proto";
+import "innerjam/renderers/RenderContext.proto";
+import "identifiers/AudioId.proto";
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "innerjam/elements/TitleSection.proto";
+import "innerjam/elements/ActionList.proto";
+import "innerjam/renderers/ContextMenu.proto";
+import "metadata/PlaybackMetadata.proto";
+import "innerjam/elements/PlayButton.proto";
+import "identifiers/ExplicitnessIconType.proto";
+
+message NumberedItemList {
+
+    repeated NumberedItemDescriptor items = 2;
+
+    oneof itemDividerLineColorType {
+        Color itemDividerLineColor = 3;
+        uint32 itemDividerLineColorId = 4;
+    }
+
+    message NumberedItemDescriptor {
+
+        RenderContext renderContext = 1;
+        AudioId itemId = 2;
+        AttributedText number = 3;
+        ImageReference imageReference = 4;
+        TitleSection titleSection = 5;
+        string allYText = 6;
+        ActionList actionList = 7;
+        ContextMenuDescriptor contextMenu = 8;
+        Color numberBackgroundColor = 9;
+        PlaybackMetadata playbackMetadata = 10;
+        PlayButton playButton = 11;
+        ExplicitnessIconType explicitnessIconType = 12;
+
+    }
+
+}
+

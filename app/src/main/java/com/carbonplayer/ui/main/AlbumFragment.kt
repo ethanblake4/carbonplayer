@@ -1,13 +1,12 @@
 package com.carbonplayer.ui.main
 
+import android.app.Fragment
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Handler
-import android.app.Fragment
-import android.graphics.drawable.ColorDrawable
 import android.support.v4.view.animation.FastOutSlowInInterpolator
-import android.support.v4.widget.NestedScrollView
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -15,15 +14,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.ScaleAnimation
-
-import butterknife.ButterKnife
 import butterknife.OnClick
-import butterknife.Unbinder
-
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
-
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
@@ -33,16 +27,12 @@ import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback
 import com.carbonplayer.utils.ColorUtils
 import com.carbonplayer.utils.IdentityUtils
 import com.carbonplayer.utils.MathUtils
-
-import com.github.florent37.glidepalette.BitmapPalette
 import com.github.florent37.glidepalette.GlidePalette
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import com.github.ksoichiro.android.observablescrollview.ScrollState
 import io.realm.Realm
-
 import kotlinx.android.synthetic.main.activity_songgroup.view.*
 import kotlinx.android.synthetic.main.songgroup_details.view.*
-
 import timber.log.Timber
 
 /**

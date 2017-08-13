@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.context";
+option java_outer_classname = "ContextSignalV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "google/protobuf/timestamp.proto";
+import "context/Location.proto";
+
+message ContextSignal {
+
+    google.protobuf.Timestamp timestamp = 3;
+
+    oneof signal {
+        MovementActivity activity = 1;
+        Location location = 2;
+    }
+
+    enum MovementActivity {
+        MOVEMENT_ACTIVITY_UNSPECIFIED = 0;
+    }
+
+}

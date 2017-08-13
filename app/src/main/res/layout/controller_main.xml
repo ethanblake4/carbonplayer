@@ -5,12 +5,12 @@
     android:fitsSystemWindows="false"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <FrameLayout
-        android:id="@+id/main_controller_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-    </FrameLayout>
+        <FrameLayout
+            android:id="@+id/main_controller_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+
 
 
     <LinearLayout

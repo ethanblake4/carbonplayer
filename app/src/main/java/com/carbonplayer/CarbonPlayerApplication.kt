@@ -45,6 +45,8 @@ class CarbonPlayerApplication : Application() {
         preferences = Preferences()
         preferences.load()
 
+        okHttpClient = OkHttpClient.Builder().addNetworkInterceptor(StethoInterceptor()).build()
+
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
 
@@ -79,13 +81,13 @@ class CarbonPlayerApplication : Application() {
         return DefaultHttpDataSourceFactory(Util.getUserAgent(this, googleUserAgent))
     }
 
+    var googleBuildNumberLong = 49211L
     var googleBuildNumber = "49211"
     var googleUserAgent = "Android-Music/" + googleBuildNumber + " (" + Build.PRODUCT + " " + Build.ID + "); gzip"
     var useWebAuthDialog = false
     var useOkHttpForLogin = true
 
-    val okHttpClient: OkHttpClient
-        get() = OkHttpClient.Builder().addNetworkInterceptor(StethoInterceptor()).build()
+    lateinit var okHttpClient: OkHttpClient
 
     fun getOkHttpClient(builder: OkHttpClient.Builder): OkHttpClient {
         return builder.addNetworkInterceptor(StethoInterceptor()).build()

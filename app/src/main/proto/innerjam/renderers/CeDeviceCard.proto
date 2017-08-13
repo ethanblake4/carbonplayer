@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "CeDeviceCardV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/RenderContext.proto";
+import "identifiers/PlayableItemId.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "innerjam/elements/TitleSection.proto";
+import "innerjam/elements/PlayButton.proto";
+import "ads/AdInfo.proto";
+
+message CeDeviceCardDescriptor {
+
+    string moduleToken = 1;
+    PlayableItemId itemId = 2;
+    ImageReference imageReference = 3;
+    TitleSection titleSection = 4;
+    string allYText = 5;
+    PlayButton playButton = 6;
+    AdInfo adInfo = 7;
+
+}
+
+message CeDeviceCardList {
+    repeated CeDeviceCardDescriptor cards = 1;
+}

@@ -9,6 +9,7 @@
     <transitionSet>
         <targets>
             <target android:targetId="@id/primaryText" />
+            <target android:targetId="@id/secondaryText" />
         </targets>
         <transition class="com.carbonplayer.ui.transition.TextResize"
             android:interpolator="@android:interpolator/fast_out_slow_in"/>

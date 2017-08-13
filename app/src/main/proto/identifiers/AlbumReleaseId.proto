@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.identifiers";
+option java_outer_classname = "AlbumReleaseIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+
+message AlbumReleaseId {
+    oneof type {
+        CatalogAlbumReleaseId catalog = 1;
+    }
+}
+
+message CatalogAlbumReleaseId {
+    string metajamCompactKey = 1;
+}

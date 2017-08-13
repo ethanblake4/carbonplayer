@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam";
+option java_outer_classname = "InnerJamApiV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "context/ClientContext.proto";
+import "identifiers/SituationId.proto";
+
+message GetHomeRequest {
+
+    ClientContext clientContext = 1;
+    SituationId firstModuleSituationId = 2;
+    string previousDistilledContextToken = 3;
+
+}
+
+message GetHomeResponse {
+    string distilledContextToken = 1;
+
+}

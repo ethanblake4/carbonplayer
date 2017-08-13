@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.metadata";
+option java_outer_classname = "PlaybackMetadataV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "google/protobuf/empty.proto";
+import "metadata/AudioEntityPlaybackMetadata.proto";
+
+message PlaybackMetadata {
+
+    oneof type {
+        google.protobuf.Empty noMetadata = 1;
+        AudioEntityPlaybackMetadata audioEntity = 2;
+    }
+
+}

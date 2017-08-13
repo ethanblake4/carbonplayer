@@ -13,14 +13,12 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
+import com.carbonplayer.ui.helpers.BackstackSaveable
 import com.carbonplayer.utils.IdentityUtils
-import icepick.Icepick
-import icepick.State
 import kotlinx.android.synthetic.main.activity_main.view.*
 import rx.Subscription
-import timber.log.Timber
 
-class AlbumPageFragment : Fragment() {
+class AlbumPageFragment : Fragment(), BackstackSaveable {
 
     private var albumSubscription: Subscription? = null
     private var adapter: RecyclerView.Adapter<*>? = null
@@ -41,6 +39,7 @@ class AlbumPageFragment : Fragment() {
         (view.toolbar.layoutParams as AppBarLayout.LayoutParams).bottomMargin += IdentityUtils.getStatusBarHeight(resources) / 2
 
         layoutManager = GridLayoutManager(activity, 2)
+
         view.main_recycler.layoutManager = layoutManager
         view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
@@ -63,7 +62,13 @@ class AlbumPageFragment : Fragment() {
         return view
     }
 
-    fun saveStateForBackstack() {
+    override fun onResume() {
+        view.main_recycler.adapter.notifyDataSetChanged()
+        super.onResume()
+
+    }
+
+    override fun saveStateForBackstack() {
         recyclerState = view.main_recycler.layoutManager.onSaveInstanceState()
     }
 }

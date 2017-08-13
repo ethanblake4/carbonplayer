@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.elements";
+option java_outer_classname = "PlayButtonV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/Color.proto";
+import "innerjam/renderers/RenderContext.proto";
+
+message PlayButton {
+
+    enum PlayButtonSize {
+        PLAY_BUTTON_SIZE_UNSPECIFIED = 0;
+        PERCENT_75 = 1;
+        PERCENT_100 = 2;
+        PERCENT_125 = 3;
+        PERCENT_175 = 4;
+    }
+
+    Color backgroundColor = 1;
+    Color foregroundColor = 2;
+    Color ringColor = 3;
+    PlayButtonSize buttonSize = 4;
+    string allYPlayText = 5;
+    string allYPauseText = 6;
+    Color pulseColor = 7;
+    RenderContext renderContext = 8;
+
+}

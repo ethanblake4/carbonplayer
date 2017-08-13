@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.ads";
+option java_outer_classname = "AdInfoV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+message AdInfo {
+
+    map<string, string> adParams = 1;
+
+}

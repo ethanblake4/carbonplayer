@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "ContextMenuV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/Color.proto";
+import "innerjam/renderers/RenderContext.proto";
+import "identifiers/AudioId.proto";
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "innerjam/elements/TitleSection.proto";
+import "innerjam/elements/ActionList.proto";
+
+message ContextMenuDescriptor {
+
+    RenderContext renderContext = 1;
+    repeated ContextMenuItemDescriptor items = 2;
+    string allYText = 3;
+
+}
+
+message ContextMenuItemDescriptor {
+    RenderContext renderContext = 1;
+    string displayText = 2;
+    string allYText = 3;
+    ActionList.Action clickAction = 4;
+}

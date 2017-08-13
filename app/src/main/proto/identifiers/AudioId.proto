@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.identifiers";
+option java_outer_classname = "AudioIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "identifiers/TrackId.proto";
+import "identifiers/PodcastEpisodeId.proto";
+
+message AudioId {
+
+    oneof type {
+        TrackId track = 1;
+        PodcastEpisodeId podcastEpisode = 2;
+    }
+
+}

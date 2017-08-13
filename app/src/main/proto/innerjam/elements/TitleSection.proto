@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.elements";
+option java_outer_classname = "TitleSectionV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/visuals/ActionableText.proto";
+
+message TitleSection {
+
+    oneof titleType {
+        AttributedText title = 1;
+        ActionableText actionableTitle = 3;
+    }
+
+    oneof subtitleType {
+        AttributedText subtitle = 2;
+        ActionableText actionableSubtitle = 4;
+    }
+
+}

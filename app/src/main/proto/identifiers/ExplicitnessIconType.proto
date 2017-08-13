@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.identifiers";
+option java_outer_classname = "ExplicitnessIconTypeV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+enum ExplicitnessIconType {
+    EXPLICITNESS_ICON_TYPE_UNSPECIFIED = 0;
+    NON_EXPLICIT = 1;
+    EXPLICIT = 2;
+}

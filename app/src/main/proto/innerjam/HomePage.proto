@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam";
+option java_outer_classname = "HomePageV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/FullBleedModule.proto";
+import "innerjam/renderers/CeDeviceModule.proto";
+
+message HomePage {
+
+    oneof renderer {
+        FullBleedModuleList fullBleedModuleList = 3;
+        CeDeviceModuleList ceDeviceModuleList = 4;
+    }
+
+}

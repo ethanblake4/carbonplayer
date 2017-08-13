@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.visuals";
+option java_outer_classname = "ActionableTextV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/elements/ActionList.proto";
+
+message ActionableText {
+
+    AttributedText attributedText = 1;
+    ActionList.Action action = 2;
+
+}

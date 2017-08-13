@@ -80,3 +80,4 @@ fabric.properties
 google-services.json
 /app/google-services.json
 /carbonplayer.properties
+/.idea/tools.protobuf.xml

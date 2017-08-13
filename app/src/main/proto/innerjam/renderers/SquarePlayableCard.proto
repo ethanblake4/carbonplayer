@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "SquarePlayableCardV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/RenderContext.proto";
+import "identifiers/PlayableItemId.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "innerjam/elements/TitleSection.proto";
+import "innerjam/elements/NumberedDescriptionSection.proto";
+import "innerjam/elements/ActionList.proto";
+import "innerjam/renderers/ContextMenu.proto";
+import "innerjam/elements/PlayButton.proto";
+import "metadata/PlaybackMetadata.proto";
+import "identifiers/ExplicitnessIconType.proto";
+import "ads/AdInfo.proto";
+
+message SquarePlayableCardList {
+    repeated SquarePlayableCardDescriptor cards = 2;
+    SquarePlayableCardSize cardSize = 3;
+}
+
+message SquarePlayableCardDescriptor {
+    RenderContext renderContext = 1;
+    PlayableItemId itemId = 2;
+    ImageReference imageReference = 3;
+    oneof descriptionSection {
+        TitleSection titleSection = 4;
+        NumberedDescriptionSection numberedDescriptionSection = 9;
+    }
+    string allYText = 5;
+    ActionList actionList = 6;
+    ContextMenuDescriptor contextMenu = 7;
+    PlayButton playButton = 8;
+    string dismissalKey = 10;
+    PlaybackMetadata playbackMetadata = 11;
+    ExplicitnessIconType explicitnessIconType = 12;
+    AdInfo adInfo = 13;
+}
+
+enum SquarePlayableCardSize {
+    SQUARE_PLAYABLE_CARD_SIZE_UNSPECIFIED = 0;
+    SQUARE_PLAYABLE_CARD_SIZE_MINI = 1;
+    SQUARE_PLAYABLE_CARD_SIZE_PETITE = 5;
+    SQUARE_PLAYABLE_CARD_SIZE_SMALL = 2;
+    SQUARE_PLAYABLE_CARD_SIZE_STANDARD = 3;
+    SQUARE_PLAYABLE_CARD_SIZE_LARGE = 4;
+}

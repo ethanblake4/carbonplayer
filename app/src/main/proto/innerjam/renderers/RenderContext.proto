@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "RenderContextV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+message RenderContext {
+
+    string logToken = 1;
+
+}

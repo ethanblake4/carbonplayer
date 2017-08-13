@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "FullBleedModuleV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/Color.proto";
+import "innerjam/renderers/RenderContext.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/renderers/HomeRecents.proto";
+import "innerjam/renderers/NumberedItem.proto";
+import "innerjam/renderers/SquarePlayableCard.proto";
+import "innerjam/renderers/NowCard.proto";
+import "innerjam/renderers/WidePlayableCard.proto";
+import "innerjam/renderers/TallPlayableCard.proto";
+import "innerjam/visuals/Palette.proto";
+
+message FullBleedModuleList {
+    repeated FullBleedModule modules = 1;
+    int32 initialModuleIndex = 2;
+    string recentsModuleToken = 3;
+}
+
+message FullBleedModule {
+
+    ImageReference backgroundImageReference = 1;
+    string allYText = 2;
+    AttributedText moduleTitle = 3;
+    AttributedText moduleSubtitle = 4;
+    FullBleedSection singleSection = 5;
+    oneof moduleTitleUnderlineType {
+        Color moduleTitleUnderlineColor = 7;
+        uint32 moduleTitleUnderlineColorId = 13;
+    }
+    Color playerBarBackgroundColor = 8;
+    Color backgroundColor = 9;
+    RenderContext renderContext = 10;
+    string moduleToken = 11;
+    Palette palette = 12;
+    oneof modulePaginationActiveColorType {
+         Color modulePaginationActiveColor = 14;
+         uint32 modulePaginationActiveColorId = 15;
+    }
+    oneof modulePaginationInactiveColorType {
+        Color modulePaginationInctiveColor = 16;
+        uint32 modulePaginationInctiveColorId = 17;
+    }
+
+}
+
+message FullBleedSection {
+    oneof content {
+        HomeRecents recents = 1;
+        NumberedItemList numberedItemList = 2;
+        SquarePlayableCardList squarePlayableCardList = 3;
+        NowCardList nowCardList = 4;
+        WidePlayableCardList widePlayableCardList = 5;
+        TallPlayableCardList tallPlayableCardList = 6;
+    }
+}

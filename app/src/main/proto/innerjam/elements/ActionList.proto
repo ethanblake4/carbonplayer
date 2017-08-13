@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.elements";
+option java_outer_classname = "ActionListV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/resources/ResourceId.proto";
+import "identifiers/AudioListId.proto";
+import "identifiers/CapabilityId.proto";
+import "identifiers/RadioSeedId.proto";
+import "identifiers/AlbumReleaseId.proto";
+import "identifiers/ArtistId.proto";
+import "innerjam/elements/PurchaseOption.proto";
+import "identifiers/PlayableItemId.proto";
+
+message ActionList {
+
+    message Action {
+        string displayText = 1;
+        oneof type {
+            DismissalOption dismissalOption = 2;
+            AlbumReleaseId albumReleaseLink = 3;
+            ArtistId artistLink = 4;
+            ShareContentOption shareContentOption = 5;
+            StartRadioStationOption startRadioStationOption = 6;
+            PurchaseOption purchaseOption = 7;
+            InternalUrl internalUrl = 8;
+            ExternalUrl externalUrl = 9;
+            PlayContainerNextOption playContainerNextOption = 10;
+            AddContainerToQueueOption addContainerToQueueOption = 11;
+            AddContainerToUserLibraryOption addContainerToUserLibraryOption = 12;
+            RemoveContainerFromUserLibraryOption removeContainerFromUserLibraryOption = 13;
+            DownloadContainerOption downloadContainerOption = 14;
+            RemoveDownloadedContainerOption removeDownloadedContainerOption = 15;
+            EditPlaylistOption editPlaylistOption = 16;
+            DeletePlaylistOption deletePlaylistOption = 17;
+            SubscribeToPlaylistOption subscribeToPlaylistOption = 18;
+            UnsubscribeFromPlaylistOption unsubscribeFromPlaylistOption = 19;
+            PlaylistLink playlistLink = 23;
+            RadioSeedId radioStationLink = 20;
+            RequestCapability requestCapability = 21;
+            ShowPageOption showPageOption = 22;
+            StartPlayableItem startPlayableItem = 24;
+            NavigationAction navigationAction = 25;
+        }
+    }
+
+}
+
+message AddContainerToQueueOption {}
+message AddContainerToUserLibraryOption {}
+message DeletePlaylistOption {}
+message DismissalOption {
+    string dismissalToken = 2;
+}
+message DownloadContainerOption {}
+message EditPlaylistOption {}
+message ExternalUrl {
+    string url = 1;
+}
+message InternalUrl {
+    string url = 1;
+}
+message NavigationAction {
+    oneof destination {
+        ResourceId resourceId = 1;
+        string moduleToken = 2;
+    }
+}
+message PlayContainerNextOption {}
+message PlaylistLink {
+    oneof type {
+        LockerPlaylistId ownedPlaylist = 1;
+        SharedPlaylistId sharedPlaylist = 2;
+    }
+}
+message RemoveContainerFromUserLibraryOption {}
+message RemoveDownloadedContainerOption {}
+message RequestCapability {
+    CapabilityId capabilityId = 1;
+}
+message ShareContentOption {
+    string shareLink = 1;
+    string shareTitle = 2;
+}
+message ShowPageOption {
+    string pageToken = 1;
+}
+message StartRadioStationOption {
+    RadioSeedId radioSeedId = 1;
+}
+message StartPlayableItem {
+    PlayableItemId itemId = 1;
+}
+message SubscribeToPlaylistOption {}
+message UnsubscribeFromPlaylistOption {}

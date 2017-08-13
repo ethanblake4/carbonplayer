@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.visuals";
+option java_outer_classname = "ColorV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+message Color {
+
+    oneof colorSpace {
+        RgbaSpace rgbaSpace = 1;
+    }
+
+    message RgbaSpace {
+        uint32 red = 1;
+        uint32 blue = 2;
+        uint32 green = 3;
+        uint32 alpha = 4;
+    }
+
+}

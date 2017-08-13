@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.context";
+option java_outer_classname = "LocationV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "google/protobuf/duration.proto";
+
+message Location {
+
+    double latitude = 1;
+    double longitude = 2;
+    double accuracyInMeters = 3;
+    google.protobuf.Duration detectionLatency = 4;
+
+}

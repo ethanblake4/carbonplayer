@@ -3,6 +3,7 @@ package com.carbonplayer.model.network;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -13,9 +14,16 @@ import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.enums.StreamQuality;
 import com.carbonplayer.model.entity.exception.ResponseCodeException;
 import com.carbonplayer.model.entity.exception.ServerRejectionException;
+import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeRequest;
+import com.carbonplayer.model.entity.proto.context.ClientContextV1Proto.ClientContext;
+import com.carbonplayer.model.entity.proto.context.ClientContextV1Proto.Capability;
+import com.carbonplayer.model.entity.proto.identifiers.CapabilityIdV1Proto;
+import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto;
+import com.carbonplayer.model.network.utils.GzipRequestInterceptor;
 import com.carbonplayer.utils.Gservices;
 import com.carbonplayer.utils.IdentityUtils;
 import com.carbonplayer.utils.URLSigning;
+import com.google.protobuf.ByteString;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,7 +36,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 
 import okhttp3.MediaType;
@@ -36,6 +46,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import timber.log.Timber;
@@ -46,6 +57,7 @@ import timber.log.Timber;
 public final class Protocol {
 
     private static final String SJ_URL = "https://mclients.googleapis.com/sj/v2.5/";
+    public static final String PA_URL = "https://music-pa.googleapis.com/";
     private static final String STREAM_URL = "https://android.clients.google.com/music/mplay";
     private static final MediaType TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
     private static final int MAX_RESULTS = 250;
@@ -79,6 +91,39 @@ public final class Protocol {
                 subscriber.onError(e);
             }
             subscriber.onCompleted();
+        });
+    }
+
+    public static Completable listenNow(@NonNull final Activity context) {
+
+        final OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient(
+                new OkHttpClient.Builder()
+                .addInterceptor(new GzipRequestInterceptor())
+        );
+        final Uri.Builder getParams = new Uri.Builder()
+                .appendQueryParameter("dv", CarbonPlayerApplication.Companion.getInstance().getGoogleBuildNumber())
+                .appendQueryParameter("alt", "proto")
+                .appendQueryParameter("hl", IdentityUtils.localeCode())
+                .appendQueryParameter("tier", "aa");
+
+        GetHomeRequest homeRequest = GetHomeRequest.newBuilder()
+                .setClientContext(getClientContext(context)).build();
+
+        return Completable.create(subscriber -> {
+            Request request = bearerBuilder(context)
+                    .url(PA_URL + "v1/ij/gethome?" + getParams.build().getEncodedQuery())
+                    .header("Content-Type", "application/x-protobuf")
+                    .post(RequestBody.create(MediaType.parse("application/x-protobuf"), homeRequest.toByteArray()))
+                    .build();
+
+            try {
+                Response r = client.newCall(request).execute();
+                if(!r.isSuccessful()) subscriber.onError(new ResponseCodeException());
+
+                Timber.d(r.body().string());
+            } catch (Exception e) {
+                subscriber.onError(e);
+            }
         });
     }
 
@@ -300,6 +345,54 @@ public final class Protocol {
                 .header("X-Device-ID", deviceId)
                 .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context));
                 //.header("X-Device-ID", IdentityUtils.deviceId(context));
+    }
+
+    private static ClientContext getClientContext(Context context) {
+        ClientContext.Builder clientContext = ClientContext.newBuilder();
+        clientContext.setBuildVersion(CarbonPlayerApplication.Companion.getInstance().getGoogleBuildNumberLong());
+        clientContext.setCapabilitiesVersion(2);
+        clientContext.setDeviceId(String.valueOf(Gservices.getLong(context.getContentResolver(), "android_id", 0)));
+        clientContext.setTimezoneOffset(IdentityUtils.getTimezoneOffsetProtoDuration());
+        clientContext.setRequestId(UUID.randomUUID().toString());
+        clientContext.setLocale(IdentityUtils.localeCode());
+        clientContext.addAllCapabilities(getClientContextCapabilities());
+        clientContext.addDeviceClientContextBytes(ByteString.EMPTY);
+        return clientContext.build();
+    }
+
+    private static List<Capability> getClientContextCapabilities() {
+        List<Capability> capabilities = new ArrayList<>();
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.INNERJAM_WIDE_PLAYABLE_CARD,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.INNERJAM_TALL_PLAYABLE_CARD,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.THUMBNAILED_MODULE_NOW_CARDS,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.THRILLER_NOW_COLOR_BLOCKS,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.THRILLER_USER_PLAYLISTS,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.LOCAL_LIBRARY_PLAYLIST_PLAYABLE_ITEMS,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.SERVER_RECENTS_MODULE,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.TRACK_RADIO,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.USER_LOCATION_HISTORY,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.USER_LOCATION_REPORTING,
+                Capability.CapabilityStatus.ENABLED));
+        capabilities.add(makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType.FINE_GRAINED_LOCATION_PERMISSION,
+                Capability.CapabilityStatus.SUPPORTED));
+        return capabilities;
+
+    }
+
+
+    private static Capability makeCapability(CapabilityIdV1Proto.CapabilityId.CapabilityType type, Capability.CapabilityStatus status) {
+        return Capability.newBuilder().setId(
+                    CapabilityIdV1Proto.CapabilityId.newBuilder().setType(type).build())
+                .setStatus(status).build();
     }
 
 

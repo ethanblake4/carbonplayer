@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.elements";
+option java_outer_classname = "PurchaseOptionV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "identifiers/AlbumReleaseId.proto";
+import "identifiers/TrackId.proto";
+
+
+message PurchaseOption {
+
+    oneof type {
+        CatalogTrackPurchaseInfo catalogTrack = 1;
+        CatalogAlbumPurchaseInfo catalogAlbum = 2;
+        SubscriptionPurchaseInfo subscription = 3;
+    }
+
+}
+
+message CatalogAlbumPurchaseInfo {
+    CatalogAlbumReleaseId catalogAlbumReleaseId = 1;
+}
+
+message CatalogTrackPurchaseInfo {
+    CatalogTrackId catalogTrackId = 1;
+}
+
+message FinskyOffer {
+    string backendDocId = 1;
+    string offerId = 2;
+    int32 offerType = 3;
+    int32 docType = 4;
+    string fullDocId = 5;
+}
+
+message FoplessOffer {
+    string offerId = 1;
+}
+
+message SubscriptionPurchaseInfo {
+    oneof type {
+        FoplessOffer foplessOffer = 1;
+        FinskyOffer finskyOffer = 2;
+    }
+
+    AcquireServiceProvider acquireServiceProvider = 3;
+}
+enum AcquireServiceProvider {
+    ACQUIRE_SERVICE_PROVIDER_UNSPECIFIED = 0;
+    FINSKY = 1;
+    FAMILY_ONBOARDING = 2;
+}

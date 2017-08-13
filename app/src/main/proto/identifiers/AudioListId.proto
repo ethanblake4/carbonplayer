@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.identifiers";
+option java_outer_classname = "AudioListIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "identifiers/AlbumReleaseId.proto";
+import "identifiers/PodcastSeriesid.proto";
+
+message AudioListId {
+    oneof type {
+        AlbumReleaseId albumRelease = 1;
+        CuratedPlaylistId curatedPlaylist = 2;
+        LockerPlaylistId lockerPlaylist = 3;
+        SharedPlaylistId sharedPlaylist = 6;
+        PodcastSeriesId podcastSeries = 4;
+    }
+}
+
+message CuratedPodcastEpisodePlaylistId {
+    string metajamCompactKey = 1;
+}
+
+message LockerPlaylistId {
+    string playlistToken = 1;
+}
+
+message SharedPlaylistId {
+    string playlistToken = 1;
+}
+
+message CuratedPlaylistId {
+    string metajamCompactKey = 1;
+}

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "TallPlayableCardV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/renderers/RenderContext.proto";
+import "identifiers/PlayableItemId.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "innerjam/elements/TitleSection.proto";
+import "innerjam/renderers/ContextMenu.proto";
+import "innerjam/elements/PlayButton.proto";
+import "metadata/PlaybackMetadata.proto";
+import "identifiers/ExplicitnessIconType.proto";
+import "ads/AdInfo.proto";
+
+message TallPlayableCardList {
+    repeated TallPlayableCardDescriptor cards = 1;
+}
+
+message TallPlayableCardDescriptor {
+    RenderContext renderContext = 1;
+    PlayableItemId itemId = 2;
+    PlaybackMetadata playbackMetadata = 3;
+    ImageReference imageReference = 4;
+    AttributedText description = 7;
+    string allYText = 8;
+    PlayButton playButton = 9;
+    ContextMenuDescriptor contextMenu = 10;
+    string dismissalKey = 11;
+    ExplicitnessIconType explicitnessIconType = 12;
+    TitleSection titleSection = 13;
+    AdInfo adInfo = 14;
+}

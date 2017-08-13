@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.identifiers";
+option java_outer_classname = "PodcastSeriesIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+message PodcastSeriesId {
+    oneof type {
+        CatalogPodcastSeriesId catalog = 1;
+    }
+}
+
+message CatalogPodcastSeriesId {
+    string metajamCompactKey = 1;
+}

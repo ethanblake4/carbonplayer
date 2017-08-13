@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "NowCardV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/RenderContext.proto";
+import "innerjam/renderers/ModuleNowCard.proto";
+import "innerjam/renderers/PlayableItemNowCard.proto";
+
+message NowCardDescriptor {
+
+    RenderContext renderContext = 1;
+    oneof cardContent {
+        ModuleNowCardDescriptor moduleCardDescriptor = 2;
+        PlayableItemNowCardDescriptor playableItemCardDescriptor = 3;
+    }
+
+}
+
+message NowCardList {
+    repeated NowCardDescriptor cards = 1;
+}

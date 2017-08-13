@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.resources";
+option java_outer_classname = "RecentsResourceIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+message RecentsResourceId {}

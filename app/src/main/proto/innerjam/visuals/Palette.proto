@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.visuals";
+option java_outer_classname = "PaletteV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/PaletteEntry.proto";
+
+message Palette {
+
+    repeated PaletteEntry entries = 1;
+
+}

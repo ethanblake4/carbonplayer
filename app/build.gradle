@@ -5,6 +5,9 @@ apply plugin: 'kotlin-android-extensions'
 
 apply plugin: 'realm-android'
 
+apply plugin: 'com.google.protobuf'
+
+
 if(project.hasProperty("carbonplayer.properties")
         && new File(project.property("carbonplayer.properties")).exists()) {
 
@@ -63,6 +66,40 @@ if(project.hasProperty("carbonplayer.properties")
             // Prevent OutOfMemory with MultiDex during the build phase
             javaMaxHeapSize "2g"
         }
+
+        sourceSets {
+            main {
+                proto {
+                    srcDir 'src/main/proto/'
+                }
+                java {
+                    srcDir 'src/main/java'
+                }
+            }
+        }
+    }
+
+    protobuf {
+        protoc {
+            artifact = "com.google.protobuf:protoc:3.0.0"
+        }
+
+        plugins {
+            lite {
+                artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
+            }
+        }
+
+        generateProtoTasks {
+            all().each {
+                task -> task.builtins {
+                    remove java
+                }
+                task.plugins {
+                    lite { }
+                }
+            }
+        }
     }
 }
 
@@ -111,6 +148,8 @@ dependencies {
     implementation 'com.google.guava:guava:22.0-android'
     implementation 'com.android.support:mediarouter-v7:25.4.0'
     implementation 'com.github.ksoichiro:android-observablescrollview:1.6.0'
+    implementation 'com.google.protobuf:protobuf-lite:3.0.1'
+    protobuf 'com.google.protobuf:protobuf-java:3.3.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

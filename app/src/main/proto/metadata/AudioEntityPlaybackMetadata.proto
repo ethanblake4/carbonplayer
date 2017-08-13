@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.metadata";
+option java_outer_classname = "AudioEntityPlaybackMetadataV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "google/protobuf/duration.proto";
+
+
+message AudioEntityPlaybackMetadata {
+
+    google.protobuf.Duration duration = 1;
+
+}

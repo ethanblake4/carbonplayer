@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.identifiers";
+option java_outer_classname = "TrackIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+message TrackId {
+
+    oneof type {
+        CatalogTrackId catalog = 1;
+        UploadedTrackId uploaded = 2;
+    }
+
+}
+
+message CatalogTrackId {
+    string metajamCompactKey = 1;
+}
+
+message UploadedTrackId {
+    string lockerId = 1;
+}

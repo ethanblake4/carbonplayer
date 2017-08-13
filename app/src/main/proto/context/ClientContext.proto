@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.context";
+option java_outer_classname = "ClientContextV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "identifiers/CapabilityId.proto";
+import "context/ContextSignal.proto";
+import "google/protobuf/duration.proto";
+
+message ClientContext {
+    ClientType type = 1;
+    int64 buildVersion = 2;
+    int64 capabilitiesVersion = 3;
+    string deviceId = 4;
+    string locale = 5;
+    string requestId = 6;
+    google.protobuf.Duration timezoneOffset = 7;
+    repeated CapabilityOverride capabilityOverrides = 8;
+    ContentFilter contentFilter = 9;
+    repeated Capability capabilities = 10;
+    repeated bytes deviceClientContextBytes = 11;
+    repeated ContextSignal contextSignals = 12;
+    int64 gmsCoreVersion = 13;
+    int64 phoneskyVersion = 14;
+}
+
+enum ClientType {
+    CLIENT_TYPE_UNSPECIFIED = 0;
+    ANDROID = 1;
+    IOS = 2;
+    WEB = 3;
+    SONOS = 4;
+    ANDROID_WEAR = 5;
+    ANDROID_AUTO = 6;
+    CARPLAY = 7;
+    GOOGLE_HOME_APP = 8;
+    INTEGRATIONS = 9;
+}
+
+enum OverrideType {
+    OVERRIDE_TYPE_UNSPECIFIED = 0;
+    ENABLE = 1;
+    DISABLE = 2;
+}
+
+enum ContentFilter {
+    CONTENT_FILTER_UNSPECIFIED = 0;
+    NO_PREFERENCE = 1;
+    FORBID_EXPLICIT = 2;
+}
+
+message CapabilityOverride {
+    CapabilityId id = 1;
+}
+
+message Capability {
+    CapabilityId id = 1;
+    CapabilityStatus status = 2;
+
+    enum CapabilityStatus {
+        CAPABILITY_STATUS_UNSPECIFIED = 0;
+        NOT_SUPPORTED = 1;
+        SUPPORTED = 2;
+        ENABLED = 3;
+        BLOCKED = 4;
+    }
+}

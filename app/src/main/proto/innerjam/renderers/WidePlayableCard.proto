@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "WidePlayableCardV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/visuals/ActionableText.proto";
+import "innerjam/renderers/RenderContext.proto";
+import "identifiers/PlayableItemId.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "innerjam/elements/TitleSection.proto";
+import "innerjam/renderers/ContextMenu.proto";
+import "innerjam/elements/PlayButton.proto";
+import "metadata/PlaybackMetadata.proto";
+import "identifiers/ExplicitnessIconType.proto";
+import "ads/AdInfo.proto";
+
+message WidePlayableCardList {
+    repeated WidePlayableCardDescriptor cards = 1;
+}
+
+message WidePlayableCardDescriptor {
+    RenderContext renderContext = 1;
+    PlayableItemId itemId = 2;
+    PlaybackMetadata playbackMetadata = 3;
+    ImageReference imageReference = 4;
+    oneof titleType {
+        AttributedText title = 5;
+        ActionableText actionableTitle = 12;
+    }
+    AttributedText description = 6;
+    string allYText = 7;
+    PlayButton playButton = 8;
+    ContextMenuDescriptor contextMenu = 9;
+    string dismissalKey = 10;
+    ExplicitnessIconType explicitnessIconType = 11;
+    AdInfo adInfo = 13;
+}

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.resources";
+option java_outer_classname = "ResourceIdV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/resources/RecentsResourceId.proto";
+import "innerjam/resources/BrowseCuratedStationsCategoryResourceId.proto";
+import "innerjam/resources/BrowseCuratedStationsResourceId.proto";
+import "innerjam/resources/OfferFlowResourceId.proto";
+
+message ResourceId {
+    oneof resourceTypeId {
+        RecentsResourceId recentsResourceId = 1;
+        BrowseCuratedStationsCategoryResourceId browseCuratedStationsCategoryResourceId = 2;
+        BrowseCuratedStationsResourceId browseCuratedStationsResourceId = 3;
+        OfferFlowResourceId offerFlowResourceId = 4;
+    }
+}

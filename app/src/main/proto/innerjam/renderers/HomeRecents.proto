@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "HomeRecentsV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/RenderContext.proto";
+import "innerjam/elements/PlayButton.proto";
+import "innerjam/renderers/SquarePlayableCard.proto";
+
+message HomeRecents {
+
+    RenderContext renderContext = 1;
+    bool anchored = 2;
+    int32 recentIndex = 3;
+    PlayButton playButton = 4;
+    SquarePlayableCardSize squarePlayableCardSize = 5;
+    uint32 cardTitlePaletteId = 6;
+    uint32 cardSubtitlePaletteId = 7;
+
+}

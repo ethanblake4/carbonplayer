@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.visuals";
+option java_outer_classname = "PaletteEntryV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/visuals/Color.proto";
+
+message PaletteEntry {
+
+    uint32 id = 1;
+    Color color = 2;
+
+}
