@@ -8,6 +8,7 @@ option optimize_for = LITE_RUNTIME;
 
 import "context/ClientContext.proto";
 import "identifiers/SituationId.proto";
+import "innerjam/ContentPage.proto";
 
 message GetHomeRequest {
 
@@ -18,6 +19,15 @@ message GetHomeRequest {
 }
 
 message GetHomeResponse {
-    string distilledContextToken = 1;
+
+    enum PreviousContentState {
+        ALL_CONTENT_NEEDS_TO_BE_UPDATED = 0;
+        ALL_CONTENT_UP_TO_DATE = 1;
+    }
+
+    ContentPage homeContentPage = 1;
+    repeated ContentPage additionalContentPages = 2;
+    string distilledContextToken = 3;
+    PreviousContentState previousContentState = 4;
 
 }

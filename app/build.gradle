@@ -150,6 +150,7 @@ dependencies {
     implementation 'com.github.ksoichiro:android-observablescrollview:1.6.0'
     implementation 'com.google.protobuf:protobuf-lite:3.0.1'
     protobuf 'com.google.protobuf:protobuf-java:3.3.1'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.8.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

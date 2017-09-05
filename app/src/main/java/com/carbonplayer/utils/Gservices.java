@@ -19,8 +19,8 @@ public class Gservices {
     public static final Uri CONTENT_URI = Uri.parse("content://com.google.android.gsf.gservices");
     public static final Uri MAIN_URI = Uri.withAppendedPath(CONTENT_URI, "main");
     public static final Uri PREFIX_URI = Uri.withAppendedPath(CONTENT_URI, "prefix");
-    public static final Pattern FALSE_PATTERN = Pattern.compile("^(0|false|f|off|no|n)$", 2);
-    public static final Pattern TRUE_PATTERN = Pattern.compile("^(1|true|t|on|yes|y)$", 2);
+    public static final Pattern FALSE_PATTERN = Pattern.compile("^(0|false|f|off|no|n)$", Pattern.CASE_INSENSITIVE);
+    public static final Pattern TRUE_PATTERN = Pattern.compile("^(1|true|t|on|yes|y)$", Pattern.CASE_INSENSITIVE);
     private static final String TAG = "GoogleServices";
     private static HashMap<String, String> cache;
     private static String[] preloadedPrefixes = new String[0];
@@ -40,7 +40,7 @@ public class Gservices {
 
     private static void ensureCacheInitializedLocked(final ContentResolver resolver) {
         if (cache == null) {
-            cache = new HashMap<String, String>();
+            cache = new HashMap<>();
             versionToken = new Object();
             Gservices.resolver = resolver;
             new Thread(() -> {

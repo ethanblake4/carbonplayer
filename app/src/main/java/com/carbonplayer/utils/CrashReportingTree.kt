@@ -15,12 +15,11 @@ class CrashReportingTree : Timber.Tree() {
 
         FirebaseCrash.logcat(priority, tag, obfuscate(message))
         throwable?.let {
-            FirebaseCrash.logcat(priority, tag, "Exception "+ it.localizedMessage + ": stack trace: \n" + it.stackTrace.contentToString())
+            FirebaseCrash.report(it)
         }
     }
 
     fun obfuscate(message: String) : String {
-
         val index = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]{}:;\"'<>,.?/\\-_=+~`!@#\$%^&*()"
         val shift = "rstuvwxyzABCDEFGHIabcdefghi+~`!@#\$%^&*()jklmnopq0123456789[]{}:;\"'<>,.?/\\-_=JKLMNOPQRSTUVWXYZ"
         val sb = StringBuilder()

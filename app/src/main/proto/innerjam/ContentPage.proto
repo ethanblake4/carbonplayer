@@ -8,12 +8,14 @@ option optimize_for = LITE_RUNTIME;
 
 import "innerjam/ExpirationPolicy.proto";
 import "innerjam/HomePage.proto";
+import "innerjam/ModulePage.proto";
 
 message ContentPage {
 
     ExpirationPolicy expirationPolicy = 1;
     oneof pageType {
         HomePage homePage = 2;
+        ModulePage modulePage = 3;
     }
     string pageToken = 4;
 

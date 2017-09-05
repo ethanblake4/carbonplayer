@@ -30,6 +30,7 @@ public class Preferences {
 
     public String BearerAuth;
     public String OAuthToken;
+    public String PlayMusicOAuth;
 
     public int maxAudioCacheSizeMB = 1024;
 

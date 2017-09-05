@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "NowModuleV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/RenderContext.proto";
+import "innerjam/visuals/ImageReference.proto";
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/renderers/NowCard.proto";
+import "innerjam/renderers/TextButton.proto";
+
+message NowModule {
+
+    message NowSection {
+        oneof content {
+            NowCardList nowCardList = 1;
+        }
+    }
+
+    RenderContext renderContext = 1;
+    ImageReference backgroundImageReference = 2;
+    string allYText = 3;
+    AttributedText moduleTitle = 4;
+    TextButtonDescriptor button = 5;
+    NowSection singleSection = 6;
+    string moduleToken = 7;
+
+}
+

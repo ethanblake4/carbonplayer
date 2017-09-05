@@ -12,7 +12,6 @@ import com.carbonplayer.ui.intro.IntroActivity;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import butterknife.Unbinder;
 
 /**
@@ -32,7 +31,7 @@ public final class IntroPageTwoFragment extends Fragment {
         startOAuth = (Button) rootView.findViewById(R.id.introOAuthStart);
 
         startOAuth.setOnClickListener(v ->
-                ((IntroActivity) getActivity()).beginOAuth2Authentication());
+                ((IntroActivity) getActivity()).beginAuthentication());
 
         return rootView;
     }

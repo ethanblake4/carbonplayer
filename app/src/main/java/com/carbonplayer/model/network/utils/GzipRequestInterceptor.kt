@@ -18,16 +18,18 @@ internal class GzipRequestInterceptor : Interceptor {
             return chain.proceed(originalRequest)
         }
 
+
+
         val compressedRequest = originalRequest.newBuilder()
                 .header("Content-Encoding", "gzip")
-                .method(originalRequest.method(), gzip(originalRequest.body()))
+                .method(originalRequest.method(), gzip(originalRequest.body() as RequestBody))
                 .build()
         return chain.proceed(compressedRequest)
     }
 
     private fun gzip(body: RequestBody): RequestBody {
         return object : RequestBody() {
-            override fun contentType(): MediaType {
+            override fun contentType(): MediaType? {
                 return body.contentType()
             }
 

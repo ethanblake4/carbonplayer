@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "ModuleV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/FullBleedModule.proto";
+import "innerjam/renderers/NowModule.proto";
+
+message Module {
+
+    oneof renderer {
+        FullBleedModule fullBleedModule = 1;
+        NowModule nowModule = 2;
+    }
+
+}

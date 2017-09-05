@@ -121,7 +121,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
     public void onPageSelected(int position) {if (position >= 1) nextButton.setAlpha(0.0f);}
 
     @SuppressLint("SetJavaScriptEnabled")
-    public void beginOAuth2Authentication() {
+    public void beginAuthentication() {
 
         Dialog authDialog = new Dialog(IntroActivity.this);
 

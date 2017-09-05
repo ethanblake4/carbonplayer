@@ -1,6 +1,7 @@
 package com.carbonplayer
 
 import android.app.Application
+import android.net.http.AndroidHttpClient
 import android.os.Build
 
 import com.carbonplayer.model.entity.Album
@@ -21,6 +22,7 @@ import icepick.Icepick
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import rx.plugins.RxJavaHooks
 import timber.log.Timber
 
@@ -46,6 +48,7 @@ class CarbonPlayerApplication : Application() {
         preferences.load()
 
         okHttpClient = OkHttpClient.Builder().addNetworkInterceptor(StethoInterceptor()).build()
+        androidHttpClient = AndroidHttpClient.newInstance(googleUserAgent, applicationContext)
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
@@ -88,9 +91,13 @@ class CarbonPlayerApplication : Application() {
     var useOkHttpForLogin = true
 
     lateinit var okHttpClient: OkHttpClient
+    lateinit var androidHttpClient: AndroidHttpClient
 
     fun getOkHttpClient(builder: OkHttpClient.Builder): OkHttpClient {
-        return builder.addNetworkInterceptor(StethoInterceptor()).build()
+        return builder
+                //.addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
+                //.addNetworkInterceptor(StethoInterceptor())
+                .build()
     }
 
     companion object {

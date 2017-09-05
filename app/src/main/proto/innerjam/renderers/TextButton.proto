@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam.renderers";
+option java_outer_classname = "TextButtonV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/RenderContext.proto";
+import "innerjam/visuals/AttributedText.proto";
+import "innerjam/visuals/Color.proto";
+import "innerjam/elements/ActionList.proto";
+
+message TextButtonDescriptor {
+
+    RenderContext renderContext = 1;
+    AttributedText displayText = 2;
+    string allYText = 3;
+    Color backgroundColor = 5;
+    repeated ActionList.Action clickActions = 6;
+
+}

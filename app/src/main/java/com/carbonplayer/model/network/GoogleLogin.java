@@ -5,38 +5,29 @@ import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Base64;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.carbonplayer.CarbonPlayerApplication;
-import com.carbonplayer.model.entity.primitive.Null;
-import com.carbonplayer.utils.Constants;
+import com.carbonplayer.utils.Gservices;
 import com.carbonplayer.utils.IdentityUtils;
-import com.carbonplayer.utils.Preferences;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.UserRecoverableAuthException;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
-import java.nio.Buffer;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -54,17 +45,23 @@ import javax.net.ssl.HttpsURLConnection;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 import rx.Completable;
-import rx.Observable;
 import timber.log.Timber;
 
 /**
  * Contains methods used to authenticate to Google services,
  * as well as to retrieve a Play Music OAuth token.
  *
- * TODO update to use OkHTTP
+ * There are several steps used when authenticating:
+ * 1) Obtain an Android master token. Normally, this is only called by Google Play services
+ *    when setting up a device for the first time. It is needed for steps #2 and #4.
+ * 2) Obtain a ClientLogin token using the master token. This token is used for retrieving
+ *    a user's music library.
+ * 3) Obtain a carbonplayer OAuth token. This is used for retrieving streaming URLs.
+ * 4) Obtain a Google Play Music oAuth token by simulating Google Play Services API calls.
+ *    Most of the code this step is taken from the microG project. This token is required
+ *    for newer features such as the adaptive homepage.
  */
 public final class GoogleLogin {
 
@@ -222,10 +219,12 @@ public final class GoogleLogin {
                 BufferedReader br = new BufferedReader(new InputStreamReader(r.body().byteStream()));
                 String line;
                 while ((line = br.readLine()) != null) {
+                    Timber.d(line);
                     String[] s = line.split("=");
                     response.put(s[0], s[1]);
                 }
             } else {
+                Timber.d(r.body().string());
                 return null;
             }
         } catch (IOException e){
@@ -314,9 +313,9 @@ public final class GoogleLogin {
                 .add("androidId", androidId)
                 .add("app", "com.google.android.music")
                 .add("client_sig", "38918a453d07199354f8b19af05ec6562ced5788")
-                .add("device_country", "us")
-                .add("operatorCountry", "us")
-                .add("lang", "en")
+                .add("device_country", IdentityUtils.getDeviceCountryCode().toLowerCase())
+                .add("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
+                .add("lang", IdentityUtils.getDeviceLanguage().toLowerCase())
                 .add("sdk_version", LOGIN_SDK_VERSION)
                 .build();
         ArrayMap<String, String> response;
@@ -422,11 +421,54 @@ public final class GoogleLogin {
                 subscriber.onCompleted();
             }
 
+            String playOAuth = getMusicOAuth(context, androidId, masterToken);
+            Timber.d("playOAuth: %s", playOAuth == null ? "null" : playOAuth);
+
+            if(playOAuth != null) CarbonPlayerApplication.Companion.getInstance().preferences.PlayMusicOAuth = playOAuth;
+
             CarbonPlayerApplication.Companion.getInstance().getPreferences().BearerAuth = mAuthToken;
             CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
 
             subscriber.onCompleted();
         });
+
+    }
+
+    public static String getMusicOAuth(Context context, String androidId, String authToken) {
+
+        Timber.i("<< MusicOAuth >>");
+
+        String deviceId = String.valueOf(Gservices.getLong(context.getContentResolver(), "android_id", 0));
+
+        FormBody body = new FormBody.Builder()
+                .add("accountType", "HOSTED_OR_GOOGLE")
+                .add("Email", CarbonPlayerApplication.Companion.getInstance().getPreferences().userEmail)
+                .add("service", "oauth2:https://www.googleapis.com/auth/skyjam")
+                .add("source", "android")
+                .add("androidId", deviceId.equals("0") ? androidId : deviceId)
+                .add("app", "com.google.android.music")
+                .add("callerPkg", "com.google.android.music")
+                .add("callerSig", "38918a453d07199354f8b19af05ec6562ced5788")
+                .add("client_sig", "38918a453d07199354f8b19af05ec6562ced5788")
+                .add("ACCESS_TOKEN", "1")
+                .add("system_partition", "1")
+                .add("Token", authToken)
+                .add("device_country", IdentityUtils.getDeviceCountryCode().toLowerCase())
+                .add("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
+                .add("lang", IdentityUtils.getDeviceLanguage().toLowerCase())
+                .add("sdk_version", LOGIN_SDK_VERSION)
+                .build();
+
+        ArrayMap<String, String> response;
+        response = okLoginCall("https://android.clients.google.com/auth", body);
+
+
+        if(response == null) {
+            return null;
+        }
+
+        if(!response.containsKey("Auth")) return null;
+        return response.get("Auth");
 
     }
 
@@ -444,8 +486,8 @@ public final class GoogleLogin {
                     }
                 }
                 if(mAuthToken==null){
-                    //noinspection deprecation
-                    mAuthToken = GoogleAuthUtil.getToken(context, email, "oauth2:https://www.googleapis.com/auth/skyjam");
+                    Account a = new Account(email, "com.google");
+                    mAuthToken = GoogleAuthUtil.getToken(context, a, "oauth2:https://www.googleapis.com/auth/skyjam");
                 }
 
             } catch (IOException | GoogleAuthException ex) {
@@ -459,7 +501,7 @@ public final class GoogleLogin {
         });
     }
 
-    public static void retryGoogleAuthSync(@NonNull Context context) throws IOException, GoogleAuthException{
+    public static void retryGoogleAuthSync(@NonNull Context context) throws IOException, GoogleAuthException {
         String mAuthToken = null;
         String email = CarbonPlayerApplication.Companion.getInstance().getPreferences().userEmail;
         Account[] accounts = AccountManager.get(context).getAccounts();

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package com.carbonplayer;
+
+option java_package = "com.carbonplayer.model.entity.proto.innerjam";
+option java_outer_classname = "ModulePageV1Proto";
+option optimize_for = LITE_RUNTIME;
+
+import "innerjam/renderers/Module.proto";
+
+message ModulePage {
+
+    Module module = 1;
+
+}
