@@ -41,11 +41,11 @@ class AlbumPageFragment : Fragment(), BackstackSaveable {
         layoutManager = GridLayoutManager(activity, 2)
 
         view.main_recycler.layoutManager = layoutManager
-        view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
+        /*view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
             }
-        })
+        })*/
 
         requestManager = Glide.with(activity)
 

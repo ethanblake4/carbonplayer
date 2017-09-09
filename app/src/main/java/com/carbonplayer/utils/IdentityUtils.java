@@ -11,6 +11,7 @@ import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.Px;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.TelephonyManager;
@@ -25,6 +26,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Utilities for identifying device and device details
@@ -36,6 +38,16 @@ public final class IdentityUtils {
         Point size = new Point();
         display.getSize(size);
         return size.x;
+    }
+
+    public static @Px int displayWidth2(@NonNull Context context){
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        return displayMetrics.widthPixels;
+    }
+
+    public static @Px int displayHeight2(@NonNull Context context){
+        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        return displayMetrics.heightPixels;
     }
 
     public static int getStatusBarHeight(Resources res) {
@@ -73,6 +85,13 @@ public final class IdentityUtils {
     public static String deviceId(@NonNull Context context){
         return Settings.Secure.getString(context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
+    }
+
+    public static @NonNull String getGservicesId(@NonNull Context context, boolean fallback) {
+        String gId = String.valueOf(Gservices.getLong(
+                context.getContentResolver(), "android_id", 0));
+        if (gId.equals("0")) return fallback ? deviceId(context) : "0";
+        return gId;
     }
 
     public static boolean getDeviceIsSmartphone(@NonNull Context context){

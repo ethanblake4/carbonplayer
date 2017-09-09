@@ -89,6 +89,7 @@ class CarbonPlayerApplication : Application() {
     var googleUserAgent = "Android-Music/" + googleBuildNumber + " (" + Build.PRODUCT + " " + Build.ID + "); gzip"
     var useWebAuthDialog = false
     var useOkHttpForLogin = true
+    var homePdContextToken: String? = null
 
     lateinit var okHttpClient: OkHttpClient
     lateinit var androidHttpClient: AndroidHttpClient

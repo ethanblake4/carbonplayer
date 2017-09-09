@@ -28,6 +28,7 @@ public class Preferences {
     public StreamQuality preferredStreamQualityWifi = StreamQuality.MEDIUM;
     public StreamQuality preferredStreamQualityMobile = StreamQuality.MEDIUM;
 
+    public String masterToken;
     public String BearerAuth;
     public String OAuthToken;
     public String PlayMusicOAuth;

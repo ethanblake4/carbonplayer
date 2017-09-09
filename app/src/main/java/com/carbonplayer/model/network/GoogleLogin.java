@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.Base64;
 import android.util.Log;
@@ -16,6 +17,7 @@ import android.util.Log;
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.utils.Gservices;
 import com.carbonplayer.utils.IdentityUtils;
+import com.carbonplayer.utils.Preferences;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 
@@ -379,6 +381,8 @@ public final class GoogleLogin {
             String androidId = Settings.Secure.getString(context.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
 
+            String gAndroidId = IdentityUtils.getGservicesId(context, true);
+
             String masterToken = CarbonPlayerApplication.Companion.getInstance().getUseOkHttpForLogin() ?
                     okPerformMasterLogin(email, password, androidId) :
                     performMasterLogin(email, password, androidId);
@@ -387,6 +391,8 @@ public final class GoogleLogin {
                 subscriber.onError(new Exception());
                 subscriber.onCompleted();
             }
+
+            prefs().masterToken = masterToken;
 
             String oAuthToken = CarbonPlayerApplication.Companion.getInstance().getUseOkHttpForLogin() ?
                     okPerformOAuth(email, masterToken, androidId) :
@@ -397,8 +403,8 @@ public final class GoogleLogin {
                 subscriber.onCompleted();
             }
 
-            CarbonPlayerApplication.Companion.getInstance().getPreferences().OAuthToken = oAuthToken;
-            CarbonPlayerApplication.Companion.getInstance().getPreferences().userEmail = email;
+            prefs().OAuthToken = oAuthToken;
+            prefs().userEmail = email;
 
             String mAuthToken = null;
             try {
@@ -416,36 +422,34 @@ public final class GoogleLogin {
                 }
 
             } catch (IOException | GoogleAuthException ex) {
-                CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
+                prefs().save();
                 subscriber.onError(ex);
                 subscriber.onCompleted();
             }
 
-            String playOAuth = getMusicOAuth(context, androidId, masterToken);
+            String playOAuth = getMusicOAuth(context, masterToken);
             Timber.d("playOAuth: %s", playOAuth == null ? "null" : playOAuth);
 
             if(playOAuth != null) CarbonPlayerApplication.Companion.getInstance().preferences.PlayMusicOAuth = playOAuth;
 
-            CarbonPlayerApplication.Companion.getInstance().getPreferences().BearerAuth = mAuthToken;
-            CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
+            prefs().BearerAuth = mAuthToken;
+            prefs().save();
 
             subscriber.onCompleted();
         });
 
     }
 
-    public static String getMusicOAuth(Context context, String androidId, String authToken) {
+    public static String getMusicOAuth(Context context, String authToken) {
 
         Timber.i("<< MusicOAuth >>");
 
-        String deviceId = String.valueOf(Gservices.getLong(context.getContentResolver(), "android_id", 0));
-
         FormBody body = new FormBody.Builder()
                 .add("accountType", "HOSTED_OR_GOOGLE")
-                .add("Email", CarbonPlayerApplication.Companion.getInstance().getPreferences().userEmail)
+                .add("Email", prefs().userEmail)
                 .add("service", "oauth2:https://www.googleapis.com/auth/skyjam")
                 .add("source", "android")
-                .add("androidId", deviceId.equals("0") ? androidId : deviceId)
+                .add("androidId", IdentityUtils.getGservicesId(context, true))
                 .add("app", "com.google.android.music")
                 .add("callerPkg", "com.google.android.music")
                 .add("callerSig", "38918a453d07199354f8b19af05ec6562ced5788")
@@ -472,6 +476,11 @@ public final class GoogleLogin {
 
     }
 
+    public static void retryPlayOAuthSync(@NonNull Context context) {
+        prefs().PlayMusicOAuth = getMusicOAuth(context, prefs().masterToken);
+        prefs().save();
+    }
+
     public static Completable retryGoogleAuth(@NonNull Context context, @NonNull String email){
         return Completable.create(subscriber -> {
 
@@ -494,8 +503,8 @@ public final class GoogleLogin {
                 subscriber.onError(ex);
             }
 
-            CarbonPlayerApplication.Companion.getInstance().getPreferences().BearerAuth = mAuthToken;
-            CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
+            prefs().BearerAuth = mAuthToken;
+            prefs().save();
 
             subscriber.onCompleted();
         });
@@ -503,7 +512,7 @@ public final class GoogleLogin {
 
     public static void retryGoogleAuthSync(@NonNull Context context) throws IOException, GoogleAuthException {
         String mAuthToken = null;
-        String email = CarbonPlayerApplication.Companion.getInstance().getPreferences().userEmail;
+        String email = prefs().userEmail;
         Account[] accounts = AccountManager.get(context).getAccounts();
         for(Account a: accounts){
             Timber.d("|%s|", a.name);
@@ -517,12 +526,16 @@ public final class GoogleLogin {
             mAuthToken = GoogleAuthUtil.getToken(context, email, "oauth2:https://www.googleapis.com/auth/skyjam");
         }
 
-        CarbonPlayerApplication.Companion.getInstance().getPreferences().BearerAuth = mAuthToken;
-        CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
+        prefs().BearerAuth = mAuthToken;
+        prefs().save();
     }
 
     public static Completable retryGoogleAuth(@NonNull Context context){
-        return retryGoogleAuth(context, CarbonPlayerApplication.Companion.getInstance().getPreferences().userEmail);
+        return retryGoogleAuth(context, prefs().userEmail);
+    }
+
+    private static Preferences prefs() {
+        return CarbonPlayerApplication.Companion.getInstance().getPreferences();
     }
 
 }

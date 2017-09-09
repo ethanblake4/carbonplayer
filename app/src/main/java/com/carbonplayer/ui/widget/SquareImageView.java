@@ -1,6 +1,7 @@
 package com.carbonplayer.ui.widget;
 
 import android.content.Context;
+import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
@@ -10,7 +11,7 @@ import android.widget.ImageView;
  *
  * @author Nick Butcher https://github.com/nickbutcher/plaid/
  */
-public class SquareImageView extends ImageView {
+public class SquareImageView extends AppCompatImageView {
 
     public SquareImageView(Context context, AttributeSet attrs) {
         super(context, attrs);

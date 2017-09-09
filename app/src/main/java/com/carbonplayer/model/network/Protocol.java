@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.net.http.AndroidHttpClient;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.model.entity.ConfigEntry;
@@ -102,12 +103,19 @@ public final class Protocol {
         });
     }
 
-    public static Single<InnerJamApiV1Proto.GetHomeResponse> listenNow(@NonNull final Activity context) {
+    public static Single<InnerJamApiV1Proto.GetHomeResponse> listenNow(@NonNull final Activity context,
+                                                                       @Nullable String previousDistilledContextToken) {
 
-        GetHomeRequest homeRequest = GetHomeRequest.newBuilder()
-                .setClientContext(getClientContext(context)).build();
+        GetHomeRequest.Builder builder = GetHomeRequest.newBuilder()
+                .setClientContext(getClientContext(context));
 
-        Timber.d(new String(homeRequest.toByteArray()));
+        if(previousDistilledContextToken != null) {
+            builder.setPreviousDistilledContextToken(previousDistilledContextToken);
+        }
+
+        GetHomeRequest homeRequest = builder.build();
+
+                Timber.d(new String(homeRequest.toByteArray()));
 
         return Single.create(subscriber -> {
 
@@ -127,6 +135,12 @@ public final class Protocol {
                 httpRequest.setHeader("Authorization", "Bearer " + getPlayOAuthToken(context));
                 HttpResponse response = CarbonPlayerApplication.Companion.getInstance().androidHttpClient
                         .execute(httpRequest);
+                if( response.getStatusLine().getStatusCode() == 401) {
+                    GoogleLogin.retryPlayOAuthSync(context);
+                    subscriber.onError(new ServerRejectionException(
+                            ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
+                    ));
+                }
                 HttpEntity ent = response.getEntity();
                 InnerJamApiV1Proto.GetHomeResponse homeResponse =
                         InnerJamApiV1Proto.GetHomeResponse.parseFrom(IOUtils.readSmallStream(ent.getContent(), 5242880));
