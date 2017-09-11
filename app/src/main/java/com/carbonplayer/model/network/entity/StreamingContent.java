@@ -120,13 +120,18 @@ public class StreamingContent {
                             }
                         }
                         sink.close();
+                        downloadRequest.setState(DownloadRequest.State.COMPLETED);
+                        Timber.d("Download Completed");
                     } catch (IOException e) {
                         throw Exceptions.propagate(e);
                     }
                 }).toSingle(() -> ""))
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.from(Looper.getMainLooper()))
-                .subscribe(x -> downloadRequest.setState(DownloadRequest.State.COMPLETED), error -> {
+                .observeOn(AndroidSchedulers.from(context.getMainLooper()))
+                .subscribe(x -> {
+                    downloadRequest.setState(DownloadRequest.State.COMPLETED);
+                    Timber.d("Download Completed");
+                }, error -> {
                     Timber.e(error, "Exception getting stream URL");
                     downloadRequest.setState(DownloadRequest.State.FAILED);
                 });
@@ -156,12 +161,12 @@ public class StreamingContent {
     }
 
     public synchronized void waitForData(long amount) throws InterruptedException {
-        //Timber.d("Waiting for %d", amount);
         while (!isFinished() && this.completed < this.extraChunkSize + amount && this.waitAllowed) {
             long uptimeMs = SystemClock.uptimeMillis();
             if (lastWait + 10000 < uptimeMs) {
                 this.lastWait = uptimeMs;
                 Timber.i("waiting for %d bytes in file: %s", amount, filepath);
+                Timber.i("State: %s", downloadRequest.getState().name());
             }
             wait();
         }
@@ -220,7 +225,8 @@ public class StreamingContent {
     public synchronized boolean isFinished() {
         if(downloadRequest == null) return true;
         DownloadRequest.State state = downloadRequest.getState();
-        return state == DownloadRequest.State.COMPLETED || state == DownloadRequest.State.CANCELED || state == DownloadRequest.State.FAILED;
+        return state == DownloadRequest.State.COMPLETED || state == DownloadRequest.State.CANCELED
+                || state == DownloadRequest.State.FAILED;
     }
 
     public synchronized boolean isCompleted() {

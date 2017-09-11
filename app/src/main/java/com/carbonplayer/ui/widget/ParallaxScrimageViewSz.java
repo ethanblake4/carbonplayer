@@ -48,7 +48,7 @@ public class ParallaxScrimageViewSz extends AppCompatImageView {
     private float scrimAlpha = 0f;
     private float maxScrimAlpha = 1f;
     private int scrimColor = 0x00000000;
-    private float parallaxFactor = -0.5f;
+    private float parallaxFactor = -0.9f;
     private boolean isPinned = false;
     private boolean immediatePin = false;
     public static final Property<ParallaxScrimageView, Float> OFFSET = new AnimUtils
@@ -133,13 +133,13 @@ public class ParallaxScrimageViewSz extends AppCompatImageView {
         if (imageOffset != 0) {
             canvas.save();
             canvas.translate(0f, imageOffset);
-            canvas.clipRect(0f, 0f, canvas.getWidth(), canvas.getHeight() + imageOffset);
+            //canvas.clipRect(0f, 0f, canvas.getWidth(), canvas.getHeight() + imageOffset);
             super.onDraw(canvas);
-            canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), scrimPaint);
+            //canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), scrimPaint);
             canvas.restore();
         } else {
             super.onDraw(canvas);
-            canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), scrimPaint);
+            //canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), scrimPaint);
         }
     }
 

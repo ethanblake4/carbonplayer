@@ -1,6 +1,5 @@
 package com.carbonplayer.ui.main
 
-import android.app.FragmentManager
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -13,6 +12,7 @@ import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.ui.helpers.BackstackSaveable
+import com.carbonplayer.ui.helpers.NowPlayingUIHelper
 import com.carbonplayer.ui.intro.IntroActivity
 import com.carbonplayer.utils.BundleBuilder
 import com.carbonplayer.utils.IdentityUtils
@@ -23,7 +23,8 @@ import kotlinx.android.synthetic.main.controller_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var libraryFrag: BackstackSaveable
+    var libraryFrag: BackstackSaveable? = null
+    lateinit var npUiHelper: NowPlayingUIHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -38,11 +39,12 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.controller_main)
 
+        npUiHelper = NowPlayingUIHelper(this)
+
         bottomNavContainer.setPadding(0, 0, 0, IdentityUtils.getNavbarHeight(resources))
         bottom_nav.selectedItemId = R.id.action_home
 
         bottom_nav.setOnNavigationItemSelectedListener { item ->
-            //fragmentManager.popBackStack("base", FragmentManager.POP_BACK_STACK_INCLUSIVE)
 
             var initialFrag = when(item.itemId) {
                 R.id.action_topcharts -> TopChartsPageFragment()
@@ -51,29 +53,25 @@ class MainActivity : AppCompatActivity() {
                 else -> AlbumPageFragment()
             }
 
-            //initialFrag.exitTransition = Fade()
             if(initialFrag is AlbumPageFragment) libraryFrag = initialFrag
+            else libraryFrag = null
+
+            initialFrag.exitTransition = Fade()
 
             main_controller_container.animate().alpha(0.0f).setDuration(200).start()
 
             Handler().postDelayed({
                 fragmentManager.beginTransaction().replace(R.id.main_controller_container, initialFrag)
                         .commit()
-
                 main_controller_container.translationY = 100.0f
-
                 main_controller_container.animate().setStartDelay(50).translationY(0.0f).alpha(1.0f).setDuration(200).start()
-
             }, 200)
-
-
 
             true
         }
 
-        var initialFrag = AlbumPageFragment()
+        val initialFrag = HomeFragment()
         initialFrag.exitTransition = Fade()
-        libraryFrag = initialFrag
 
         fragmentManager.beginTransaction().replace(R.id.main_controller_container, initialFrag)
                 .commit()
@@ -86,7 +84,7 @@ class MainActivity : AppCompatActivity() {
 
     fun gotoAlbum(album: Album, image: ImageView, content: View, textColor: Int, mainColor: Int, text: TextView, text2: TextView) {
 
-        libraryFrag.saveStateForBackstack()
+        libraryFrag!!.saveStateForBackstack()
 
         val frag = AlbumFragment()
         frag.allowEnterTransitionOverlap = true
@@ -97,6 +95,7 @@ class MainActivity : AppCompatActivity() {
         frag.sharedElementReturnTransition = TransitionInflater.from(this).inflateTransition(R.transition.album_click)
 
         frag.enterTransition = Fade(Fade.IN)
+
 
         fragmentManager.beginTransaction()
                 .addSharedElement(image, image.transitionName)

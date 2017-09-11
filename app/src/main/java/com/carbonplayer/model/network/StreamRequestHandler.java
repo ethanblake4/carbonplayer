@@ -86,7 +86,7 @@ public class StreamRequestHandler implements HttpRequestHandler {
             Timber.d("The content type is: %s", contentType);
 
             response.addHeader(HttpHeaders.CONTENT_TYPE, contentType);
-            response.addHeader("X-SocketTimeout", "60");
+            response.addHeader("X-SocketTimeout", "3000");
             response.addHeader("Pragma", "no-cache");
             response.addHeader("Cache-Control", "no-cache");
             response.setEntity(new InputStreamEntity(streamingContent.toString(), new TailInputStream(streamingContent.getContext(), streamingContent, startRangeByte)));

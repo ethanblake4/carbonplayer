@@ -73,14 +73,13 @@ class CarbonPlayerApplication : Application() {
         Realm.setDefaultConfiguration(realmConfig)
     }
 
-    fun buildDataSourceFactory(bandwidthMeter: DefaultBandwidthMeter): DataSource.Factory {
+    fun buildDataSourceFactory(bandwidthMeter: DefaultBandwidthMeter?): DataSource.Factory {
         return DefaultDataSourceFactory(this, bandwidthMeter,
-                buildHttpDataSourceFactory(bandwidthMeter))
-
+                buildHttpDataSourceFactory())
 
     }
 
-    fun buildHttpDataSourceFactory(bandwidthMeter: DefaultBandwidthMeter): HttpDataSource.Factory {
+    fun buildHttpDataSourceFactory(): HttpDataSource.Factory {
         return DefaultHttpDataSourceFactory(Util.getUserAgent(this, googleUserAgent))
     }
 

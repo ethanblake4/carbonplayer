@@ -21,12 +21,8 @@ import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.proto.innerjam.elements.TitleSectionV1Proto;
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.*;
-import com.carbonplayer.ui.widget.AspectView;
-import com.carbonplayer.ui.widget.ParallaxFadeScrimageView;
-import com.carbonplayer.ui.widget.ParallaxScrimageView;
 import com.carbonplayer.ui.widget.ParallaxScrimageViewSz;
 import com.carbonplayer.utils.ColorUtils;
-import com.carbonplayer.utils.IdentityUtils;
 import com.carbonplayer.utils.MathUtils;
 import com.carbonplayer.utils.ProtoUtils;
 
@@ -43,13 +39,15 @@ import static android.text.Spanned.SPAN_INCLUSIVE_INCLUSIVE;
 public final class FullBleedListAdapter extends RecyclerView.Adapter<FullBleedListAdapter.ViewHolder> {
 
     Context context;
+    RecyclerView recycler;
 
     public FullBleedListAdapter(Context context, List<FullBleedModule> dataset, Function1<FullBleedModule, Unit> callback,
-                                RequestManager requestManager) {
+                                RequestManager requestManager, RecyclerView my) {
         this.context = context;
         this.dataset = dataset;
         this.callback = callback;
         this.requestManager = requestManager;
+        recycler = my;
     }
 
     private List<FullBleedModule> dataset;
@@ -59,6 +57,8 @@ public final class FullBleedListAdapter extends RecyclerView.Adapter<FullBleedLi
     class ViewHolder extends RecyclerView.ViewHolder {
 
         private FullBleedModule module;
+
+        RecyclerView.OnScrollListener listener;
 
         @BindView(R.id.cardTitle) TextView cardTitle;
         @BindView(R.id.full_bleed_card_img) ParallaxScrimageViewSz image;
@@ -138,12 +138,11 @@ public final class FullBleedListAdapter extends RecyclerView.Adapter<FullBleedLi
             //image.setScrimColor2(ProtoUtils.colorFrom(module.getBackgroundImageReference().getRepresentativeColor()));
             //image.setScrimAlpha(0.3f);
 
-
             requestManager.load(module.getBackgroundImageReference().getUrl())
                     .apply(new RequestOptions().override(
-                            Math.round( MathUtils.dpToPx(context, 300) *
+                            Math.round( MathUtils.dpToPx(context, 400) *
                                     MathUtils.aspectWidthMultiple(module.getBackgroundImageReference().getAspectRatio())),
-                            MathUtils.dpToPx(context, 300)))
+                            MathUtils.dpToPx(context, 400)))
                     .transition(DrawableTransitionOptions.withCrossFade(200))
                     .into(image);
 
@@ -151,8 +150,9 @@ public final class FullBleedListAdapter extends RecyclerView.Adapter<FullBleedLi
     }
 
     @Override
-    public void onViewRecycled(ViewHolder v){
-
+    public void onViewRecycled(ViewHolder vh){
+        //recycler.removeOnScrollListener(vh.listener);
+        requestManager.clear(vh.image);
     }
 
     // Create new views (invoked by the layout manager)
@@ -165,8 +165,25 @@ public final class FullBleedListAdapter extends RecyclerView.Adapter<FullBleedLi
         // set the view's size, margins, paddings and layout parameters
 
         ViewHolder vh = new ViewHolder(v);
+
+        vh.listener = new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                //vh.image.setOffset(vh.image.getOffset() + dy);
+                int[] loc = new int[2];
+                vh.image.getLocationInWindow(loc);
+                vh.image.setTranslationY(-loc[1] * 0.12f);
+                //vh.gradient.setTranslationY(-loc[1] * 0.12f);
+                super.onScrolled(recyclerView, dx, dy);
+            }
+        };
+
+        recycler.addOnScrollListener(vh.listener);
+
         return vh;
     }
+
+
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override

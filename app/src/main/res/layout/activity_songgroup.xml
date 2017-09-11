@@ -36,7 +36,5 @@
 
     </com.github.ksoichiro.android.observablescrollview.ObservableScrollView>
 
-    <include layout="@layout/now_playing_overlay" />
-
 
 </FrameLayout>

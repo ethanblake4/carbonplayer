@@ -1,5 +1,6 @@
 package com.carbonplayer.model.entity
 
+import android.media.MediaMetadata
 import java.util.Date
 
 import io.realm.RealmList

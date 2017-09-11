@@ -10,6 +10,8 @@ import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import kotlinx.android.synthetic.main.controller_main.view.*
+import kotlinx.android.synthetic.main.nowplaying.view.*
 
 
 class BottomNavigationBehavior : CoordinatorLayout.Behavior<View> {
@@ -36,11 +38,14 @@ class BottomNavigationBehavior : CoordinatorLayout.Behavior<View> {
     }
 
     private fun hideBottomNavigationView(view: View) {
-        view.animate().translationY(view.height.toFloat()*2).interpolator = FastOutSlowInInterpolator()
+
+        view.animate().translationY(view.bottom_nav.height.toFloat()).interpolator = FastOutSlowInInterpolator()
+        view.bottom_nav.animate().alpha(0.0f).interpolator = FastOutSlowInInterpolator()
 
     }
 
     private fun showBottomNavigationView(view: View) {
         view.animate().translationY(0f).interpolator = FastOutSlowInInterpolator()
+        view.bottom_nav.animate().alpha(1.0f)
     }
 }

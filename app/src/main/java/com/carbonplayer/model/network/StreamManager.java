@@ -16,44 +16,38 @@ import rx.Observable;
 import rx.Single;
 import rx.functions.Func1;
 
-/**
- * Created by ethanelshyeb on 7/21/17.
- */
 
 public class StreamManager {
     private static StreamManager instance;
-    private List<ParcelableMusicTrack> tracks;
     private StreamServer server;
-    private StreamingContent currentTrack;
-    private StreamingContent nextTrack;
 
-    public static StreamManager getInstance() throws IOException {
-        if(instance == null) instance = new StreamManager();
+    public static StreamManager getInstance(Context context) throws IOException {
+        if(instance == null) instance = new StreamManager(context);
         return instance;
     }
 
-    private StreamManager() throws IOException {
-        server = new StreamServer(CarbonPlayerApplication.Companion.getInstance());
+    private StreamManager(Context context) throws IOException {
+        server = new StreamServer(context);
     }
 
-    public StreamManager(List<ParcelableMusicTrack> tracks) throws IOException {
-        this();
-        this.tracks = tracks;
-    }
-
-    public void setTracks(List<ParcelableMusicTrack> tracks) {
-        this.tracks = tracks;
-    }
-
-    public Single<Pair<String, Observable<Float>>> getLocalStreamUrlForCurrentTrack(Context context){
+    public Single<Pair<String, Observable<Float>>> getUrl(Context context, SongID id, String title){
         StreamQuality quality = CarbonPlayerApplication.Companion.getInstance().getPreferences()
                 .getPreferredStreamQuality(CarbonPlayerApplication.Companion.getInstance());
-        SongID id = new SongID(tracks.get(0));
 
-        StreamingContent content = new StreamingContent(context, id, tracks.get(0).getTitle(), quality);
+        StreamingContent content = new StreamingContent(context, id, title, quality);
 
         return Single.fromCallable(() -> server.serveStream(content))
                 .map(stream_url -> new Pair<>(stream_url, content.progressMonitor()));
+
+    }
+
+    public StreamingContent getStream(Context context, SongID id, String title){
+        StreamQuality quality = CarbonPlayerApplication.Companion.getInstance().getPreferences()
+                .getPreferredStreamQuality(CarbonPlayerApplication.Companion.getInstance());
+
+        StreamingContent content = new StreamingContent(context, id, title, quality);
+
+        return content;
 
     }
 }

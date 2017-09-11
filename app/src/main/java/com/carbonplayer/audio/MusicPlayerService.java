@@ -5,9 +5,9 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.media.PlaybackParams;
+import android.media.Rating;
+import android.media.session.MediaSession;
 import android.net.Uri;
-import android.net.UrlQuerySanitizer;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,69 +15,32 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.support.v4.util.ArrayMap;
+import android.os.ResultReceiver;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.text.TextUtils;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
-import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.ParcelableMusicTrack;
-import com.carbonplayer.model.entity.exception.ServerRejectionException;
-import com.carbonplayer.model.network.Protocol;
-import com.carbonplayer.model.network.StreamManager;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.utils.Constants;
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
-import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.hls.HlsMediaSource;
-import com.google.android.exoplayer2.trackselection.AdaptiveVideoTrackSelection;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelections;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.util.Util;
 
 import org.parceler.Parcels;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Func2;
-import rx.schedulers.Schedulers;
 import timber.log.Timber;
 
 /**
  * Music player background service
  */
-public final class MusicPlayerService extends Service
-        implements TrackSelector.EventListener<MappingTrackSelector.MappedTrackInfo>, ExoPlayer.EventListener, MusicFocusable {
+public final class MusicPlayerService extends Service implements MusicFocusable {
 
     public static final float DUCK_VOLUME = 0.1f;
 
     AudioFocusHelper audioFocusHelper = null;
     AudioFocus audioFocus;
-
-    private StreamManager streamManager;
 
     enum AudioFocus {
         NoFocusNoDuck,
@@ -85,12 +48,13 @@ public final class MusicPlayerService extends Service
         Focused
     }
 
+    private MediaSession mediaSession;
+
     AudioFocus mAudioFocus = AudioFocus.NoFocusNoDuck;
 
     WifiManager.WifiLock wifiLock;
 
     private ArrayList<ParcelableMusicTrack> tracks;
-    private SimpleExoPlayer player;
 
     private NotificationCompat.Builder notificationBuilder;
 
@@ -102,17 +66,11 @@ public final class MusicPlayerService extends Service
     private int currentTrack;
     private boolean isPlaying = false;
 
+    private MusicPlayback playback;
+
     public ArrayList<Messenger> clients = new ArrayList<>();
 
     final Messenger mMessenger = new Messenger(new IncomingHandler());
-
-    private MappingTrackSelector trackSelector;
-    private DataSource.Factory mediaDataSourceFactory;
-
-    private long mCurrentExpireTimestamp;
-
-    private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
-    Handler mainHandler;
 
     @Override
     public void onCreate() {
@@ -135,7 +93,14 @@ public final class MusicPlayerService extends Service
                 isPlaying = !isPlaying;
                 emit(isPlaying ? Constants.EVENT.Play : Constants.EVENT.Pause);
                 updateNotification(tracks.get(currentTrack));
-                updatePlayer(true);
+                if(isPlaying) {
+                    playback.play();
+                    audioFocusHelper.requestFocus();
+                }
+                else {
+                    playback.pause();
+                    audioFocusHelper.abandonFocus();
+                }
                 break;
             case Constants.ACTION.NEXT:
                 Timber.i("Clicked Next");
@@ -156,7 +121,8 @@ public final class MusicPlayerService extends Service
     private void initService(Intent intent){
 
         notificationIntent = new Intent(this, MainActivity.class);
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         previousIntent = new Intent(this, MusicPlayerService.class);
         previousIntent.setAction(Constants.ACTION.PREVIOUS);
@@ -170,7 +136,16 @@ public final class MusicPlayerService extends Service
         Bundle bundle = intent.getExtras();
         tracks = Parcels.unwrap(bundle.getParcelable(Constants.KEY.INITITAL_TRACKS));
 
-        // build notification
+        playback = new MusicPlayback(this);
+        playback.setup();
+        playback.newQueue(tracks);
+
+        mediaSession = new MediaSession(this, "CarbonMusic");
+        mediaSession.setCallback(mediaSessionCallback);
+        mediaSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
+                MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+
         notificationBuilder = new NotificationCompat.Builder(this)
                 .setContentTitle("Carbon Player")
                 .setContentText("Playing music")
@@ -179,26 +154,8 @@ public final class MusicPlayerService extends Service
 
         currentTrack = 0;
 
-        try {
-            streamManager = new StreamManager(tracks);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Timber.e(e, "Exception while creating StreamManager");
-        }
-
-        // 1. Create a default TrackSelector
-        mediaDataSourceFactory = buildDataSourceFactory(true);
-        mainHandler = new Handler();
-        TrackSelection.Factory videoTrackSelectionFactory =
-                new AdaptiveVideoTrackSelection.Factory(BANDWIDTH_METER);
-        trackSelector = new DefaultTrackSelector(mainHandler, videoTrackSelectionFactory);
-        trackSelector.addListener(this);
-        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector, new DefaultLoadControl());
-
-        player.addListener(this);
-
         updateNotification(tracks.get(currentTrack));
-        updatePlayer(true);
+        playback.play();
     }
 
     private void updateNotification(ParcelableMusicTrack track){
@@ -233,129 +190,7 @@ public final class MusicPlayerService extends Service
                 notificationBuilder.build());
     }
 
-    private void releasePlayer() {
-        if (player != null) {
-            Timeline timeline = player.getCurrentTimeline();
-            //if (timeline != null) {
-                //playerWindow = player.getCurrentWindowIndex();
-                //Timeline.Window window = timeline.getWindow(playerWindow, new Timeline.Window());
-                //if (!window.isDynamic) {
-                //    shouldRestorePosition = true;
-                //    playerPosition = window.isSeekable ? player.getCurrentPosition() : C.TIME_UNSET;
-                //}
-            //}
-            player.release();
-            player = null;
-            trackSelector = null;
-            //trackSelectionHelper = null;
-            //eventLogger = null;
-        }
-    }
-
-    private void updatePlayer(boolean resetPosition){
-        Timber.d("updatePlayer called: %s", tracks.get(currentTrack).getId());
-        //if(isPlaying){
-            //player = ExoPlayer.Factory.newInstance(1);
-        streamManager.getLocalStreamUrlForCurrentTrack(this)
-                .subscribeOn(Schedulers.io())
-                /*.retry((retries, throwable) -> {
-                    if(throwable instanceof ServerRejectionException) {
-                        ServerRejectionException exception = (ServerRejectionException) throwable;
-                        switch(exception.getRejectionReason()){
-                            case DEVICE_NOT_AUTHORIZED:
-                                if (retries < 2) return true;
-                            default: {}
-                        }
-                    }
-                    return false;
-                })*/
-                .observeOn(AndroidSchedulers.from(getMainLooper()))
-                .subscribe(pair -> {
-                    String url = pair.first;
-                    pair.second
-                            .debounce(16, TimeUnit.MILLISECONDS)
-                            .subscribe(f -> emit(Constants.EVENT.BufferProgress, f));
-                    Timber.d("Local stream Url retrieved: %s", url);
-
-                    /*try {
-                        Uri uri=Uri.parse(url);
-                        //mCurrentExpireTimestamp = Long.parseLong(uri.getQueryParameter("expire")); // get your value
-                    } catch(Exception e) {
-                        e.printStackTrace();
-                        //mCurrentExpireTimestamp = (System.currentTimeMillis()/1000) + 100;
-                    }*/
-
-                    MediaSource mediaSource = buildMediaSource(Uri.parse(url), "mp3");
-                    player.prepare(mediaSource, resetPosition);
-                    if(resetPosition) player.setPlayWhenReady(true);
-                }, error -> emit(Constants.EVENT.Error, error));
-        /*
-            Protocol.getStreamURL(this, tracks.get(currentTrack).getId())
-                    .subscribeOn(Schedulers.io())
-                    .retry((retries, throwable) -> {
-                        if(throwable instanceof ServerRejectionException) {
-                            ServerRejectionException exception = (ServerRejectionException) throwable;
-                            switch(exception.getRejectionReason()){
-                                case DEVICE_NOT_AUTHORIZED:
-                                    if (retries < 2) return true;
-                                default: {}
-                            }
-                        }
-                        return false;
-                    })
-                    .observeOn(AndroidSchedulers.from(getMainLooper()))
-                    .subscribe(url -> {
-                        Timber.d("Stream Url retrieved: %s", url);
-
-                        try {
-                            Uri uri=Uri.parse(url);
-                            mCurrentExpireTimestamp = Long.parseLong(uri.getQueryParameter("expire")); // get your value
-                        } catch(Exception e) {
-                            e.printStackTrace();
-                            mCurrentExpireTimestamp = (System.currentTimeMillis()/1000) + 100;
-                        }
-
-                        MediaSource mediaSource = buildMediaSource(Uri.parse(url), "");
-                        player.prepare(mediaSource, resetPosition);
-                        if(resetPosition) player.setPlayWhenReady(true);
-                    }, error -> emit(Event.Error, error));*/
-    }
-
-    @Override
-    public void onTrackSelectionsChanged(TrackSelections<? extends MappingTrackSelector.MappedTrackInfo> trackSelections) {
-        /*updateButtonVisibilities();
-        MappedTrackInfo trackInfo = trackSelections.info;
-        if (trackInfo.hasOnlyUnplayableTracks(C.TRACK_TYPE_VIDEO)) {
-            showToast(R.string.error_unsupported_video);
-        }
-        if (trackInfo.hasOnlyUnplayableTracks(C.TRACK_TYPE_AUDIO)) {
-            showToast(R.string.error_unsupported_audio);
-        }*/
-    }
-    @Override
-    public void onLoadingChanged(boolean isLoading) {
-        // Do nothing.
-    }
-
-    @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-        if (playbackState == ExoPlayer.STATE_ENDED) {
-            //showControls();
-        }
-        //updateButtonVisibilities();
-    }
-
-    @Override
-    public void onPositionDiscontinuity() {
-        // Do nothing.
-    }
-
-    @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest) {
-        // Do nothing.
-    }
-
-    @Override
+    /*@Override
     public void onPlayerError(ExoPlaybackException e) {
         String errorString = "Unknown Error";
         if (e.type == ExoPlaybackException.TYPE_RENDERER) {
@@ -391,7 +226,7 @@ public final class MusicPlayerService extends Service
         //playerNeedsSource = true;
         //updateButtonVisibilities();
         //showControls();
-    }
+    }*/
 
     private void emit(int e) {
         switch(e) {
@@ -413,32 +248,6 @@ public final class MusicPlayerService extends Service
                 clients.remove(m);
             }
         }
-    }
-
-    /**
-     * Returns a new DataSource factory.
-     *
-     * @param useBandwidthMeter Whether to set {@link #BANDWIDTH_METER} as a listener to the new
-     *     DataSource factory.
-     * @return A new DataSource factory.
-     */
-    private DataSource.Factory buildDataSourceFactory(boolean useBandwidthMeter) {
-        return ((CarbonPlayerApplication) getApplication())
-                .buildDataSourceFactory(useBandwidthMeter ? BANDWIDTH_METER : null);
-    }
-
-    private MediaSource buildMediaSource(Uri uri, String overrideExtension) {
-
-        ExtractorMediaSource mm = new ExtractorMediaSource(uri, mediaDataSourceFactory, new DefaultExtractorsFactory(),
-                mainHandler, error -> {
-                    Timber.e("Error", error);
-                    Timber.d("mcurrentexpireTimestamp: %d vs time: %d", mCurrentExpireTimestamp, System.currentTimeMillis()/1000);
-                    if(mCurrentExpireTimestamp <= System.currentTimeMillis()/1000) {
-                        //updatePlayer(false);
-                    }
-        });
-
-        return mm;
     }
 
     public void onGainedAudioFocus(){
@@ -476,5 +285,108 @@ public final class MusicPlayerService extends Service
             }
         }
     }
+
+    MediaSession.Callback mediaSessionCallback = new MediaSession.Callback() {
+        @Override
+        public void onCommand(@NonNull String command, @Nullable Bundle args,
+                              @Nullable ResultReceiver cb) {
+            super.onCommand(command, args, cb);
+        }
+
+        @Override
+        public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent) {
+            return super.onMediaButtonEvent(mediaButtonIntent);
+        }
+
+        @Override
+        public void onPrepare() {
+            super.onPrepare();
+        }
+
+        @Override
+        public void onPrepareFromMediaId(String mediaId, Bundle extras) {
+            super.onPrepareFromMediaId(mediaId, extras);
+        }
+
+        @Override
+        public void onPrepareFromSearch(String query, Bundle extras) {
+            super.onPrepareFromSearch(query, extras);
+        }
+
+        @Override
+        public void onPrepareFromUri(Uri uri, Bundle extras) {
+            super.onPrepareFromUri(uri, extras);
+        }
+
+        @Override
+        public void onPlay() {
+            super.onPlay();
+        }
+
+        @Override
+        public void onPlayFromSearch(String query, Bundle extras) {
+            super.onPlayFromSearch(query, extras);
+        }
+
+        @Override
+        public void onPlayFromMediaId(String mediaId, Bundle extras) {
+            super.onPlayFromMediaId(mediaId, extras);
+        }
+
+        @Override
+        public void onPlayFromUri(Uri uri, Bundle extras) {
+            super.onPlayFromUri(uri, extras);
+        }
+
+        @Override
+        public void onSkipToQueueItem(long id) {
+            super.onSkipToQueueItem(id);
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+        }
+
+        @Override
+        public void onSkipToNext() {
+            super.onSkipToNext();
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            super.onSkipToPrevious();
+        }
+
+        @Override
+        public void onFastForward() {
+            super.onFastForward();
+        }
+
+        @Override
+        public void onRewind() {
+            super.onRewind();
+        }
+
+        @Override
+        public void onStop() {
+            super.onStop();
+        }
+
+        @Override
+        public void onSeekTo(long pos) {
+            super.onSeekTo(pos);
+        }
+
+        @Override
+        public void onSetRating(@NonNull Rating rating) {
+            super.onSetRating(rating);
+        }
+
+        @Override
+        public void onCustomAction(@NonNull String action, @Nullable Bundle extras) {
+            super.onCustomAction(action, extras);
+        }
+    };
 
 }

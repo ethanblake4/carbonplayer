@@ -20,6 +20,7 @@ import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1P
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adaptivehome.FullBleedListAdapter
 import com.carbonplayer.utils.IdentityUtils
+import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import kotlinx.android.synthetic.main.adaptivehome.*
 import kotlinx.android.synthetic.main.adaptivehome.view.*
 import rx.android.schedulers.AndroidSchedulers
@@ -51,6 +52,9 @@ class HomeFragment: Fragment() {
         layoutManager = LinearLayoutManager(activity)
 
         view.main_recycler.layoutManager = layoutManager
+
+        view.main_recycler.recycledViewPool.setMaxRecycledViews(0, 2)
+
         /*view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
@@ -78,6 +82,7 @@ class HomeFragment: Fragment() {
                 }, { err ->
                     Timber.e("Error in listennow", err)
                 })
+
     }
 
     fun processHomeRequest(home: GetHomeResponse) {
@@ -97,7 +102,7 @@ class HomeFragment: Fragment() {
                                 }
                             },
                         {mod: FullBleedModuleV1Proto.FullBleedModule -> Timber.d(mod.toString())},
-                                requestManager)
+                                requestManager, main_recycler)
             }
         }
     }

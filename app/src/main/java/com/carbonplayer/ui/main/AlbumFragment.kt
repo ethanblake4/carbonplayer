@@ -22,6 +22,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.MusicTrack
+import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.helpers.NowPlayingUIHelper
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback
 import com.carbonplayer.utils.ColorUtils
@@ -54,6 +55,8 @@ class AlbumFragment : Fragment() {
     private lateinit var album: Album
     private lateinit var tracks: List<MusicTrack>
 
+    private lateinit var manager: MusicManager
+
     private var nowPlayingHelper: NowPlayingUIHelper? = null
 
     override fun onCreateView(inflater: LayoutInflater, containerView: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -63,7 +66,9 @@ class AlbumFragment : Fragment() {
 
         root = inflater.inflate(R.layout.activity_songgroup, containerView, false)
 
-        nowPlayingHelper = NowPlayingUIHelper(activity)
+        manager = MusicManager(activity as MainActivity)
+
+        //nowPlayingHelper = NowPlayingUIHelper(activity)
 
         Timber.d("album %s", album.id)
 
@@ -157,27 +162,23 @@ class AlbumFragment : Fragment() {
         }
         root.songgroup_recycler.layoutManager = mLayoutManager
 
-        tracks = MusicLibrary.getInstance().getAllAlbumTracks(album.id)
+                tracks = MusicLibrary.getInstance().getAllAlbumTracks(album.id)
 
 
         val params = root.songgroup_recycler.layoutParams
         params.height = tracks.size * MathUtils.dpToPx(activity, 67)
 
         mAdapter = SongListAdapter(tracks) { (id, clientID, nautilusID) ->
-            nowPlayingHelper!!.makePlayingScreen(root.main_backdrop.drawable)
-            nowPlayingHelper!!.newQueue(tracks)
-            Unit
+            manager.fromAlbum(album.id)
         }
         root.songgroup_recycler.adapter = mAdapter
-
 
         return root
     }
 
     @OnClick(R.id.play_fab)
     internal fun playFABClicked() {
-        nowPlayingHelper!!.makePlayingScreen(root.main_backdrop.drawable)
-        nowPlayingHelper!!.newQueue(tracks)
+        manager.fromAlbum(album.id)
     }
 
     fun setTransformedTextPosition(transform: Int) {

@@ -11,15 +11,19 @@
             android:layout_height="match_parent" />
 
 
-
-
     <LinearLayout
         android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/colorPrimary"
+        android:orientation="vertical"
+        android:elevation="8dp"
         app:layout_behavior="com.carbonplayer.ui.widget.helpers.BottomNavigationBehavior">
+
+        <include
+            layout="@layout/nowplaying" />
+
         <android.support.design.widget.BottomNavigationView
             android:id="@+id/bottom_nav"
             android:layout_width="match_parent"
@@ -29,6 +33,7 @@
             app:itemIconTint="@color/bottomnav_color_selector"
             app:itemTextColor="@color/bottomnav_color_selector"
             app:menu="@menu/bottomnav_menu" />
+
     </LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>

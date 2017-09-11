@@ -161,7 +161,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="icepick-3.2.0" level="project" />
     <orderEntry type="library" exported="" name="stetho-okhttp3-1.5.0" level="project" />
-    <orderEntry type="library" exported="" name="exoplayer-r2.0.1" level="project" />
     <orderEntry type="library" exported="" name="animal-sniffer-annotations-1.14" level="project" />
     <orderEntry type="library" exported="" name="glide-4.0.0" level="project" />
     <orderEntry type="library" exported="" name="firebase-crash-11.0.2" level="project" />
@@ -185,13 +184,17 @@
     <orderEntry type="library" exported="" name="disklrucache-4.0.0" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-25.4.0" level="project" />
     <orderEntry type="library" exported="" name="animated-vector-drawable-25.4.0" level="project" />
+    <orderEntry type="library" exported="" name="exoplayer-ui-r2.5.2" level="project" />
     <orderEntry type="library" exported="" name="play-services-basement-11.0.2" level="project" />
     <orderEntry type="library" exported="" name="play-services-auth-11.0.2" level="project" />
+    <orderEntry type="library" exported="" name="exoplayer-hls-r2.5.2" level="project" />
     <orderEntry type="library" exported="" name="constraint-layout-1.0.2" level="project" />
     <orderEntry type="library" exported="" name="firebase-iid-11.0.2" level="project" />
+    <orderEntry type="library" exported="" name="exoplayer-r2.5.2" level="project" />
     <orderEntry type="library" exported="" name="transition-25.4.0" level="project" />
     <orderEntry type="library" exported="" name="annotations-4.0.0" level="project" />
     <orderEntry type="library" exported="" name="stetho-1.5.0" level="project" />
+    <orderEntry type="library" exported="" name="exoplayer-dash-r2.5.2" level="project" />
     <orderEntry type="library" exported="" name="kotlin-reflect-1.1.3-2" level="project" />
     <orderEntry type="library" exported="" name="gifdecoder-4.0.0" level="project" />
     <orderEntry type="library" exported="" name="jsr305-2.0.1" level="project" />
@@ -205,6 +208,7 @@
     <orderEntry type="library" exported="" name="mediarouter-v7-25.4.0" level="project" />
     <orderEntry type="library" exported="" name="realm-annotations-3.3.1" level="project" />
     <orderEntry type="library" exported="" name="rxandroid-1.2.1" level="project" />
+    <orderEntry type="library" exported="" name="exoplayer-smoothstreaming-r2.5.2" level="project" />
     <orderEntry type="library" exported="" name="okhttp3-integration-4.0.0" level="project" />
     <orderEntry type="library" exported="" name="okhttp-3.8.1" level="project" />
     <orderEntry type="library" exported="" name="firebase-analytics-11.0.2" level="project" />
@@ -215,6 +219,7 @@
     <orderEntry type="library" exported="" name="org.apache.http.legacy" level="project" />
     <orderEntry type="library" exported="" name="timber-4.1.2" level="project" />
     <orderEntry type="library" exported="" name="butterknife-8.7.0" level="project" />
+    <orderEntry type="library" exported="" name="exoplayer-core-r2.5.2" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="junit-4.12" level="project" />
     <orderEntry type="library" exported="" name="error_prone_annotations-2.0.18" level="project" />
     <orderEntry type="library" exported="" name="logging-interceptor-3.8.1" level="project" />

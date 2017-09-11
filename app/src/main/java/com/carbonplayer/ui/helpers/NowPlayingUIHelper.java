@@ -55,14 +55,14 @@ public final class NowPlayingUIHelper {
 
         if(npUIHelperManager == null) npUIHelperManager = new NpUIHelperManager();
 
-        mainFrame   = (LinearLayout)     mActivity.findViewById(R.id.nowplaying_main);
-        thumb       = (ImageView)        mActivity.findViewById(R.id.nowplaying_thumb);
-        detailsView = (ConstraintLayout) mActivity.findViewById(R.id.nowplaying_details);
-        playPause   = (ImageView)        mActivity.findViewById(R.id.nowplaying_playpause);
+        //mainFrame   = (LinearLayout)     mActivity.findViewById(R.id.nowplaying_frame);
+        //thumb       = (ImageView)        mActivity.findViewById(R.id.nowplaying_thumb);
+        //detailsView = (ConstraintLayout) mActivity.findViewById(R.id.nowplaying_details);
+        //playPause   = (ImageView)        mActivity.findViewById(R.id.nowplaying_playpause);
 
-        if(npUIHelperManager.uiVisible){
+        /*if(npUIHelperManager.uiVisible){
             mainFrame.setVisibility(View.VISIBLE);
-        }
+        }*/
     }
 
 
@@ -70,9 +70,9 @@ public final class NowPlayingUIHelper {
 
     public void newQueue(List<MusicTrack> tracks){
         queue = TrackQueue.instance(tracks, true);
-        Glide.with(mActivity)
+        /*Glide.with(mActivity)
                 .load(queue.currentTrack().getAlbumArtURL())
-                .into(thumb);
+                .into(thumb);*/
         mActivity.startService(buildServiceIntent());
     }
 

@@ -128,7 +128,7 @@ dependencies {
     kapt 'frankiesardo:icepick-processor:3.2.0'
     implementation 'io.reactivex:rxandroid:1.2.1'
     implementation 'com.github.bumptech.glide:glide:4.0.0'
-    implementation 'com.google.android.exoplayer:exoplayer:r2.0.1'
+    implementation 'com.google.android.exoplayer:exoplayer:r2.5.2'
     implementation('com.github.florent37:glidepalette:2.1.0') {
         exclude group: 'com.github.bumptech.glide'
     }
