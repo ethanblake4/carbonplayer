@@ -18,6 +18,7 @@ import com.google.android.exoplayer2.util.Util
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider
 
 import butterknife.ButterKnife
+import com.squareup.leakcanary.LeakCanary
 import icepick.Icepick
 import io.realm.Realm
 import io.realm.RealmConfiguration
@@ -43,6 +44,11 @@ class CarbonPlayerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        if (LeakCanary.isInAnalyzerProcess(this))
+            return
+
+        LeakCanary.install(this)
 
         preferences = Preferences()
         preferences.load()

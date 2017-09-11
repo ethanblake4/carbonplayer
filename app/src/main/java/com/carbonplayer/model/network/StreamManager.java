@@ -19,27 +19,12 @@ import rx.functions.Func1;
 
 public class StreamManager {
     private static StreamManager instance;
-    private StreamServer server;
 
-    public static StreamManager getInstance(Context context) throws IOException {
-        if(instance == null) instance = new StreamManager(context);
+    public static StreamManager getInstance() {
+        if(instance == null) instance = new StreamManager();
         return instance;
     }
 
-    private StreamManager(Context context) throws IOException {
-        server = new StreamServer(context);
-    }
-
-    public Single<Pair<String, Observable<Float>>> getUrl(Context context, SongID id, String title){
-        StreamQuality quality = CarbonPlayerApplication.Companion.getInstance().getPreferences()
-                .getPreferredStreamQuality(CarbonPlayerApplication.Companion.getInstance());
-
-        StreamingContent content = new StreamingContent(context, id, title, quality);
-
-        return Single.fromCallable(() -> server.serveStream(content))
-                .map(stream_url -> new Pair<>(stream_url, content.progressMonitor()));
-
-    }
 
     public StreamingContent getStream(Context context, SongID id, String title){
         StreamQuality quality = CarbonPlayerApplication.Companion.getInstance().getPreferences()

@@ -139,10 +139,10 @@ public final class FullBleedListAdapter extends RecyclerView.Adapter<FullBleedLi
             //image.setScrimAlpha(0.3f);
 
             requestManager.load(module.getBackgroundImageReference().getUrl())
-                    .apply(new RequestOptions().override(
+                    /*.apply(new RequestOptions().override(
                             Math.round( MathUtils.dpToPx(context, 400) *
                                     MathUtils.aspectWidthMultiple(module.getBackgroundImageReference().getAspectRatio())),
-                            MathUtils.dpToPx(context, 400)))
+                            MathUtils.dpToPx(context, 400)))*/
                     .transition(DrawableTransitionOptions.withCrossFade(200))
                     .into(image);
 

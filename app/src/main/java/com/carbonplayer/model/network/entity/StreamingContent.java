@@ -37,14 +37,12 @@ public class StreamingContent {
 
     private PublishSubject<Float> downloadProgress = PublishSubject.create();
     private long completed = 0;
-    private String contentType;
     private final Context context;
     private long seekMs;
     private StreamQuality quality;
     private final DownloadRequest downloadRequest;
     private long extraChunkSize = 0;
     private String filepath;
-    private boolean isInitialized = false;
     private boolean waitAllowed = true;
     private final SongID songID;
     private volatile long startReadPoint = 0;
@@ -154,12 +152,6 @@ public class StreamingContent {
         return songID;
     }
 
-    public synchronized void initialize(String httpContentType)/* throws InterruptedException*/ {
-        isInitialized = true;
-        contentType = httpContentType;
-        Timber.d("Initializing");
-    }
-
     public synchronized void waitForData(long amount) throws InterruptedException {
         while (!isFinished() && this.completed < this.extraChunkSize + amount && this.waitAllowed) {
             long uptimeMs = SystemClock.uptimeMillis();
@@ -211,12 +203,6 @@ public class StreamingContent {
         return url;
     }
 
-    public String getContentType(){
-        if(!isInitialized){
-            throw new IllegalArgumentException("StreamingContent must be initialized");
-        }
-        return contentType;
-    }
 
     public void setWaitAllowed(boolean waitAllowed){
         this.waitAllowed = waitAllowed;
