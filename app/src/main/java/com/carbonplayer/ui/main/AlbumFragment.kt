@@ -117,7 +117,7 @@ class AlbumFragment : Fragment() {
                                     if (Color.red(ColorUtils.contrastColor(it.getVibrantColor(Color.DKGRAY))) > 200) {
                                         Timber.d("red>200")
                                         root.play_fab.backgroundTintList = ColorStateList.valueOf(it.getLightVibrantColor(Color.WHITE))
-                                        nowPlayingHelper?.detailsView?.setBackgroundColor(it.getLightVibrantColor(Color.WHITE))
+                                        //nowPlayingHelper?.detailsView?.setBackgroundColor(it.getLightVibrantColor(Color.WHITE))
                                     } else {
                                         Timber.d("not")
                                         val s = ColorStateList.valueOf(it.getDarkVibrantColor(Color.DKGRAY))
@@ -126,7 +126,7 @@ class AlbumFragment : Fragment() {
                                         Timber.d(t.toString())
                                         root.play_fab.backgroundTintList = s
                                         root.play_fab.imageTintList = t
-                                        nowPlayingHelper?.detailsView?.setBackgroundColor(it.getDarkVibrantColor(Color.DKGRAY))
+                                        //nowPlayingHelper?.detailsView?.setBackgroundColor(it.getDarkVibrantColor(Color.DKGRAY))
                                     } }
                                 }
                 )

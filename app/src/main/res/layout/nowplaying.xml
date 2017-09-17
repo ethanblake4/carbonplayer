@@ -8,7 +8,7 @@
     android:visibility="visible">
 
     <com.carbonplayer.ui.widget.SquareImageView
-        android:id="@+id/nowplaying.thumb"
+        android:id="@+id/npui_thumb"
         android:layout_width="56dp"
         android:layout_height="0dp"
         android:scaleType="centerCrop"
@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.constraint.ConstraintLayout
-        android:id="@+id/nowplaying.details"
+        android:id="@+id/nowplaying_detailsv"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -33,24 +33,24 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:id="@+id/nowplaying.playpause"
+            android:id="@+id/npui_playpause"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginEnd="16dp"
             android:layout_marginTop="12dp"
             android:contentDescription="@string/play_pause_button"
-            app:layout_constraintEnd_toStartOf="@+id/nowplaying.fastforward"
+            app:layout_constraintEnd_toStartOf="@+id/npui_fastforward"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_pause" />
 
         <ImageView
-            android:id="@+id/nowplaying.fastrewind"
+            android:id="@+id/npui_fastrewind"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginEnd="16dp"
             android:contentDescription="@string/previous_song"
-            app:layout_constraintEnd_toStartOf="@+id/nowplaying.playpause"
-            app:layout_constraintTop_toTopOf="@+id/nowplaying.playpause"
+            app:layout_constraintEnd_toStartOf="@+id/npui_playpause"
+            app:layout_constraintTop_toTopOf="@+id/npui_playpause"
             app:srcCompat="@drawable/ic_fast_rewind" />
 
         <TextView
@@ -63,13 +63,13 @@
             app:layout_constraintTop_toBottomOf="@+id/npui_song" />
 
         <ImageView
-            android:id="@+id/nowplaying.fastforward"
+            android:id="@+id/npui_fastforward"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginEnd="16dp"
             android:contentDescription="@string/fast_forward"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/nowplaying.playpause"
+            app:layout_constraintTop_toTopOf="@+id/npui_playpause"
             app:srcCompat="@drawable/ic_fast_forward" />
 
     </android.support.constraint.ConstraintLayout>

@@ -1,7 +1,6 @@
 package com.carbonplayer.model.network.entity;
 
 import android.content.Context;
-import android.os.Looper;
 import android.os.SystemClock;
 
 import com.carbonplayer.CarbonPlayerApplication;
@@ -28,7 +27,6 @@ import rx.Completable;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.exceptions.Exceptions;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import timber.log.Timber;
@@ -95,7 +93,8 @@ public class StreamingContent {
                 downloadProgress.onNext((float)((bytesRead/100.0)/(contentLength/100.0)));
         ArrayList<okhttp3.Protocol> protocols = new ArrayList<>();
         protocols.add(okhttp3.Protocol.HTTP_1_1);
-        OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient(new OkHttpClient.Builder()
+        OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient(
+                new OkHttpClient.Builder()
                 .protocols(protocols)
                 .addNetworkInterceptor(chain -> {
                     Response originalResponse = chain.proceed(chain.request());

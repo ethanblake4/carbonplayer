@@ -1,34 +1,22 @@
 package com.carbonplayer.ui.main;
 
-import android.app.ActivityOptions;
-import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Point;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorInt;
-import android.support.annotation.Nullable;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
-import android.transition.Fade;
-import android.util.Pair;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.animation.AlphaAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.GenericTransitionOptions;
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
-import com.bumptech.glide.TransitionOptions;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
-import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.model.entity.Album;
@@ -41,8 +29,6 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import kotlin.jvm.functions.Function0;
-import kotlin.jvm.functions.Function1;
 
 /**
  * Displays albums in variable-size grid view
@@ -70,17 +56,6 @@ class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
             ButterKnife.bind(this, v);
 
             layoutRoot.setOnClickListener(view -> {
-                //Toast.makeText(MainActivity.this, songs, Toast.LENGTH_SHORT).show();
-                /*CarbonPlayerApplication.Companion.getInstance().setCurrentAlbum(album);
-                Intent i = new Intent(context, AlbumActivity.class);
-
-                ActivityOptions options = ActivityOptions
-                        .makeSceneTransitionAnimation(context,
-                                Pair.create(thumb, "imgthumb"),
-                                Pair.create(contentRoot, "albumdetails"),
-                                Pair.create(titleText, "albumName"),
-                                Pair.create(detailText, "artistName"));
-                context.startActivity(i, options.toBundle());*/
 
                 thumb.setTransitionName(album.getId() + "i");
                 contentRoot.setTransitionName(album.getId() + "cr");

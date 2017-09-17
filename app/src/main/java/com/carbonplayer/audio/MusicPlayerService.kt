@@ -20,6 +20,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.entity.ParcelableMusicTrack
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.utils.*
+import com.google.common.collect.Queues
 import org.parceler.Parcels
 import timber.log.Timber
 import java.util.*
@@ -53,6 +54,7 @@ class MusicPlayerService : Service(), MusicFocusable {
     private lateinit var playback: MusicPlayback
 
     var clients = ArrayList<Messenger>()
+    private var messageQueue = Queues.newLinkedBlockingQueue<Pair<Int, Any?>>()
 
     internal val messenger = Messenger(IncomingHandler())
 
@@ -75,12 +77,12 @@ class MusicPlayerService : Service(), MusicFocusable {
                 if(!playback.isUnpaused()) {
                     playback.play()
                 }
-                emit(Constants.EVENT.PrevSong)
+                //emit(Constants.EVENT.PrevSong)
             }
             Constants.ACTION.PLAYPAUSE -> {
                 Timber.i("Clicked Play/Pause")
                 val isPlaying = playback.isUnpaused()
-                emit(if (isPlaying) Constants.EVENT.Pause else Constants.EVENT.Play)
+                //emit(if (isPlaying) Constants.EVENT.Paused else Constants.EVENT.Playing)
                 if (isPlaying) {
                     playback.pause()
                     audioFocusHelper.abandonFocus()
@@ -97,7 +99,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 if(!playback.isUnpaused()) {
                     playback.play()
                 }
-                emit(Constants.EVENT.NextSong)
+                //emit(Constants.EVENT.NextSong)
             }
             Constants.ACTION.SEND_QUEUE -> {
                 Timber.i("Sending Queue")
@@ -124,7 +126,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         notificationMgr = NotificationManagerCompat.from(this)
 
         notificationIntent = newIntent<MainActivity> {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
 
         previousIntent  = newIntent<MusicPlayerService>(Constants.ACTION.PREVIOUS)
@@ -152,6 +154,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_NONE,
                                     playback.getCurrentPosition(), 1.0f).build())
+                    emit(Constants.EVENT.Paused)
                 }
                 MusicPlayback.PlayState.STARTING -> {
                     mediaSession.setPlaybackState(
@@ -162,6 +165,8 @@ class MusicPlayerService : Service(), MusicFocusable {
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_BUFFERING,
                                     playback.getCurrentPosition(), 1.0f).build())
+
+                    emit(Constants.EVENT.Buffering)
                 }
                 MusicPlayback.PlayState.PLAYING -> {
                     mediaSession.setPlaybackState(
@@ -169,9 +174,14 @@ class MusicPlayerService : Service(), MusicFocusable {
                                 PlaybackStateCompat.STATE_PLAYING else
                                 PlaybackStateCompat.STATE_PAUSED,
                             playback.getCurrentPosition(), 1.0f).build())
+
+                    emit(if(playback.isUnpaused()) Constants.EVENT.Playing else
+                        Constants.EVENT.Paused)
+
                 }
             }
         }, { num, track ->
+            emit(Constants.EVENT.TrackPlaying, track)
             loadImageAndDoUpdates(track)
         }, { bufferProgress ->
             emit(Constants.EVENT.BufferProgress, bufferProgress)
@@ -262,7 +272,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         builder.setStyle(
                 android.support.v4.media.app.NotificationCompat.MediaStyle()
                         .setShowCancelButton(true)
-                        .setShowActionsInCompactView(*intArrayOf(1))
+                        .setShowActionsInCompactView(*intArrayOf(0, 1, 2))
                         .setMediaSession(mediaSession.sessionToken))
                 .setColor(Color.argb(255, 34,34,34))
                 .setContentIntent(contentIntent)
@@ -292,7 +302,16 @@ class MusicPlayerService : Service(), MusicFocusable {
 
     }
 
-    private fun emit(e: Int, obj: Any?) {
+    private fun emit(e: Int, obj: Any?, recurse: Boolean = false) {
+        //Timber.d("Emitting %d to %d clients", e, clients.size)
+        if(clients.size == 0) {
+            messageQueue.add(Pair(e, obj))
+        } else {
+            if(!recurse) {
+                messageQueue.forEach { (first, second) -> emit(first, second, true) }
+                messageQueue.clear()
+            }
+        }
         for (m in clients) {
             try {
                 if (obj == null)
@@ -338,7 +357,10 @@ class MusicPlayerService : Service(), MusicFocusable {
     internal inner class IncomingHandler : Handler() { // Handler of incoming messages from clients.
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                Constants.MESSAGE.REGISTER_CLIENT -> clients.add(msg.replyTo)
+                Constants.MESSAGE.REGISTER_CLIENT -> {
+                    Timber.d("Registering 1 client")
+                    clients.add(msg.replyTo)
+                }
                 Constants.MESSAGE.UNREGISTER_CLIENT -> clients.remove(msg.replyTo)
                 else -> super.handleMessage(msg)
             }

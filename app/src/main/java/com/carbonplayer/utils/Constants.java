@@ -20,17 +20,25 @@ public final class Constants {
         String NEXT = "NEXT";
 
         String SEND_QUEUE = "SEND_QUEUE";
+        String SEND_STATE = "SEND_STATE";
     }
 
     public interface EVENT {
         // Events are sent from the service to the UI
         int NextSong = 0;
         int PrevSong = 1;
-        int Play = 2;
-        int Pause = 3;
+
+
+        int NotPlaying = 9;
+        int Playing = 2;
+        int Paused = 3;
+        int Buffering = 8;
+
         int SendQueue = 4;
         int BufferProgress = 5;
         int Error = 6;
+
+        int TrackPlaying = 7;
     }
 
     public interface KEY {

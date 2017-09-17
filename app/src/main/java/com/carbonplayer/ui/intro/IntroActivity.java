@@ -40,7 +40,7 @@ import timber.log.Timber;
  */
 public class IntroActivity extends FragmentActivity implements ViewPager.OnPageChangeListener {
 
-    private IntroPresenter mPresenter;
+    private IntroPresenter presenter;
 
     private static final int NUM_PAGES = 3;
 
@@ -59,14 +59,14 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
         Icepick.restoreInstanceState(this, savedInstanceState);
 
-        mPresenter = new IntroPresenter(this);
+        presenter = new IntroPresenter(this);
 
         setContentView(R.layout.activity_intro);
 
         ButterKnife.bind(this);
 
-        mPager = (ViewPager) findViewById(R.id.introPager);
-        nextButton = (ImageButton) findViewById(R.id.next);
+        mPager = findViewById(R.id.introPager);
+        nextButton = findViewById(R.id.next);
         // Instantiate a ViewPager and a PagerAdapter.
         PagerAdapter mPagerAdapter = new IntroAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
@@ -128,9 +128,9 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         if(CarbonPlayerApplication.Companion.getInstance().getUseWebAuthDialog()) {
             authDialog.setContentView(R.layout.auth_dialog);
 
-            mPresenter.setAuthDialog(authDialog);
+            presenter.setAuthDialog(authDialog);
 
-            web = (WebView) authDialog.findViewById(R.id.webv);
+            web = authDialog.findViewById(R.id.webv);
 
             //Setup WebView
             web.getSettings().setJavaScriptEnabled(true);
@@ -154,11 +154,11 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
             });
         } else {
             authDialog.setContentView(R.layout.auth_dialog_std);
-            mPresenter.setAuthDialog(authDialog);
+            presenter.setAuthDialog(authDialog);
             authDialog.findViewById(R.id.sign_in_dialog_button).setOnClickListener(v -> {
                 String user = ((EditText)authDialog.findViewById(R.id.sign_in_username_email)).getText().toString();
                 String pass = ((EditText)authDialog.findViewById(R.id.sign_in_dialog_password)).getText().toString();
-                mPresenter.tryLogin(user, pass);
+                presenter.tryLogin(user, pass);
             });
 
         }
@@ -169,7 +169,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
     }
 
     public void callbackWithJson(String json){
-        mPresenter.callbackWithJson(json);
+        presenter.callbackWithJson(json);
     }
 
     private static class IntroAdapter extends FragmentStatePagerAdapter {
@@ -194,7 +194,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        mPresenter.onActivityResult(requestCode, resultCode, data);
+        presenter.onActivityResult(requestCode, resultCode, data);
     }
 
     void makeLibraryError(@StringRes int desc){

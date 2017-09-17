@@ -1,7 +1,5 @@
 package com.carbonplayer.ui.main.adaptivehome;
 
-import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.support.v7.widget.RecyclerView;
@@ -14,16 +12,13 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
-import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.proto.innerjam.elements.TitleSectionV1Proto;
-import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.*;
+import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.FullBleedModule;
 import com.carbonplayer.ui.widget.ParallaxScrimageViewSz;
 import com.carbonplayer.utils.ColorUtils;
-import com.carbonplayer.utils.MathUtils;
 import com.carbonplayer.utils.ProtoUtils;
 
 import java.util.List;
@@ -32,18 +27,18 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
-import timber.log.Timber;
 
 import static android.text.Spanned.SPAN_INCLUSIVE_INCLUSIVE;
 
-public final class FullBleedListAdapter extends RecyclerView.Adapter<FullBleedListAdapter.ViewHolder> {
+public final class FullBleedListAdapter
+        extends RecyclerView.Adapter<FullBleedListAdapter.ViewHolder> {
 
-    Context context;
     RecyclerView recycler;
 
-    public FullBleedListAdapter(Context context, List<FullBleedModule> dataset, Function1<FullBleedModule, Unit> callback,
+    public FullBleedListAdapter(List<FullBleedModule> dataset,
+                                Function1<FullBleedModule, Unit> callback,
                                 RequestManager requestManager, RecyclerView my) {
-        this.context = context;
+        //this.context = context;
         this.dataset = dataset;
         this.callback = callback;
         this.requestManager = requestManager;
@@ -73,14 +68,6 @@ public final class FullBleedListAdapter extends RecyclerView.Adapter<FullBleedLi
         }
 
         void init () {
-
-            /*Timber.d("title: %s\nbackground: %s\n,image-representative: %s\n" +
-                    "text: %s\npagination: %s",
-                    module.getModuleTitle().getText(),
-                    module.getBackgroundColor().getRgbaSpace().toString(),
-                    module.getBackgroundImageReference().getRepresentativeColor().getRgbaSpace().toString(),
-                    module.getModuleTitle().getColor().getRgbaSpace().toString(),
-                    module.getModulePaginationActiveColor().getRgbaSpace().getAlpha());*/
 
             if(!module.hasModuleSubtitle() || (module.hasModuleSubtitle() &&
                     module.getModuleSubtitle().getText().length() == 0))
@@ -122,27 +109,19 @@ public final class FullBleedListAdapter extends RecyclerView.Adapter<FullBleedLi
 
             itemText.setText(itemTitle);
 
-            //gradient.setAspect(module.getBackgroundImageReference().getAspectRatio());
-
-            gradient.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[] {
+            gradient.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                    new int[] {
                     ColorUtils.modifyAlpha(ProtoUtils.colorFrom(
                         module.getBackgroundColor()), 0.1f),
                     ColorUtils.modifyAlpha(ProtoUtils.colorFrom(
                         module.getBackgroundImageReference().getRepresentativeColor()), 1.0f)
             }));
 
-            image.setBackgroundColor(ProtoUtils.colorFrom(module.getBackgroundImageReference().getRepresentativeColor()));
+            image.setBackgroundColor(ProtoUtils.colorFrom(
+                    module.getBackgroundImageReference().getRepresentativeColor()));
 
-            //image.setAspectRatio(module.getBackgroundImageReference().getAspectRatio());
-            //image.setScrimColor(ProtoUtils.colorFrom(module.getBackgroundColor()));
-            //image.setScrimColor2(ProtoUtils.colorFrom(module.getBackgroundImageReference().getRepresentativeColor()));
-            //image.setScrimAlpha(0.3f);
 
             requestManager.load(module.getBackgroundImageReference().getUrl())
-                    /*.apply(new RequestOptions().override(
-                            Math.round( MathUtils.dpToPx(context, 400) *
-                                    MathUtils.aspectWidthMultiple(module.getBackgroundImageReference().getAspectRatio())),
-                            MathUtils.dpToPx(context, 400)))*/
                     .transition(DrawableTransitionOptions.withCrossFade(200))
                     .into(image);
 

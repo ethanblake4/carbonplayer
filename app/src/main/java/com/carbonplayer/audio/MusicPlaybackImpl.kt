@@ -20,6 +20,7 @@ import com.google.android.exoplayer2.trackselection.*
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultAllocator
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
+import rx.Subscription
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -34,6 +35,8 @@ class MusicPlaybackImpl (
 
     val mainHandler: Handler = Handler(service.mainLooper)
     val streamManager: StreamManager = StreamManager.getInstance()
+
+    var subscription: Subscription? = null
 
     var renderersFactory = DefaultRenderersFactory(service)
     val allocator = DefaultAllocator(true, 64 * 1024)
@@ -112,12 +115,16 @@ class MusicPlaybackImpl (
 
             if(!mirroredContentQueue[index].downloadInitialized) {
                 mirroredContentQueue[index].initDownload()
-                todo = { mirroredContentQueue[index].progressMonitor().subscribe(onbuffer) }
+                todo = {
+                    subscription?.unsubscribe()
+                    subscription = mirroredContentQueue[index].progressMonitor()
+                            .subscribe({ b -> onbuffer(b) }) }
             }
 
+            disallowNextAutoInc = true
             exoPlayer.seekTo(index, 0L)
             trackNum = index
-            disallowNextAutoInc = true
+
             ontrackchanged(index, mirroredQueue[index])
             todo()
         }
@@ -128,9 +135,10 @@ class MusicPlaybackImpl (
             if(!mirroredContentQueue[trackNum + 1].downloadInitialized) {
                 mirroredContentQueue[trackNum + 1].initDownload()
             }
+            disallowNextAutoInc = true
             exoPlayer.seekTo(trackNum + 1, 0L)
             trackNum++
-            disallowNextAutoInc = true
+
             ontrackchanged(trackNum, mirroredQueue[trackNum])
         }
     }
@@ -158,11 +166,16 @@ class MusicPlaybackImpl (
         mirroredQueue.addAll(tracks)
         val sources = MutableList(tracks.size, { z ->
             val sourcePair = sourceFromTrack(tracks[z])
-            if(z == 0 && downloadFirst && !sourcePair.first.isDownloaded)
+            if(z == 0 && downloadFirst && !sourcePair.first.isDownloaded) {
                 sourcePair.first.initDownload()
+            }
             mirroredContentQueue.add(sourcePair.first)
             sourcePair.second
         })
+        subscription?.unsubscribe()
+        subscription = mirroredContentQueue[trackNum].progressMonitor()
+                .subscribe({ b -> onbuffer(b) })
+
         dynamicSource.addMediaSources(sources)
     }
 
@@ -281,8 +294,9 @@ class MusicPlaybackImpl (
 
         if(newState != mirroredPlayState) {
             mirroredPlayState = newState
-            callback(newState)
         }
+
+        callback(newState)
     }
 
     override fun onLoadingChanged(isLoading: Boolean) {
@@ -293,8 +307,15 @@ class MusicPlaybackImpl (
         Timber.d("Position Discontinuity")
         if(exoPlayer.currentWindowIndex == lastKnownWindowIndex + 1 && !disallowNextAutoInc) {
             trackNum++
-            Timber.i("Next Track")
+            Timber.i("Discontinuity -> Next Track")
             ontrackchanged(trackNum, mirroredQueue[trackNum])
+            if(mirroredContentQueue[trackNum].isDownloaded) {
+                onbuffer(1.0f)
+            } else {
+                subscription?.unsubscribe()
+                subscription = mirroredContentQueue[trackNum].progressMonitor()
+                        .subscribe({ b -> onbuffer(b) })
+            }
         }
 
         if(disallowNextAutoInc) disallowNextAutoInc = false

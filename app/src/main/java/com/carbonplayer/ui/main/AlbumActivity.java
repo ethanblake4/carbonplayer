@@ -110,7 +110,7 @@ public class AlbumActivity extends AppCompatActivity {
                         if(Color.red(ColorUtils.contrastColor(palette.getVibrantColor(Color.DKGRAY))) > 200) {
                             Timber.d("red>200");
                             fab.setBackgroundTintList(ColorStateList.valueOf(palette.getLightVibrantColor(Color.WHITE)));
-                            nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getLightVibrantColor(Color.WHITE));
+                            //nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getLightVibrantColor(Color.WHITE));
                         } else {
                             Timber.d("not");
                             ColorStateList s = ColorStateList.valueOf(palette.getDarkVibrantColor(Color.DKGRAY));
@@ -119,7 +119,7 @@ public class AlbumActivity extends AppCompatActivity {
                             Timber.d(t.toString());
                             fab.setBackgroundTintList(s);
                             fab.setImageTintList(t);
-                            nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getDarkVibrantColor(Color.DKGRAY));
+                            //nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getDarkVibrantColor(Color.DKGRAY));
                         }
                     })
             )

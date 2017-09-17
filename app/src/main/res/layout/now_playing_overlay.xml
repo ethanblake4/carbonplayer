@@ -98,9 +98,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
             android:paddingBottom="8dp"
-            app:layout_constraintLeft_toLeftOf="@+id/nowplaying.fastrewind"
-            app:layout_constraintRight_toRightOf="@+id/nowplaying.fastforward"
-            app:layout_constraintTop_toBottomOf="@+id/nowplaying.playpause">
+            app:layout_constraintLeft_toLeftOf="@+id/npui_fastrewind"
+            app:layout_constraintRight_toRightOf="@+id/npui_fastforward"
+            app:layout_constraintTop_toBottomOf="@+id/npui_playpause">
 
             <View
                 android:id="@+id/nowplaying.ic_lowvolume"

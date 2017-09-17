@@ -93,7 +93,7 @@ class HomeFragment: Fragment() {
             PageTypeCase.HOMEPAGE -> {
                 val homePage = homeContentPage.homePage
 
-                main_recycler.adapter = FullBleedListAdapter(activity,
+                main_recycler.adapter = FullBleedListAdapter(
                         homePage.fullBleedModuleList.modulesList.filter { m ->
                                 m.singleSection.contentCase.let {
                                     it == FullBleedSection.ContentCase.TALLPLAYABLECARDLIST ||
