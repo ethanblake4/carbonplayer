@@ -25,7 +25,7 @@ public class Preferences {
     //Device
     public String userEmail;
 
-    public StreamQuality preferredStreamQualityWifi = StreamQuality.MEDIUM;
+    public StreamQuality preferredStreamQualityWifi = StreamQuality.HIGH;
     public StreamQuality preferredStreamQualityMobile = StreamQuality.MEDIUM;
 
     public String masterToken;

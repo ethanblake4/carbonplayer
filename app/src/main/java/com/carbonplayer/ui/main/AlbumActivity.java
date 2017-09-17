@@ -4,19 +4,15 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.ColorInt;
-import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.FrameLayout;
 import android.widget.ScrollView;
@@ -24,17 +20,13 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.request.target.Target;
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.model.entity.MusicTrack;
-import com.carbonplayer.model.entity.RealmString;
-import com.carbonplayer.model.entity.SongID;
-import com.carbonplayer.ui.helpers.NowPlayingUIHelper;
+import com.carbonplayer.ui.helpers.NowPlayingHelper;
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback;
 import com.carbonplayer.ui.widget.ParallaxScrimageView;
 import com.carbonplayer.ui.widget.SquareView;
@@ -44,18 +36,12 @@ import com.carbonplayer.utils.MathUtils;
 import com.github.florent37.glidepalette.BitmapPalette;
 import com.github.florent37.glidepalette.GlidePalette;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.RunnableFuture;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.realm.RealmList;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
 import timber.log.Timber;
 
 /**
@@ -82,7 +68,7 @@ public class AlbumActivity extends AppCompatActivity {
     private Album mAlbum;
     private List<MusicTrack> tracks;
 
-    private NowPlayingUIHelper nowPlayingHelper;
+    private NowPlayingHelper nowPlayingHelper;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -91,7 +77,7 @@ public class AlbumActivity extends AppCompatActivity {
         setContentView(R.layout.activity_songgroup);
         ButterKnife.bind(this);
 
-        nowPlayingHelper = new NowPlayingUIHelper(this);
+        nowPlayingHelper = new NowPlayingHelper(this);
 
         mAlbum = CarbonPlayerApplication.Companion.getInstance().getCurrentAlbum();
 
@@ -174,7 +160,7 @@ public class AlbumActivity extends AppCompatActivity {
         params.height = tracks.size() * MathUtils.dpToPx(this, 67);
 
         mAdapter = new SongListAdapter(tracks, songID -> {
-            nowPlayingHelper.makePlayingScreen(albumart.getDrawable());
+            //nowPlayingHelper.makePlayingScreen(albumart.getDrawable());
             nowPlayingHelper.newQueue(tracks);
             return Unit.INSTANCE;
         });
@@ -190,7 +176,7 @@ public class AlbumActivity extends AppCompatActivity {
 
     @OnClick(R.id.play_fab)
     void playFABClicked(){
-        nowPlayingHelper.makePlayingScreen(albumart.getDrawable());
+//        ..nowPlayingHelper.makePlayingScreen(albumart.getDrawable());
         nowPlayingHelper.newQueue(tracks);
     }
 

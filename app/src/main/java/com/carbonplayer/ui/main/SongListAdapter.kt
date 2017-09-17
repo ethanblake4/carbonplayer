@@ -25,12 +25,12 @@ internal class SongListAdapter(
     : RecyclerView.Adapter<SongListAdapter.ViewHolder>() {
 
     internal inner class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
-        var trackName: TextView = v.findViewById(R.id.trackName) as TextView
-        var trackNumber: TextView = v.findViewById(R.id.trackNumber) as TextView
+        var trackName: TextView = v.findViewById<View>(R.id.trackName) as TextView
+        var trackNumber: TextView = v.findViewById<View>(R.id.trackNumber) as TextView
         lateinit var id: SongID
 
         init {
-            v.findViewById(R.id.songLayoutRoot).setOnClickListener { _ -> clicked(id)}
+            v.findViewById<View>(R.id.songLayoutRoot).setOnClickListener { _ -> clicked(id)}
         }
     }
 

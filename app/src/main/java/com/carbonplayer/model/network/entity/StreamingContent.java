@@ -36,6 +36,7 @@ import timber.log.Timber;
 public class StreamingContent {
 
     private PublishSubject<Float> downloadProgress = PublishSubject.create();
+    public boolean downloadInitialized = false;
     private long completed = 0;
     private final Context context;
     private long seekMs;
@@ -50,7 +51,8 @@ public class StreamingContent {
     private long lastWait;
     private long len;
 
-    public StreamingContent(Context context, SongID songId, String trackTitle, StreamQuality quality) {
+    public StreamingContent(Context context, SongID songId, String trackTitle,
+                            StreamQuality quality, boolean doDownload) {
 
         this.context = context;
         this.songID = songId;
@@ -60,10 +62,11 @@ public class StreamingContent {
             Timber.i("Creating new DownloadRequest");
             downloadRequest =
                     new DownloadRequest(songId, trackTitle, 100,
-                            0, new FileLocation(StorageType.CACHE, TrackCache.getTrackFile(context, songId, quality)),
+                            0, new FileLocation(StorageType.CACHE,
+                            TrackCache.getTrackFile(context, songId, quality)),
                             true, quality, StreamQuality.UNDEFINED);
             this.filepath = TrackCache.getTrackFile(context, songId, quality).getAbsolutePath();
-            initDownload();
+            if (doDownload) initDownload();
         } else {
             Timber.i("File already exists");
             File file = TrackCache.getTrackFile(context, songId, quality);
@@ -76,7 +79,18 @@ public class StreamingContent {
 
     }
 
-    private void initDownload(){
+    public StreamingContent(Context context, SongID songId, String trackTitle,
+                            StreamQuality quality) {
+
+        this(context, songId, trackTitle, quality, true);
+
+    }
+
+    public void initDownload(){
+        downloadInitialized = true;
+        Timber.i("InitDownload for %s", this.toString());
+        if(downloadRequest == null) return;
+
         ProgressResponseBody.ProgressListener listener = (bytesRead, contentLength, done) ->
                 downloadProgress.onNext((float)((bytesRead/100.0)/(contentLength/100.0)));
         ArrayList<okhttp3.Protocol> protocols = new ArrayList<>();
@@ -116,6 +130,7 @@ public class StreamingContent {
                             synchronized (StreamingContent.this) {
                                 notifyAll();
                             }
+                            //downloadProgress.onNext(writ);
                         }
                         sink.close();
                         downloadRequest.setState(DownloadRequest.State.COMPLETED);
@@ -158,7 +173,7 @@ public class StreamingContent {
             if (lastWait + 10000 < uptimeMs) {
                 this.lastWait = uptimeMs;
                 Timber.i("waiting for %d bytes in file: %s", amount, filepath);
-                Timber.i("State: %s", downloadRequest.getState().name());
+//                Timber.i("State: %s", downloadRequest.getState().name());
             }
             wait();
         }
@@ -213,6 +228,12 @@ public class StreamingContent {
         DownloadRequest.State state = downloadRequest.getState();
         return state == DownloadRequest.State.COMPLETED || state == DownloadRequest.State.CANCELED
                 || state == DownloadRequest.State.FAILED;
+    }
+
+    public synchronized boolean isDownloaded() {
+        if(downloadRequest == null) return true;
+        DownloadRequest.State state = downloadRequest.getState();
+        return state == DownloadRequest.State.COMPLETED;
     }
 
     public synchronized boolean isCompleted() {

@@ -1,6 +1,7 @@
 package com.carbonplayer.ui.main
 
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
@@ -12,7 +13,7 @@ import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.ui.helpers.BackstackSaveable
-import com.carbonplayer.ui.helpers.NowPlayingUIHelper
+import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
 import com.carbonplayer.utils.BundleBuilder
 import com.carbonplayer.utils.IdentityUtils
@@ -24,11 +25,13 @@ import kotlinx.android.synthetic.main.controller_main.*
 class MainActivity : AppCompatActivity() {
 
     var libraryFrag: BackstackSaveable? = null
-    lateinit var npUiHelper: NowPlayingUIHelper
+    lateinit var npHelper: NowPlayingHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
+
+        volumeControlStream = AudioManager.STREAM_MUSIC
 
         if (CarbonPlayerApplication.instance.preferences.firstStart) {
             val i = Intent(this@MainActivity, IntroActivity::class.java)
@@ -39,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.controller_main)
 
-        npUiHelper = NowPlayingUIHelper(this)
+        npHelper = NowPlayingHelper(this)
 
         bottomNavContainer.setPadding(0, 0, 0, IdentityUtils.getNavbarHeight(resources))
         bottom_nav.selectedItemId = R.id.action_home

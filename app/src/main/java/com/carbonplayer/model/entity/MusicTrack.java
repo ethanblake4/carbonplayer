@@ -119,21 +119,6 @@ public class MusicTrack extends RealmObject {
         localTrackSizeBytes = 0;
     }
 
-    public MediaMetadata getMediaMetadata() {
-        return new MediaMetadata.Builder()
-                .putString(MediaMetadata.METADATA_KEY_MEDIA_ID, getTrackId())
-            /*.putString(MusicProvider.CUSTOM_METADATA_TRACK_SOURCE, getUrl(context, realm).toString())*/
-                .putString(MediaMetadata.METADATA_KEY_ALBUM, getAlbum())
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, getArtist())
-                .putLong(MediaMetadata.METADATA_KEY_DURATION, getDurationMillis())
-                .putString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI, getAlbumArtURL())
-                .putString(MediaMetadata.METADATA_KEY_TITLE, getTitle())
-                .putLong(MediaMetadata.METADATA_KEY_TRACK_NUMBER, getTrackNumber())
-             /*   .putLong(MediaMetadata.METADATA_KEY_NUM_TRACKS, allTracks.size())*/
-                .build();
-
-    }
-
     public String getTrackId() {
         return id;
     }
@@ -335,6 +320,10 @@ public class MusicTrack extends RealmObject {
         if(nid != null) return nid;
         if(clientId != null) return clientId;
         return id;
+    }
+
+    public ParcelableMusicTrack parcelable() {
+        return new ParcelableMusicTrack(this);
     }
 
     @Override

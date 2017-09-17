@@ -1,6 +1,10 @@
 package com.carbonplayer.model.entity;
 
 
+import android.media.MediaMetadata;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+
 import org.parceler.Parcel;
 
 /**
@@ -163,6 +167,20 @@ public class ParcelableMusicTrack{
 
     public void setEstimatedSize(int estimatedSize) {
         this.estimatedSize = estimatedSize;
+    }
+
+    public MediaMetadataCompat getMediaMetadata() {
+        return new MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, getId())
+            /*.putString(MusicProvider.CUSTOM_METADATA_TRACK_SOURCE, getUrl(context, realm).toString())*/
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, getAlbum())
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, getArtist())
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, getDurationMillis())
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, getAlbumArtURL())
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, getTitle())
+                .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, getTrackNumber())
+             /*   .putLong(MediaMetadata.METADATA_KEY_NUM_TRACKS, allTracks.size())*/
+                .build();
     }
 
 }

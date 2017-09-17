@@ -8,7 +8,7 @@ import com.google.common.base.Preconditions
 import java.io.IOException
 import java.io.InputStream
 
-class ExoPlayerDataSource(private val streamingContent: StreamingContent) : DataSource {
+class ExoPlayerDataSource(val streamingContent: StreamingContent) : DataSource {
 
     private var bytesRead: Long = 0
     private var inputStream: InputStream? = null

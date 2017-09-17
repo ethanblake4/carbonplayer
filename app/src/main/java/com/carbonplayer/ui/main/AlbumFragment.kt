@@ -23,7 +23,7 @@ import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.ui.helpers.MusicManager
-import com.carbonplayer.ui.helpers.NowPlayingUIHelper
+import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback
 import com.carbonplayer.utils.ColorUtils
 import com.carbonplayer.utils.IdentityUtils
@@ -57,7 +57,7 @@ class AlbumFragment : Fragment() {
 
     private lateinit var manager: MusicManager
 
-    private var nowPlayingHelper: NowPlayingUIHelper? = null
+    private var nowPlayingHelper: NowPlayingHelper? = null
 
     override fun onCreateView(inflater: LayoutInflater, containerView: ViewGroup?, savedInstanceState: Bundle?): View {
 
@@ -68,7 +68,7 @@ class AlbumFragment : Fragment() {
 
         manager = MusicManager(activity as MainActivity)
 
-        //nowPlayingHelper = NowPlayingUIHelper(activity)
+        //nowPlayingHelper = NowPlayingHelper(activity)
 
         Timber.d("album %s", album.id)
 

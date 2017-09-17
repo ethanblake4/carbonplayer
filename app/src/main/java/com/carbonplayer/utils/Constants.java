@@ -1,14 +1,19 @@
 package com.carbonplayer.utils;
 
 /**
- * Holds constants shared between activities
+ * Holds constants shared between activities and service
  */
 public final class Constants {
 
     public interface ACTION {
-        //Actions
+        // Actions are sent from the UI to the service
         String START_SERVICE = "START_SERVICE";
         String STOP_SERVICE = "STOP_SERVICE";
+
+        String NEW_QUEUE = "NEW_QUEUE";
+        String INSERT_AT_END = "INSERT_AT_END";
+        String INSERT_NEXT = "INSERT_NEXT";
+        String REORDER = "REORDER";
 
         String PREVIOUS = "PREVIOUS";
         String PLAYPAUSE = "PLAYPAUSE";
@@ -17,13 +22,8 @@ public final class Constants {
         String SEND_QUEUE = "SEND_QUEUE";
     }
 
-    public interface UIACTION {
-        int CLICK_PREVIOUS = 0;
-        int CLICK_PLAY = 1;
-        int CLICK_NEXT = 2;
-    }
-
     public interface EVENT {
+        // Events are sent from the service to the UI
         int NextSong = 0;
         int PrevSong = 1;
         int Play = 2;
@@ -34,12 +34,14 @@ public final class Constants {
     }
 
     public interface KEY {
-        //Constant keys for key-value pairs
-        String INITITAL_TRACKS = "INITIAL_TRACKS";
+        // Constant keys for key-value pairs
+        String TRACKS = "TRACKS";
+        String REORDER_FROM = "REORDER_FROM";
+        String REORDER_TO = "REORDER_TO";
     }
 
     public interface ID {
-        int MUSIC_PLAYER_SERVICE = 117;
+        int MUSIC_PLAYER_SERVICE = 227266;
     }
 
     public interface MESSAGE {

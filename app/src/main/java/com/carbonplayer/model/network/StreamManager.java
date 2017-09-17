@@ -26,11 +26,11 @@ public class StreamManager {
     }
 
 
-    public StreamingContent getStream(Context context, SongID id, String title){
+    public StreamingContent getStream(Context context, SongID id, String title, boolean download){
         StreamQuality quality = CarbonPlayerApplication.Companion.getInstance().getPreferences()
                 .getPreferredStreamQuality(CarbonPlayerApplication.Companion.getInstance());
 
-        StreamingContent content = new StreamingContent(context, id, title, quality);
+        StreamingContent content = new StreamingContent(context, id, title, quality, download);
 
         return content;
 
