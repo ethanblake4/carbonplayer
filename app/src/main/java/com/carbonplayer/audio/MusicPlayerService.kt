@@ -6,7 +6,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.media.MediaMetadata
 import android.net.Uri
 import android.net.wifi.WifiManager
@@ -53,8 +52,12 @@ class MusicPlayerService : Service(), MusicFocusable {
 
     private lateinit var playback: MusicPlayback
 
+    private var lastBitmap: Bitmap? = null
+    private var lastNotifiedTrack: ParcelableMusicTrack? = null
+
     var clients = ArrayList<Messenger>()
     private var messageQueue = Queues.newLinkedBlockingQueue<Pair<Int, Any?>>()
+    private var sendStateOnRegistered = false
 
     internal val messenger = Messenger(IncomingHandler())
 
@@ -108,6 +111,10 @@ class MusicPlayerService : Service(), MusicFocusable {
                 stopForeground(true)
                 stopSelf()
             }
+            Constants.ACTION.SEND_STATE -> {
+                Timber.i("Will send service state")
+                sendStateOnRegistered = true
+            }
             Constants.ACTION.STOP_SERVICE -> {
                 Timber.i("Received Stop Foreground Intent")
                 stopForeground(true)
@@ -157,11 +164,13 @@ class MusicPlayerService : Service(), MusicFocusable {
                     emit(Constants.EVENT.Paused)
                 }
                 MusicPlayback.PlayState.STARTING -> {
+                    if (!wifiLock.isHeld) wifiLock.acquire()
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_CONNECTING,
                                     playback.getCurrentPosition(), 1.0f).build())
                 }
                 MusicPlayback.PlayState.BUFFERING -> {
+                    if (!wifiLock.isHeld) wifiLock.acquire()
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_BUFFERING,
                                     playback.getCurrentPosition(), 1.0f).build())
@@ -169,6 +178,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                     emit(Constants.EVENT.Buffering)
                 }
                 MusicPlayback.PlayState.PLAYING -> {
+                    if (!wifiLock.isHeld) wifiLock.acquire()
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(if(playback.isUnpaused())
                                 PlaybackStateCompat.STATE_PLAYING else
@@ -177,8 +187,10 @@ class MusicPlayerService : Service(), MusicFocusable {
 
                     emit(if(playback.isUnpaused()) Constants.EVENT.Playing else
                         Constants.EVENT.Paused)
-
                 }
+            }
+            lastNotifiedTrack?.let {
+                updateNotification(it, lastBitmap)
             }
         }, { num, track ->
             emit(Constants.EVENT.TrackPlaying, track)
@@ -224,6 +236,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         playback.newQueue(tracks)
         audioFocusHelper.requestFocus()
         wifiLock.acquire()
+        playback.seekTo(0)
         playback.play()
     }
 
@@ -251,6 +264,9 @@ class MusicPlayerService : Service(), MusicFocusable {
 
     private fun updateNotification(track: ParcelableMusicTrack, bitmap: Bitmap? = null) {
 
+        lastNotifiedTrack = track
+        lastBitmap = bitmap
+
         val builder = NotificationCompat.Builder(this, "Default")
 
         val contentIntent = pendingActivityIntent(notificationIntent)
@@ -274,14 +290,16 @@ class MusicPlayerService : Service(), MusicFocusable {
                         .setShowCancelButton(true)
                         .setShowActionsInCompactView(*intArrayOf(0, 1, 2))
                         .setMediaSession(mediaSession.sessionToken))
-                .setColor(Color.argb(255, 34,34,34))
+                .setChannelId("Carbon")
                 .setContentIntent(contentIntent)
                 .setSmallIcon(R.drawable.ic_play)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setContentTitle(track.title)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setOngoing(true)
+                .setOngoing(playback.isUnpaused())
                 .setContentText(track.artist)
+                .setColorized(true)
+                .setShowWhen(false)
                 .apply { bitmap?.let { setLargeIcon(it) } }
 
         if(!initialized) {
@@ -360,8 +378,19 @@ class MusicPlayerService : Service(), MusicFocusable {
                 Constants.MESSAGE.REGISTER_CLIENT -> {
                     Timber.d("Registering 1 client")
                     clients.add(msg.replyTo)
+                    if(sendStateOnRegistered) {
+                        sendStateOnRegistered = false
+                        Timber.d("Sending service state")
+                        emit(Constants.EVENT.SendQueue)
+                        emit(Constants.EVENT.TrackPlaying, lastNotifiedTrack)
+                        emit(if (playback.isUnpaused()) Constants.EVENT.Playing else
+                            Constants.EVENT.Paused)
+                    }
                 }
-                Constants.MESSAGE.UNREGISTER_CLIENT -> clients.remove(msg.replyTo)
+                Constants.MESSAGE.UNREGISTER_CLIENT -> {
+                    Timber.d("Unregistering 1 client")
+                    clients.remove(msg.replyTo)
+                }
                 else -> super.handleMessage(msg)
             }
         }

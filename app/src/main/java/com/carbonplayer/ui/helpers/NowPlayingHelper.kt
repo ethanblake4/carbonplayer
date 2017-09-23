@@ -7,8 +7,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.media.AudioManager
 import android.os.*
 import android.support.v4.content.ContextCompat
+import android.support.v4.view.animation.FastOutSlowInInterpolator
+import android.view.KeyEvent
 import android.view.View
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -17,13 +20,13 @@ import com.carbonplayer.audio.MusicPlayerService
 import com.carbonplayer.audio.TrackQueue
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.model.entity.ParcelableMusicTrack
-import com.carbonplayer.utils.AnimUtils
-import com.carbonplayer.utils.Constants
-import com.carbonplayer.utils.asParcel
+import com.carbonplayer.utils.*
 import kotlinx.android.synthetic.main.controller_main.*
 import kotlinx.android.synthetic.main.nowplaying.*
 import kotlinx.android.synthetic.main.nowplaying.view.*
 import timber.log.Timber
+
+
 
 
 /**
@@ -32,14 +35,25 @@ import timber.log.Timber
 class NowPlayingHelper(private val activity: Activity) {
 
     var bottomNavHeight: Int = 0
+    lateinit var replyMessenger: Messenger
 
-    private val connection = object : ServiceConnection {
+    val dispW = IdentityUtils.displayWidth2(activity)
+    val dp56 = MathUtils.dpToPx2(activity.resources, 56).toInt()
+    val buttonHalfWidth = MathUtils.dpToPx2(activity.resources, 16)
+    val prevInitialX = dispW - MathUtils.dpToPx2(activity.resources, 132)
+    val playPauseInitialX = dispW - MathUtils.dpToPx2(activity.resources, 90)
+    val nextInitialX = dispW - MathUtils.dpToPx2(activity.resources, 48)
+    val audioManager = activity.applicationContext
+            .getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+    private var connection: ServiceConnection? = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             messenger = Messenger(service)
             try {
                 Timber.d("Registering bound client")
                 val msg = Message.obtain(null, Constants.MESSAGE.REGISTER_CLIENT)
-                msg.replyTo = Messenger(IncomingHandler())
+                replyMessenger = Messenger(IncomingHandler())
+                msg.replyTo = replyMessenger
                 messenger?.send(msg)
             } catch (e: RemoteException) {
                 // In this case the service has crashed before we could even do anything with it
@@ -94,6 +108,66 @@ class NowPlayingHelper(private val activity: Activity) {
         } else {
             activity.nowplaying_frame.visibility = View.GONE
         }
+
+        activity.nowplaying_frame.npui_volumebar_background
+                .layoutParams.width = (dispW / 2f).toInt()
+
+        activity.nowplaying_frame.npui_volumebar_background.translationY = dispW * 1.5f
+
+        activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.5f
+        activity.nowplaying_frame.npui_volumeHi.translationY = dispW * 1.5f
+        activity.nowplaying_frame.npui_volumeLow.x = dispW/4f - buttonHalfWidth
+        activity.nowplaying_frame.npui_volumeHi.x = dispW - (dispW/4f) - buttonHalfWidth
+        activity.nowplaying_frame.volume_fab.x = ((1f-volumePercent()) * dispW/4f) +
+                (volumePercent() * (dispW - dispW/4f - 2* buttonHalfWidth))
+
+        activity.nowplaying_frame.callback = { up ->
+
+            activity.nowplaying_frame.npui_thumb.run {
+                postOnAnimation {
+                    layoutParams.width =
+                            (up.times(dispW - dp56)).toInt() + dp56
+                    invalidate()
+                }
+            }
+            activity.nowplaying_frame.npui_song.run {
+                postOnAnimation {
+                    alpha = 1f - up
+                    invalidate()
+                }
+            }
+            activity.nowplaying_frame.npui_artist.run {
+                postOnAnimation {
+                    alpha = 1f - up
+                    invalidate()
+                }
+            }
+
+            activity.bottom_nav.run {
+                postOnAnimation {
+                    layoutParams.height = (dp56 * (1f - up)).toInt()
+                }
+            }
+            activity.nowplaying_frame.npui_fastrewind.run {
+                postOnAnimation {
+                    translationY = (up * dispW / 3)
+                    x = ((dispW/4f - buttonHalfWidth) * up) + (prevInitialX * (1f - up))
+                }
+            }
+            activity.nowplaying_frame.npui_playpause.run {
+                postOnAnimation {
+                    translationY = (up * dispW / 3)
+                    (((dispW / 2f) - buttonHalfWidth) * up) + (playPauseInitialX * (1f - up))
+                }
+            }
+            activity.nowplaying_frame.npui_fastforward.run {
+                postOnAnimation {
+                    translationY = (up * dispW / 3)
+                    x =  ((dispW - (dispW/4f) - buttonHalfWidth))  * up + (nextInitialX * (1f - up))
+                }
+            }
+
+        }
     }
 
     private var messenger: Messenger? = null
@@ -113,8 +187,33 @@ class NowPlayingHelper(private val activity: Activity) {
         } else Timber.d("Not binding to service, already started")
     }
 
+    fun handleVolumeEvent(event: Int) : Boolean {
+        if (event == KeyEvent.KEYCODE_VOLUME_DOWN || event == KeyEvent.KEYCODE_VOLUME_UP) {
+            if( activity.nowplaying_frame.isUp ) {
+                audioManager.adjustStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        if (event == KeyEvent.KEYCODE_VOLUME_UP) AudioManager.ADJUST_RAISE
+                        else AudioManager.ADJUST_LOWER,
+                        AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE)
+                return true
+            }
+            activity.nowplaying_frame.volume_fab.animate()
+                    .x(((1f-volumePercent()) * dispW/4f) +
+                    (volumePercent() * (dispW - dispW/4f - 2* buttonHalfWidth)))
+                    .setDuration(250).setInterpolator(FastOutSlowInInterpolator()).start()
+        }
+        return false
+    }
+
+    fun volumePercent() : Float {
+        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() /
+                audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
+    }
+
     private fun revealPlayerUI() {
         AnimUtils.expand(activity.bottomNavContainer.nowplaying_frame)
+        activity.nowplaying_frame.initialHeight = MathUtils.dpToPx2(activity.resources, 56)
+                .toInt()
     }
 
     private fun newIntent(): Intent = Intent(activity, MusicPlayerService::class.java)
@@ -208,6 +307,13 @@ class NowPlayingHelper(private val activity: Activity) {
         }
     }
 
+    fun onDestroy() {
+        messenger?.send(Message.obtain(null, Constants.MESSAGE.UNREGISTER_CLIENT).apply {
+            replyTo = replyMessenger
+        })
+        activity.unbindService(connection)
+    }
+
     @Suppress("DEPRECATION")
     private fun isServiceRunning(): Boolean {
         val manager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -215,6 +321,4 @@ class NowPlayingHelper(private val activity: Activity) {
             MusicPlayerService::class.java.name == it.service.className
         }
     }
-
-
 }

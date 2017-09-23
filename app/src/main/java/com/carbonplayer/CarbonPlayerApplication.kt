@@ -3,27 +3,19 @@ package com.carbonplayer
 import android.app.Application
 import android.net.http.AndroidHttpClient
 import android.os.Build
-
+import butterknife.ButterKnife
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.utils.CrashReportingTree
 import com.carbonplayer.utils.Preferences
 import com.facebook.stetho.Stetho
 import com.facebook.stetho.okhttp3.StethoInterceptor
-import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
-import com.google.android.exoplayer2.upstream.HttpDataSource
+import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.Util
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider
-
-import butterknife.ButterKnife
-import com.squareup.leakcanary.LeakCanary
 import icepick.Icepick
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import rx.plugins.RxJavaHooks
 import timber.log.Timber
 
@@ -45,10 +37,10 @@ class CarbonPlayerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        if (LeakCanary.isInAnalyzerProcess(this))
-            return
+        //if (LeakCanary.isInAnalyzerProcess(this))
+        //    return
 
-        LeakCanary.install(this)
+        //LeakCanary.install(this)
 
         preferences = Preferences()
         preferences.load()

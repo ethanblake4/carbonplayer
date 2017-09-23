@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.carbonplayer.ui.widget.NowPlayingFrame
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nowplaying_frame"
     android:layout_width="match_parent"
@@ -12,67 +13,77 @@
         android:layout_width="56dp"
         android:layout_height="0dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/unknown_music_track"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:src="@drawable/unknown_music_track" />
 
-    <android.support.constraint.ConstraintLayout
-        android:id="@+id/nowplaying_detailsv"
+    <TextView
+        android:id="@+id/npui_song"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="68dp"
+        android:layout_marginTop="8dp"
+        android:text="Song Name"
+        android:textColor="#fff" />
+
+    <ImageView
+        android:id="@+id/npui_playpause"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="right|center_vertical"
+        android:layout_marginEnd="58dp"
+        android:contentDescription="@string/play_pause_button"
+        app:srcCompat="@drawable/ic_pause" />
+
+    <ImageView
+        android:id="@+id/npui_fastrewind"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="right|center_vertical"
+        android:layout_marginEnd="100dp"
+        android:contentDescription="@string/previous_song"
+        app:srcCompat="@drawable/ic_fast_rewind" />
+
+    <TextView
+        android:id="@+id/npui_artist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="68dp"
+        android:layout_marginTop="30dp"
+        android:text="Artist"/>
+
+    <ImageView
+        android:id="@+id/npui_fastforward"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="right|center_vertical"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="@string/fast_forward"
+        app:srcCompat="@drawable/ic_fast_forward" />
+
+    <View
+        android:id="@+id/npui_volumebar_background"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="2dp"
+        android:layout_gravity="center_horizontal"
+        android:background="#fff" />
 
-        <TextView
-            android:id="@+id/npui_song"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="68dp"
-            android:layout_marginTop="8dp"
-            android:text="Song Name"
-            android:textColor="#fff"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+    <ImageView
+        android:id="@+id/npui_volumeLow"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        app:srcCompat="@drawable/ic_volume_down" />
 
-        <ImageView
-            android:id="@+id/npui_playpause"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="12dp"
-            android:contentDescription="@string/play_pause_button"
-            app:layout_constraintEnd_toStartOf="@+id/npui_fastforward"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_pause" />
+    <ImageView
+        android:id="@+id/npui_volumeHi"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        app:srcCompat="@drawable/ic_volume_up" />
 
-        <ImageView
-            android:id="@+id/npui_fastrewind"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginEnd="16dp"
-            android:contentDescription="@string/previous_song"
-            app:layout_constraintEnd_toStartOf="@+id/npui_playpause"
-            app:layout_constraintTop_toTopOf="@+id/npui_playpause"
-            app:srcCompat="@drawable/ic_fast_rewind" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/volume_fab"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:fabSize="mini" />
 
-        <TextView
-            android:id="@+id/npui_artist"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="Artist"
-            app:layout_constraintStart_toStartOf="@+id/npui_song"
-            app:layout_constraintTop_toBottomOf="@+id/npui_song" />
-
-        <ImageView
-            android:id="@+id/npui_fastforward"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginEnd="16dp"
-            android:contentDescription="@string/fast_forward"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/npui_playpause"
-            app:srcCompat="@drawable/ic_fast_forward" />
-
-    </android.support.constraint.ConstraintLayout>
-
-
-</FrameLayout>
+</com.carbonplayer.ui.widget.NowPlayingFrame>

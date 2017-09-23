@@ -5,7 +5,9 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
-import android.transition.*
+import android.transition.Fade
+import android.transition.TransitionInflater
+import android.view.KeyEvent
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -18,9 +20,10 @@ import com.carbonplayer.ui.intro.IntroActivity
 import com.carbonplayer.utils.BundleBuilder
 import com.carbonplayer.utils.IdentityUtils
 import icepick.Icepick
-
-import timber.log.Timber
 import kotlinx.android.synthetic.main.controller_main.*
+import timber.log.Timber
+
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -111,9 +114,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        return npHelper.handleVolumeEvent(keyCode)
+    }
+
     override fun onResume() {
 
         super.onResume()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        npHelper.onDestroy()
     }
 
     override fun onBackPressed() {

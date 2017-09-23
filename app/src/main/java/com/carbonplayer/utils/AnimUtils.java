@@ -18,6 +18,7 @@ package com.carbonplayer.utils;
 import android.animation.Animator;
 import android.animation.TimeInterpolator;
 import android.content.Context;
+import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.transition.Transition;
 import android.util.ArrayMap;
 import android.util.Property;
@@ -319,7 +320,7 @@ public class AnimUtils {
         }
     }
 
-    public static void expand(final View v) {
+    public static int expand(final View v) {
         v.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         final int targetHeight = v.getMeasuredHeight();
 
@@ -344,7 +345,9 @@ public class AnimUtils {
 
         // 1dp/ms
         a.setDuration((int)(targetHeight / v.getContext().getResources().getDisplayMetrics().density));
+        a.setInterpolator(new FastOutSlowInInterpolator());
         v.startAnimation(a);
+        return targetHeight;
     }
 
     public static void collapse(final View v) {

@@ -16,7 +16,9 @@ import com.google.android.exoplayer2.source.DynamicConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.TrackGroupArray
-import com.google.android.exoplayer2.trackselection.*
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultAllocator
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
@@ -40,8 +42,8 @@ class MusicPlaybackImpl (
 
     var renderersFactory = DefaultRenderersFactory(service)
     val allocator = DefaultAllocator(true, 64 * 1024)
-    val loadControl = DefaultLoadControl(allocator, 3000, 4500, 1000, 5000)
-    val dataSourceFactory = buildDataSourceFactory(true)
+    val loadControl = DefaultLoadControl(allocator, 6000, 10000, 2000, 5000)
+
     val trackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
     val trackSelector = DefaultTrackSelector(trackSelectionFactory)
     val dynamicSource = DynamicConcatenatingMediaSource()
@@ -107,6 +109,7 @@ class MusicPlaybackImpl (
         mirroredContentQueue.clear()
         add(queue, true)
         ontrackchanged(trackNum, mirroredQueue[trackNum])
+        playerIsPrepared = false
     }
 
     fun skipToTrack(index: Int) {
@@ -118,7 +121,8 @@ class MusicPlaybackImpl (
                 todo = {
                     subscription?.unsubscribe()
                     subscription = mirroredContentQueue[index].progressMonitor()
-                            .subscribe({ b -> onbuffer(b) }) }
+                            .subscribe({ b -> onbuffer(b) })
+                }
             }
 
             disallowNextAutoInc = true
@@ -143,17 +147,21 @@ class MusicPlaybackImpl (
         }
     }
 
-    fun prevTrack() {
-        if(trackNum > 0) {
-            if(!mirroredContentQueue[trackNum - 1].downloadInitialized) {
+    fun prevTrack(alwaysSkip: Boolean = false) {
+        if(!alwaysSkip && exoPlayer.currentPosition > SKIP_ON_PREVIOUS) {
+            exoPlayer.seekTo(0L)
+        } else if (trackNum > 0) {
+            if (!mirroredContentQueue[trackNum - 1].downloadInitialized) {
                 mirroredContentQueue[trackNum - 1].initDownload()
             }
 
             exoPlayer.seekTo(trackNum - 1, 0L)
             trackNum--
-            disallowNextAutoInc = true
             ontrackchanged(trackNum, mirroredQueue[trackNum])
+
+            disallowNextAutoInc = true
         }
+
     }
 
     fun seekTo(pos: Long) {
@@ -340,6 +348,7 @@ class MusicPlaybackImpl (
     companion object {
         val bandwidthMeter = DefaultBandwidthMeter()
         val DELAY_ADD_ITEM = TimeUnit.SECONDS.toMillis(15)
+        val SKIP_ON_PREVIOUS = TimeUnit.SECONDS.toMillis(3)
     }
 
 }
