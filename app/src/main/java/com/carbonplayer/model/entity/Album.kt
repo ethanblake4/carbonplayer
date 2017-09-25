@@ -1,12 +1,10 @@
 package com.carbonplayer.model.entity
 
-import android.media.MediaMetadata
-import java.util.Date
-
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.annotations.Ignore
 import io.realm.annotations.PrimaryKey
+import java.util.*
 
 /**
  * Album data class

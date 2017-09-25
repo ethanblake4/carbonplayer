@@ -5,34 +5,41 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.PopupMenu
 import android.transition.Fade
 import android.transition.TransitionInflater
 import android.view.KeyEvent
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Album
+import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.ui.helpers.BackstackSaveable
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
 import com.carbonplayer.utils.BundleBuilder
 import com.carbonplayer.utils.IdentityUtils
+import com.carbonplayer.utils.VolumeObserver
 import icepick.Icepick
 import kotlinx.android.synthetic.main.controller_main.*
 import timber.log.Timber
-
-
 
 class MainActivity : AppCompatActivity() {
 
     var libraryFrag: BackstackSaveable? = null
     lateinit var npHelper: NowPlayingHelper
+    val volumeObserver = VolumeObserver({ npHelper.maybeHandleVolumeEvent() })
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
+
+        applicationContext.contentResolver.registerContentObserver (
+                android.provider.Settings.System.CONTENT_URI, true,
+                volumeObserver)
 
         volumeControlStream = AudioManager.STREAM_MUSIC
 
@@ -67,10 +74,12 @@ class MainActivity : AppCompatActivity() {
             main_controller_container.animate().alpha(0.0f).setDuration(200).start()
 
             Handler().postDelayed({
-                fragmentManager.beginTransaction().replace(R.id.main_controller_container, initialFrag)
+                fragmentManager.beginTransaction()
+                        .replace(R.id.main_controller_container, initialFrag)
                         .commit()
                 main_controller_container.translationY = 100.0f
-                main_controller_container.animate().setStartDelay(50).translationY(0.0f).alpha(1.0f).setDuration(200).start()
+                main_controller_container.animate().setStartDelay(50).translationY(0.0f)
+                        .alpha(1.0f).setDuration(200).start()
             }, 200)
 
             true
@@ -88,7 +97,8 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
-    fun gotoAlbum(album: Album, image: ImageView, content: View, textColor: Int, mainColor: Int, text: TextView, text2: TextView) {
+    fun gotoAlbum(album: Album, image: ImageView, content: View, textColor: Int,
+                  mainColor: Int, text: TextView, text2: TextView) {
 
         libraryFrag!!.saveStateForBackstack()
 
@@ -97,8 +107,10 @@ class MainActivity : AppCompatActivity() {
         frag.arguments = BundleBuilder().putString("album_id", album.id)
                 .putInt("text_color", textColor).putInt("main_color", mainColor)
                 .build()
-        frag.sharedElementEnterTransition = TransitionInflater.from(this).inflateTransition(R.transition.album_click)
-        frag.sharedElementReturnTransition = TransitionInflater.from(this).inflateTransition(R.transition.album_click)
+        frag.sharedElementEnterTransition = TransitionInflater.from(this)
+                .inflateTransition(R.transition.album_click)
+        frag.sharedElementReturnTransition = TransitionInflater.from(this)
+                .inflateTransition(R.transition.album_click)
 
         frag.enterTransition = Fade(Fade.IN)
 
@@ -111,10 +123,34 @@ class MainActivity : AppCompatActivity() {
                 .replace(R.id.main_controller_container, frag)
                 .addToBackStack("base")
                 .commit()
+    }
 
+    fun showAlbumPopup(view: View, trackList: List<MusicTrack>) {
+        val pop = PopupMenu(this, view)
+        pop.inflate(R.menu.album_popup)
+        pop.setOnMenuItemClickListener { item ->
+            when(item.itemId) {
+                R.id.menu_play_next -> {
+                    npHelper.trackQueue.insertNext(trackList)
+                }
+                R.id.menu_add_to_queue -> {
+                    npHelper.trackQueue.insertAtEnd(trackList)
+                }
+                else -> {
+                    Toast.makeText(this, "This action is not supported yet",
+                            Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            return@setOnMenuItemClickListener true
+        }
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if(keyCode == KeyEvent.KEYCODE_BACK) {
+            onBackPressed() // Fixes issue with HTC One
+            return true
+        }
         return npHelper.handleVolumeEvent(keyCode)
     }
 
@@ -126,6 +162,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         npHelper.onDestroy()
+        applicationContext.contentResolver.unregisterContentObserver(volumeObserver)
     }
 
     override fun onBackPressed() {

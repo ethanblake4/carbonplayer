@@ -2,19 +2,19 @@ package com.carbonplayer.model;
 
 import android.app.Activity;
 import android.support.annotation.UiThread;
+import android.util.Pair;
 
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.model.entity.ConfigEntry;
-import com.carbonplayer.model.entity.primitive.FinalBool;
 import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.model.entity.exception.NoNautilusException;
+import com.carbonplayer.model.entity.primitive.FinalBool;
 import com.carbonplayer.model.entity.primitive.RealmInteger;
 import com.carbonplayer.model.network.Protocol;
 
 import java.util.LinkedList;
 
 import io.realm.Realm;
-import io.realm.RealmList;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import rx.Observable;
@@ -40,7 +40,7 @@ public final class MusicLibrary {
 
     public void config(Activity context, Action1<Throwable> onError, Action0 onSuccess){
         final FinalBool failed = new FinalBool();
-        Protocol.getConfig(context)
+        Protocol.INSTANCE.getConfig(context)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(entries -> {
@@ -56,8 +56,9 @@ public final class MusicLibrary {
     }
 
     @UiThread
-    public void updateMusicLibrary(Activity context, Action1<Throwable> onError, Action1<Integer> onProgress, Action0 onSuccess) {
-        Observable<LinkedList<MusicTrack>> trackObservable = Protocol.listTracks(context)
+    public void updateMusicLibrary(Activity context, Action1<Throwable> onError,
+                                   Action1<Pair<Boolean, Integer>> onProgress, Action0 onSuccess) {
+        Observable<LinkedList<MusicTrack>> trackObservable = Protocol.INSTANCE.listTracks(context)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
         final RealmInteger received = new RealmInteger();
@@ -83,7 +84,7 @@ public final class MusicLibrary {
                         }
                     }
             });
-            onProgress.call(received.value());
+            onProgress.call(new Pair<>(false, received.value()));
         },
         onError,
         onSuccess);

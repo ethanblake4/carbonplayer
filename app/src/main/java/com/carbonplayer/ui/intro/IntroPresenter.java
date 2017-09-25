@@ -61,7 +61,7 @@ class IntroPresenter {
     }
 
     void tryLogin(String username, String password){
-        Timber.d("retrieved username=%s and password=%s", username, password);
+        Timber.d("retrieved username=|%s| and password=|%s|", username, password);
         if (!username.contains("@")) username = username + "@gmail.com";
 
         try{
@@ -104,7 +104,7 @@ class IntroPresenter {
             // The Google Play services APK is old, disabled, or not present.
             // Show a dialog created by Google Play services that allows
             // the user to update the APK
-            mActivity.runOnUiThread(()-> {
+            mActivity.runOnUiThread(() -> {
                 int statusCode = ((GooglePlayServicesAvailabilityException) t)
                         .getConnectionStatusCode();
                 Dialog dialog = GooglePlayServicesUtil.getErrorDialog(statusCode,
@@ -137,10 +137,10 @@ class IntroPresenter {
     }
 
     private void getLibrary(){
-        mActivity.slide3Progress(0);
+        mActivity.slide3Progress(false, 0);
         MusicLibrary.getInstance().updateMusicLibrary(mActivity,
             t -> mActivity.makeLibraryError(R.string.intro_slide3_issue),
-            i -> mActivity.slide3Progress(i),
+            i -> mActivity.slide3Progress(i.first, i.second),
             mActivity::endSuccessfully);
     }
 

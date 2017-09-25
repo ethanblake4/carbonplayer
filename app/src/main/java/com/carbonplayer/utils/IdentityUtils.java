@@ -11,9 +11,7 @@ import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.Px;
-import android.support.v4.app.NotificationCompat;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -26,7 +24,6 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * Utilities for identifying device and device details
@@ -60,9 +57,12 @@ public final class IdentityUtils {
     }
 
     public static int getNavbarHeight(Resources res) {
-        int resourceId = res.getIdentifier("navigation_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            return res.getDimensionPixelSize(resourceId);
+        int id = res.getIdentifier("config_showNavigationBar", "bool", "android");
+        if(id > 0 && res.getBoolean(id)) {
+            int resourceId = res.getIdentifier("navigation_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                return res.getDimensionPixelSize(resourceId);
+            }
         }
         return 0;
     }

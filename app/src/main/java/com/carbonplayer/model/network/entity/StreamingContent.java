@@ -103,7 +103,7 @@ public class StreamingContent {
                             .build();
                 }));
 
-        Protocol.getStreamURL(context, songID.getNautilusID())
+        Protocol.INSTANCE.getStreamURL(context, songID.getNautilusID())
                 .retry((tries, err) -> {
                     if (!(err instanceof ServerRejectionException)) return false;
                     if (((ServerRejectionException) err).getRejectionReason() !=

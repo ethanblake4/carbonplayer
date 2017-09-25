@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -55,6 +56,7 @@ class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
             super(v);
             ButterKnife.bind(this, v);
 
+
             layoutRoot.setOnClickListener(view -> {
 
                 thumb.setTransitionName(album.getId() + "i");
@@ -68,6 +70,9 @@ class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
             ViewTreeObserver vto = thumb.getViewTreeObserver();
             vto.addOnPreDrawListener(() -> {
                 size = thumb.getMeasuredWidth();
+                ((FrameLayout.LayoutParams) contentRoot.getLayoutParams())
+                    .setMargins(0, size, 0, 0);
+                contentRoot.postInvalidate();
                 return true;
             });
 

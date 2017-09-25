@@ -26,9 +26,9 @@ class TrackQueue(val callback: TrackQueueCallback) {
         if (!noCallback) callback.insertAtEnd(tracks.parcelable())
     }
 
-    fun insertNext(track: MusicTrack, noCallback: Boolean = false) {
-        queue.add(position + 1, track)
-        if (!noCallback) callback.insertNext(mutableListOf(track.parcelable()))
+    fun insertNext(tracks: List<MusicTrack>, noCallback: Boolean = false) {
+        queue.addAll(position + 1, tracks)
+        if (!noCallback) callback.insertNext(tracks.parcelable())
     }
 
     fun reorder(pos: Int, pnew: Int, noCallback: Boolean = false) {

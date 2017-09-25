@@ -18,6 +18,7 @@ import com.carbonplayer.utils.IdentityUtils
 import kotlinx.android.synthetic.main.activity_main.view.*
 import rx.Subscription
 
+/* Displays a list of albums */
 class AlbumPageFragment : Fragment(), BackstackSaveable {
 
     private var albumSubscription: Subscription? = null

@@ -242,9 +242,7 @@ class MusicPlaybackImpl (
                     Timber.d("Position: %s", exoPlayer.currentPosition)
                 }
 
-                val endMsec = mirroredQueue[trackNum].durationMillis.toLong()
-
-                if(exoPlayer.currentPosition > endMsec - DELAY_ADD_ITEM &&
+                if(exoPlayer.currentPosition > DELAY_ADD_ITEM &&
                         mirroredQueue.size > trackNum + 1
                         && !mirroredContentQueue[trackNum + 1].downloadInitialized) {
                     Timber.i("Init download for next track")

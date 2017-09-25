@@ -12,24 +12,26 @@
     <string name="intro_setup">Let\'s get setup</string>
     <string name="intro_slide2_desc">Sign in to your Google Account so we can access your music</string>
     <string name="intro_signin">Sign In</string>
+    <string name="sign_in_dialog_header">Sign in to your Google Account</string>
+    <string name="username">Username/Email</string>
+    <string name="password">Password</string>
 
     <string name="intro_settingup">Setting up...</string>
     <string name="intro_slide3_desc">Logging in...</string>
     <string name="intro_slide3_desc2">Getting your music library. Retrieved %1$d songs.</string>
+    <string name="intro_slide3_desc3">Getting your music library. Retrieved %1$d playlists.</string>
     <string name="intro_slide3_error">Error</string>
     <string name="intro_slide3_no_nautilus">A Play Music All Access subscription is required to use Carbon Player.</string>
     <string name="intro_slide3_issue">An issue occurred while setting up Carbon Player.</string>
-    <string name="ok">OK</string>
-
     <string name="intro_done">We\'re all set</string>
     <string name="intro_slide4_desc">Tap the checkmark to start listening</string>
+
+    <string name="ok">OK</string>
+
     <string name="next">Next</string>
     <string name="fast_forward">Fast Forward</string>
     <string name="previous_song">Previous Song</string>
     <string name="play_pause_button">Play pause button</string>
-    <string name="sign_in_dialog_header">Sign in to your Google Account</string>
-    <string name="username">Username/Email</string>
-    <string name="password">Password</string>
 
     <string name="serverrejectionexception_another_stream_being_played">Another stream is being played.</string>
     <string name="serverrejectionexception_stream_rate_limit_reached">Rate limit reached for streaming.</string>
@@ -48,8 +50,17 @@
     <string name="settings_opt_account_desc">Manage your connected Google account</string>
     <string name="settings_opt_about">About</string>
     <string name="settings_opt_about_desc">View info about this application and open-source licenses</string>
+
     <string name="top_charts">Top Charts</string>
     <string name="home">Home</string>
     <string name="library">Library</string>
+
     <string name="play_button_default_desc">Play Button</string>
+
+    <string name="action_start_radio">Start radio</string>
+    <string name="action_play_next">Play next</string>
+    <string name="action_add_to_queue">Add to queue</string>
+    <string name="action_add_to_playlist">Add to playlist</string>
+    <string name="action_go_to_artist">Go to artist</string>
+    <string name="action_share">Share</string>
 </resources>

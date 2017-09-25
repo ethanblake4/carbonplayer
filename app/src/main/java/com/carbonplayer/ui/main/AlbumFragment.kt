@@ -16,6 +16,7 @@ import android.view.ViewTreeObserver
 import android.view.animation.ScaleAnimation
 import butterknife.OnClick
 import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.carbonplayer.R
@@ -23,7 +24,6 @@ import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.ui.helpers.MusicManager
-import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback
 import com.carbonplayer.utils.ColorUtils
 import com.carbonplayer.utils.IdentityUtils
@@ -41,10 +41,7 @@ import timber.log.Timber
  */
 class AlbumFragment : Fragment() {
 
-    //onstructor(album: Album) : this()
-
     internal lateinit var root: View
-
 
     private var fabOffset: Int = 0
     private var squareHeight: Int = 0
@@ -56,10 +53,10 @@ class AlbumFragment : Fragment() {
     private lateinit var tracks: List<MusicTrack>
 
     private lateinit var manager: MusicManager
+    private lateinit var requestMgr: RequestManager
 
-    private var nowPlayingHelper: NowPlayingHelper? = null
-
-    override fun onCreateView(inflater: LayoutInflater, containerView: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater, containerView: ViewGroup?,
+                              savedInstanceState: Bundle?): View {
 
         album = Realm.getDefaultInstance().where(Album::class.java)
                 .equalTo("id", arguments.getString("album_id")).findFirst()
@@ -67,8 +64,6 @@ class AlbumFragment : Fragment() {
         root = inflater.inflate(R.layout.activity_songgroup, containerView, false)
 
         manager = MusicManager(activity as MainActivity)
-
-        //nowPlayingHelper = NowPlayingHelper(activity)
 
         Timber.d("album %s", album.id)
 
@@ -89,7 +84,6 @@ class AlbumFragment : Fragment() {
             }
 
             override fun onDownMotionEvent() {}
-            //root.main_backdrop.offset = (-scrollY).toFloat()
         })
 
         root.albumLayoutRoot.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
@@ -99,34 +93,38 @@ class AlbumFragment : Fragment() {
 
         val preImageWidth = IdentityUtils.displayWidthDp(activity) - 4
 
-
         val handler = DetailSharedElementEnterCallback(this)
         handler.addTextViewSizeResource(root.primaryText,
                 R.dimen.small_text_size, R.dimen.large_text_size)
         handler.addTextViewSizeResource(root.secondaryText,
                 R.dimen.small_text_2, R.dimen.large_text_2)
 
-        Glide.with(this).load(album.albumArtURL)
-                .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth).diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
+        requestMgr = Glide.with(this)
+
+        requestMgr.load(album.albumArtURL)
+                .apply(
+                        RequestOptions.overrideOf(preImageWidth, preImageWidth)
+                                .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
                 .listener(
                         GlidePalette.with(album.albumArtURL)
                                 .use(0)
-                                /*.intoTextColor(root.primaryText, BitmapPalette.Swatch.BODY_TEXT_COLOR)*/
-                                /*.intoTextColor(root.secondaryText, BitmapPalette.Swatch.BODY_TEXT_COLOR)*/
                                 .intoCallBack { palette -> palette?.let {
-                                    if (Color.red(ColorUtils.contrastColor(it.getVibrantColor(Color.DKGRAY))) > 200) {
+                                    if (Color.red(ColorUtils.contrastColor(
+                                            it.getVibrantColor(Color.DKGRAY))) > 200) {
                                         Timber.d("red>200")
-                                        root.play_fab.backgroundTintList = ColorStateList.valueOf(it.getLightVibrantColor(Color.WHITE))
-                                        //nowPlayingHelper?.detailsView?.setBackgroundColor(it.getLightVibrantColor(Color.WHITE))
+                                        root.play_fab.backgroundTintList =
+                                                ColorStateList.valueOf(
+                                                        it.getLightVibrantColor(Color.WHITE))
                                     } else {
                                         Timber.d("not")
-                                        val s = ColorStateList.valueOf(it.getDarkVibrantColor(Color.DKGRAY))
-                                        val t = ColorStateList.valueOf(it.getVibrantColor(Color.WHITE))
+                                        val s = ColorStateList.valueOf(
+                                                it.getDarkVibrantColor(Color.DKGRAY))
+                                        val t = ColorStateList.valueOf(
+                                                it.getVibrantColor(Color.WHITE))
                                         Timber.d(s.toString())
                                         Timber.d(t.toString())
                                         root.play_fab.backgroundTintList = s
                                         root.play_fab.imageTintList = t
-                                        //nowPlayingHelper?.detailsView?.setBackgroundColor(it.getDarkVibrantColor(Color.DKGRAY))
                                     } }
                                 }
                 )
@@ -135,7 +133,8 @@ class AlbumFragment : Fragment() {
         root.play_fab.visibility = View.INVISIBLE
         Handler().postDelayed({
             root.play_fab.visibility = View.VISIBLE
-            val anim = ScaleAnimation(0f, 1f, 0f, 1f, root.play_fab.pivotX, (root.main_backdrop.height - fabOffset).toFloat())
+            val anim = ScaleAnimation(0f, 1f, 0f, 1f, root.play_fab.pivotX,
+                    (root.main_backdrop.height - fabOffset).toFloat())
             anim.fillAfter = true
             anim.duration = 310
             anim.interpolator = FastOutSlowInInterpolator()
@@ -143,27 +142,17 @@ class AlbumFragment : Fragment() {
         }, 600)
 
 
-        /*new Handler().postDelayed(() ->
-                Glide.with(AlbumActivity.this).load(mAlbum.getAlbumArtURL())
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .dontAnimate()
-                .into(albumart), 1000);*/
-
         root.secondaryText.text = album.artist
         root.primaryText.text = album.title
 
         root.songgroup_recycler.isNestedScrollingEnabled = false
 
         // use a linear layout manager
-        mLayoutManager = object : LinearLayoutManager(activity) {
+        mLayoutManager = LinearLayoutManager(activity)
 
-            /*@Override
-            public boolean canScrollVertically() { return false; }*/
-        }
         root.songgroup_recycler.layoutManager = mLayoutManager
 
-                tracks = MusicLibrary.getInstance().getAllAlbumTracks(album.id)
-
+        tracks = MusicLibrary.getInstance().getAllAlbumTracks(album.id)
 
         val params = root.songgroup_recycler.layoutParams
         params.height = tracks.size * MathUtils.dpToPx(activity, 67)
@@ -186,26 +175,12 @@ class AlbumFragment : Fragment() {
                 root.secondaryText.right, root.secondaryText.bottom + transform)
     }
 
-    private val scrollListener = ViewTreeObserver.OnScrollChangedListener {
-
-        val scrollY = root.songgroup_scrollview.scrollY
-        root.main_backdrop.offset = (-scrollY).toFloat()
-        //fab.setY(albumart.getHeight() - scrollY - fabOffset);
+    private val layoutListener = ViewTreeObserver.OnGlobalLayoutListener {
+        root.play_fab.y = (root.main_backdrop.height - fabOffset).toFloat()
     }
 
-    private val layoutListener = ViewTreeObserver.OnGlobalLayoutListener { root.play_fab.y = (root.main_backdrop.height - fabOffset).toFloat() }
-
-    /*@Override
-    public void onResume(){
-        super.onResume();
-        Glide.with(AlbumActivity.this).load(mAlbum.getAlbumArtURL())
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(albumart);
+    override fun onDestroyView() {
+        super.onDestroyView()
+        requestMgr.clear(root.main_backdrop)
     }
-
-    @Override
-    public void onStop(){
-        super.onStop();
-        Glide.clear(albumart);
-    }*/
 }

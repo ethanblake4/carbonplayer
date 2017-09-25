@@ -45,6 +45,7 @@ class NowPlayingHelper(private val activity: Activity) {
     val nextInitialX = dispW - MathUtils.dpToPx2(activity.resources, 48)
     val audioManager = activity.applicationContext
             .getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    var lastVolumePercent = 0f
 
     private var connection: ServiceConnection? = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -157,7 +158,7 @@ class NowPlayingHelper(private val activity: Activity) {
             activity.nowplaying_frame.npui_playpause.run {
                 postOnAnimation {
                     translationY = (up * dispW / 3)
-                    (((dispW / 2f) - buttonHalfWidth) * up) + (playPauseInitialX * (1f - up))
+                    x= (((dispW / 2f) - buttonHalfWidth) * up) + (playPauseInitialX * (1f - up))
                 }
             }
             activity.nowplaying_frame.npui_fastforward.run {
@@ -187,6 +188,15 @@ class NowPlayingHelper(private val activity: Activity) {
         } else Timber.d("Not binding to service, already started")
     }
 
+    fun maybeHandleVolumeEvent() {
+        if(volumePercent() != lastVolumePercent) {
+            activity.nowplaying_frame.volume_fab.animate()
+                    .x(((1f - volumePercent()) * dispW / 4f) +
+                            (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth)))
+                    .setDuration(250).setInterpolator(FastOutSlowInInterpolator()).start()
+        }
+    }
+
     fun handleVolumeEvent(event: Int) : Boolean {
         if (event == KeyEvent.KEYCODE_VOLUME_DOWN || event == KeyEvent.KEYCODE_VOLUME_UP) {
             if( activity.nowplaying_frame.isUp ) {
@@ -197,10 +207,6 @@ class NowPlayingHelper(private val activity: Activity) {
                         AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE)
                 return true
             }
-            activity.nowplaying_frame.volume_fab.animate()
-                    .x(((1f-volumePercent()) * dispW/4f) +
-                    (volumePercent() * (dispW - dispW/4f - 2* buttonHalfWidth)))
-                    .setDuration(250).setInterpolator(FastOutSlowInInterpolator()).start()
         }
         return false
     }

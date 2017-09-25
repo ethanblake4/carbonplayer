@@ -82,7 +82,8 @@ public class TrackCache extends RealmObject {
         if (existingFile != null) return existingFile;
 
         if(newQuality == null) {
-            newQuality = CarbonPlayerApplication.Companion.getInstance().getPreferences().getPreferredStreamQuality(context);
+            newQuality = CarbonPlayerApplication.Companion.getInstance()
+                    .getPreferences().getPreferredStreamQuality(context);
         }
 
         return new File(context.getCacheDir(), id.getId() + "--" + String.valueOf(newQuality.ordinal()));

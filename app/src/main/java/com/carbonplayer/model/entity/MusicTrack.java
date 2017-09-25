@@ -1,7 +1,5 @@
 package com.carbonplayer.model.entity;
 
-import android.media.MediaMetadata;
-
 import com.carbonplayer.model.entity.enums.PlaySource;
 import com.carbonplayer.model.entity.primitive.RealmLong;
 
@@ -78,7 +76,7 @@ public class MusicTrack extends RealmObject {
     }
 
 
-    public MusicTrack(JSONObject trackJson) throws JSONException{
+    public MusicTrack(JSONObject trackJson) throws JSONException {
         if(!trackJson.getString("kind").equals("sj#track")) return;
 
         id = trackJson.getString("id");
@@ -291,7 +289,9 @@ public class MusicTrack extends RealmObject {
         int cacheImportance;
         cacheImportance = Math.max(0, (int) Math.round(Math.log((double) playCount) * 8.0));
         for (RealmLong play : localPlays) {
-            cacheImportance += Math.max(0, (int) Math.round(10 - Math.pow(((System.currentTimeMillis() - play.get()) / 864000000L), 2)));
+            cacheImportance += Math.max(0,
+                    (int) Math.round(10 - Math.pow(((
+                            System.currentTimeMillis() - play.get()) / 864000000L), 2)));
         }
         switch(source){
             case RECENTS:
