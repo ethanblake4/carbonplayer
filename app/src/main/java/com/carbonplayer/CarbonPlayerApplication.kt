@@ -45,7 +45,8 @@ class CarbonPlayerApplication : Application() {
         preferences = Preferences()
         preferences.load()
 
-        okHttpClient = OkHttpClient.Builder().addNetworkInterceptor(StethoInterceptor()).build()
+        okHttpClient = OkHttpClient.Builder()
+                .addNetworkInterceptor(StethoInterceptor()).build()
         androidHttpClient = AndroidHttpClient.newInstance(googleUserAgent, applicationContext)
 
         if (BuildConfig.DEBUG) {
@@ -63,7 +64,7 @@ class CarbonPlayerApplication : Application() {
             Timber.plant(CrashReportingTree())
         }
 
-        RxJavaHooks.setOnError { e -> Timber.e(e.toString()) }
+        RxJavaHooks.setOnError { e -> Timber.e(e, e.toString()) }
 
         Realm.init(this)
         // Configure default configuration for Realm

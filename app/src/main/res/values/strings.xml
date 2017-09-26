@@ -19,7 +19,7 @@
     <string name="intro_settingup">Setting up...</string>
     <string name="intro_slide3_desc">Logging in...</string>
     <string name="intro_slide3_desc2">Getting your music library. Retrieved %1$d songs.</string>
-    <string name="intro_slide3_desc3">Getting your music library. Retrieved %1$d playlists.</string>
+    <string name="intro_slide3_desc3">Getting your music library. Retrieving playlists.</string>
     <string name="intro_slide3_error">Error</string>
     <string name="intro_slide3_no_nautilus">A Play Music All Access subscription is required to use Carbon Player.</string>
     <string name="intro_slide3_issue">An issue occurred while setting up Carbon Player.</string>

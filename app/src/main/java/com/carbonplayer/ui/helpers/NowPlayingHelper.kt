@@ -101,7 +101,6 @@ class NowPlayingHelper(private val activity: Activity) {
         if(isServiceRunning()) {
             val intent = newIntent().apply {
                 action = Constants.ACTION.SEND_STATE
-
                 maybeBind(this)
             }
 

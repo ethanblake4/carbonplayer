@@ -27,6 +27,7 @@ import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.model.entity.MusicTrack;
 import com.carbonplayer.ui.helpers.NowPlayingHelper;
+import com.carbonplayer.ui.main.adapters.SongListAdapter;
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback;
 import com.carbonplayer.ui.widget.ParallaxScrimageView;
 import com.carbonplayer.ui.widget.SquareView;

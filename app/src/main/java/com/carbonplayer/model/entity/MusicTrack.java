@@ -36,6 +36,7 @@ public class MusicTrack extends RealmObject {
     private int durationMillis;
     private Integer beatsPerMinute;
     private String albumArtURL;
+    private String artistArtURL;
     private int playCount;
     private String rating;
     private int estimatedSize;
@@ -49,7 +50,7 @@ public class MusicTrack extends RealmObject {
 
     public MusicTrack(String id, Date recentTimestamp, boolean deleted, String title, String artist, String composer,
                       String album, Integer year, String comment, Integer trackNumber, String genre, int durationMillis,
-                      Integer beatsPerMinute, String albumArtURL, int playCount, String rating, int estimatedSize,
+                      Integer beatsPerMinute, String albumArtURL, String artistArtURL, int playCount, String rating, int estimatedSize,
                       String albumId, RealmList<RealmString> artistId, String clientId, String nid, long localTrackSizeBytes) {
         this.id = id;
         this.recentTimestamp = recentTimestamp;
@@ -66,6 +67,7 @@ public class MusicTrack extends RealmObject {
         this.durationMillis = durationMillis;
         this.beatsPerMinute = beatsPerMinute;
         this.albumArtURL = albumArtURL;
+        this.artistArtURL = artistArtURL;
         this.playCount = playCount;
         this.rating = rating;
         this.estimatedSize = estimatedSize;
@@ -79,13 +81,21 @@ public class MusicTrack extends RealmObject {
     public MusicTrack(JSONObject trackJson) throws JSONException {
         if(!trackJson.getString("kind").equals("sj#track")) return;
 
-        id = trackJson.getString("id");
+        if(trackJson.has("id"))
+            id = trackJson.getString("id");
+        else if(trackJson.has("clientId"))
+            id = "client" + trackJson.getString("clientId");
+
         if(trackJson.has("clientId"))
             clientId = trackJson.getString("clientId");
-        recentTimestamp = new Date(Long.parseLong(trackJson.getString("recentTimestamp").substring(0,10)));
-        deleted = trackJson.getBoolean("deleted");
-        title = trackJson.getString("title");
-        artist = trackJson.getString("artist");
+        if(trackJson.has("recentTimestamp"))
+            recentTimestamp = new Date(Long.parseLong(trackJson.getString("recentTimestamp").substring(0,10)));
+        if(trackJson.has("deleted"))
+            deleted = trackJson.getBoolean("deleted");
+        if(trackJson.has("title"))
+            title = trackJson.getString("title");
+        if(trackJson.has("artist"))
+            artist = trackJson.getString("artist");
         if(trackJson.has("composer"))
             composer = trackJson.getString("composer");
         album = trackJson.getString("album");
@@ -93,7 +103,8 @@ public class MusicTrack extends RealmObject {
             year = trackJson.getInt("year");
         if(trackJson.has("comment"))
             comment = trackJson.getString("comment");
-        trackNumber = trackJson.getInt("trackNumber");
+        if(trackJson.has("trackNumber"))
+            trackNumber = trackJson.getInt("trackNumber");
         if(trackJson.has("genre"))
             genre = trackJson.getString("genre");
         durationMillis = Integer.parseInt(trackJson.getString("durationMillis"));
@@ -101,6 +112,8 @@ public class MusicTrack extends RealmObject {
             beatsPerMinute = trackJson.getInt("beatsPerMinute");
         if(trackJson.has("albumArtRef"))
             albumArtURL = trackJson.getJSONArray("albumArtRef").getJSONObject(0).getString("url");
+        if(trackJson.has("artistArtRef"))
+            artistArtURL = trackJson.getJSONArray("artistArtRef").getJSONObject(0).getString("url");
         if(trackJson.has("playCount"))
             playCount = trackJson.getInt("playCount");
         if(trackJson.has("rating"))
@@ -231,6 +244,14 @@ public class MusicTrack extends RealmObject {
 
     public void setAlbumArtURL(String albumArtURL) {
         this.albumArtURL = albumArtURL;
+    }
+
+    public String getArtistArtURL() {
+        return artistArtURL;
+    }
+
+    public void setArtistArtURL(String artistArtURL) {
+        this.artistArtURL = artistArtURL;
     }
 
     public int getPlayCount() {

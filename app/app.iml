@@ -21,6 +21,22 @@
         <option name="ASSETS_FOLDER_RELATIVE_PATH" value="/src/main/assets" />
       </configuration>
     </facet>
+    <facet type="kotlin-language" name="Kotlin">
+      <configuration version="3" platform="JVM 1.8" useProjectSettings="false">
+        <compilerSettings />
+        <compilerArguments>
+          <option name="jvmTarget" value="1.8" />
+          <option name="languageVersion" value="1.1" />
+          <option name="apiVersion" value="1.1" />
+          <option name="pluginOptions">
+            <array />
+          </option>
+          <option name="pluginClasspaths">
+            <array />
+          </option>
+        </compilerArguments>
+      </configuration>
+    </facet>
   </component>
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
     <output url="file://$MODULE_DIR$/build/intermediates/classes/dev/debug" />
@@ -162,6 +178,7 @@
     <orderEntry type="library" name="support-core-ui-26.0.2" level="project" />
     <orderEntry type="library" name="icepick-3.2.0" level="project" />
     <orderEntry type="library" name="stetho-okhttp3-1.5.0" level="project" />
+    <orderEntry type="library" name="support-v13-26.0.2" level="project" />
     <orderEntry type="library" name="animal-sniffer-annotations-1.14" level="project" />
     <orderEntry type="library" name="firebase-core-11.2.2" level="project" />
     <orderEntry type="library" name="support-media-compat-26.0.2" level="project" />

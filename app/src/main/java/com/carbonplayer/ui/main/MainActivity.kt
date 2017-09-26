@@ -2,6 +2,7 @@ package com.carbonplayer.ui.main
 
 import android.content.Intent
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
@@ -17,9 +18,10 @@ import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.MusicTrack
-import com.carbonplayer.ui.helpers.BackstackSaveable
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
+import com.carbonplayer.ui.main.library.AlbumFragment
+import com.carbonplayer.ui.main.library.LibraryFragment
 import com.carbonplayer.utils.BundleBuilder
 import com.carbonplayer.utils.IdentityUtils
 import com.carbonplayer.utils.VolumeObserver
@@ -29,7 +31,6 @@ import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
-    var libraryFrag: BackstackSaveable? = null
     lateinit var npHelper: NowPlayingHelper
     val volumeObserver = VolumeObserver({ npHelper.maybeHandleVolumeEvent() })
 
@@ -62,21 +63,22 @@ class MainActivity : AppCompatActivity() {
             var initialFrag = when(item.itemId) {
                 R.id.action_topcharts -> TopChartsPageFragment()
                 R.id.action_home -> HomeFragment()
-                R.id.action_library -> AlbumPageFragment()
-                else -> AlbumPageFragment()
+                R.id.action_library -> LibraryFragment()
+                else -> LibraryFragment()
             }
-
-            if(initialFrag is AlbumPageFragment) libraryFrag = initialFrag
-            else libraryFrag = null
 
             initialFrag.exitTransition = Fade()
 
             main_controller_container.animate().alpha(0.0f).setDuration(200).start()
 
             Handler().postDelayed({
-                fragmentManager.beginTransaction()
+                val transaction = fragmentManager.beginTransaction()
                         .replace(R.id.main_controller_container, initialFrag)
-                        .commit()
+
+                if(Build.VERSION.SDK_INT >= 24) {
+                    transaction.commitNow()
+                } else transaction.commit()
+
                 main_controller_container.translationY = 100.0f
                 main_controller_container.animate().setStartDelay(50).translationY(0.0f)
                         .alpha(1.0f).setDuration(200).start()
@@ -88,8 +90,10 @@ class MainActivity : AppCompatActivity() {
         val initialFrag = HomeFragment()
         initialFrag.exitTransition = Fade()
 
-        fragmentManager.beginTransaction().replace(R.id.main_controller_container, initialFrag)
+        fragmentManager.beginTransaction()
+                .replace(R.id.main_controller_container, initialFrag)
                 .commit()
+
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -99,8 +103,6 @@ class MainActivity : AppCompatActivity() {
 
     fun gotoAlbum(album: Album, image: ImageView, content: View, textColor: Int,
                   mainColor: Int, text: TextView, text2: TextView) {
-
-        libraryFrag!!.saveStateForBackstack()
 
         val frag = AlbumFragment()
         frag.allowEnterTransitionOverlap = true

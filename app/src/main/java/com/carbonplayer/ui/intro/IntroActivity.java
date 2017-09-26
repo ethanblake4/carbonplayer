@@ -215,7 +215,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
     void slide3Progress(boolean playlist, int p){
         ((TextView)findViewById(R.id.introSlide3Desc)).setText(playlist ?
-                getString(R.string.intro_slide3_desc3, p) :
+                getString(R.string.intro_slide3_desc3) :
                 getString(R.string.intro_slide3_desc2, p));
     }
 

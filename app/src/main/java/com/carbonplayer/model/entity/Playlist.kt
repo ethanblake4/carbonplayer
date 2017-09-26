@@ -38,7 +38,7 @@ open class Playlist (
             json.getString("kind"),
             json.getString("name"),
             if(json.has("deleted")) json.getBoolean("deleted") else false,
-            json.getString("type"),
+            if(json.has("type")) json.getString("type") else null,
             "lastModifiedTimestamp".let {if (json.has(it)) Date(json.getString(it).toLong()) else null},
             "recentTimestamp".let {if (json.has(it)) Date(json.getString(it).toLong()) else null},
             json.getString("shareToken"),

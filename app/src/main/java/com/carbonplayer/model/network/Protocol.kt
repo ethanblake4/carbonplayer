@@ -186,7 +186,7 @@ object Protocol {
         }
     }
 
-    fun listTracks(context: Context): Observable<List<MusicTrack>> {
+    @JvmStatic fun listTracks(context: Context): Observable<List<MusicTrack>> {
         return pagedJSONFeed(context, "trackfeed")
                 .map<List<MusicTrack>> { jsonObjects ->
                     try {
@@ -197,7 +197,7 @@ object Protocol {
                 }
     }
 
-    fun listPlaylists(context: Activity): Observable<List<Playlist>> {
+    @JvmStatic fun listPlaylists(context: Activity): Observable<List<Playlist>> {
         return pagedJSONFeed(context, "playlistfeed")
                 .map<List<Playlist>> { jsonObjects ->
                     try {
@@ -208,7 +208,7 @@ object Protocol {
                 }
     }
 
-    fun listPlaylistEntries(context: Activity): Observable<List<PlaylistEntry>> {
+    @JvmStatic fun listPlaylistEntries(context: Activity): Observable<List<PlaylistEntry>> {
         return pagedJSONFeed(context, "plentryfeed")
                 .map<List<PlaylistEntry>> { jsonObjects ->
                     try {

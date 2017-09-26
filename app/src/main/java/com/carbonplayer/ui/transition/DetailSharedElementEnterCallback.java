@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.carbonplayer.ui.main.AlbumActivity;
-import com.carbonplayer.ui.main.AlbumFragment;
+import com.carbonplayer.ui.main.library.AlbumFragment;
 
 import java.util.HashMap;
 import java.util.List;

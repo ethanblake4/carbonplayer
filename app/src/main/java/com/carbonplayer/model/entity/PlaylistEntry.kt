@@ -4,7 +4,7 @@ import io.realm.RealmObject
 import org.json.JSONObject
 import java.util.*
 
-class PlaylistEntry (
+open class PlaylistEntry (
         var kind: String = "",
         var id: String = "",
         var clientId: String = "",

@@ -9,13 +9,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.ArrayMap;
 import android.util.Base64;
 import android.util.Log;
 
 import com.carbonplayer.CarbonPlayerApplication;
-import com.carbonplayer.utils.Gservices;
 import com.carbonplayer.utils.IdentityUtils;
 import com.carbonplayer.utils.Preferences;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -49,6 +47,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import rx.Completable;
+import rx.exceptions.Exceptions;
 import timber.log.Timber;
 
 /**
@@ -388,7 +387,7 @@ public final class GoogleLogin {
                     performMasterLogin(email, password, androidId);
 
             if(masterToken == null) {
-                subscriber.onError(new Exception());
+                subscriber.onError(Exceptions.propagate(new Exception()));
                 subscriber.onCompleted();
             }
 

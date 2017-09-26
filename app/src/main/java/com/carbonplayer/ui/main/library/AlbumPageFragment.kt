@@ -1,9 +1,8 @@
-package com.carbonplayer.ui.main
+package com.carbonplayer.ui.main.library
 
 import android.app.Fragment
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.design.widget.AppBarLayout
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -13,13 +12,13 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
-import com.carbonplayer.ui.helpers.BackstackSaveable
-import com.carbonplayer.utils.IdentityUtils
-import kotlinx.android.synthetic.main.activity_main.view.*
+import com.carbonplayer.ui.main.MainActivity
+import com.carbonplayer.ui.main.adapters.AlbumAdapterJ
+import kotlinx.android.synthetic.main.single_recycler_layout.view.*
 import rx.Subscription
 
 /* Displays a list of albums */
-class AlbumPageFragment : Fragment(), BackstackSaveable {
+class AlbumPageFragment : Fragment() {
 
     private var albumSubscription: Subscription? = null
     private var adapter: RecyclerView.Adapter<*>? = null
@@ -27,28 +26,19 @@ class AlbumPageFragment : Fragment(), BackstackSaveable {
     lateinit var requestManager: RequestManager
     var recyclerState: Parcelable? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View {
 
-        val view = inflater.inflate(R.layout.activity_main, container, false)
+        val view = inflater.inflate(R.layout.single_recycler_layout, container, false)
         view.main_recycler.hasFixedSize()
-
-        view.toolbar.setPadding(view.toolbar.paddingLeft, view.toolbar.paddingTop + IdentityUtils.getStatusBarHeight(resources),
-                view.toolbar.paddingRight, view.toolbar.paddingBottom)
-
-        //view.toolbar.layoutParams.height += IdentityUtils.getStatusBarHeight(resources)
-        (view.toolbar.layoutParams as AppBarLayout.LayoutParams).topMargin += IdentityUtils.getStatusBarHeight(resources) / 2
-        (view.toolbar.layoutParams as AppBarLayout.LayoutParams).bottomMargin += IdentityUtils.getStatusBarHeight(resources) / 2
 
         layoutManager = GridLayoutManager(activity, 2)
 
         view.main_recycler.layoutManager = layoutManager
-        /*view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-            }
-        })*/
 
         requestManager = Glide.with(activity)
+
+        recyclerState = savedInstanceState?.getParcelable("recycler")
 
         albumSubscription?.unsubscribe()
         albumSubscription = MusicLibrary.getInstance().loadAlbums()
@@ -69,7 +59,8 @@ class AlbumPageFragment : Fragment(), BackstackSaveable {
 
     }
 
-    override fun saveStateForBackstack() {
-        recyclerState = view.main_recycler.layoutManager.onSaveInstanceState()
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putParcelable("recycler", view.main_recycler.layoutManager.onSaveInstanceState())
+        super.onSaveInstanceState(outState)
     }
 }

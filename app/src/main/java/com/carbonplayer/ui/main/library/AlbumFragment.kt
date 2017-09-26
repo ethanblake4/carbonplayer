@@ -1,4 +1,4 @@
-package com.carbonplayer.ui.main
+package com.carbonplayer.ui.main.library
 
 import android.app.Fragment
 import android.content.res.ColorStateList
@@ -24,6 +24,8 @@ import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.ui.helpers.MusicManager
+import com.carbonplayer.ui.main.MainActivity
+import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback
 import com.carbonplayer.utils.ColorUtils
 import com.carbonplayer.utils.IdentityUtils

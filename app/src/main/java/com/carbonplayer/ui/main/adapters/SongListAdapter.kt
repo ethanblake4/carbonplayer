@@ -1,20 +1,15 @@
-package com.carbonplayer.ui.main
+package com.carbonplayer.ui.main.adapters
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.model.entity.SongID
-import java.util.function.Consumer
-
-import timber.log.Timber
 
 /**
  * Album / playlist adapter
@@ -35,7 +30,7 @@ internal class SongListAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup,
-                                    viewType: Int): SongListAdapter.ViewHolder {
+                                    viewType: Int): ViewHolder {
         val v = LayoutInflater.from(parent.context)
                 .inflate(R.layout.song_item_layout, parent, false)
 
@@ -43,7 +38,7 @@ internal class SongListAdapter(
     }
 
     @SuppressLint("SetTextI18n")
-    override fun onBindViewHolder(holder: SongListAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val t = mDataset[position]
         holder.trackName.text = t.title
         if (t.trackNumber != null) holder.trackNumber.text = t.trackNumber!!.toString()
