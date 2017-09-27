@@ -4,7 +4,7 @@ import android.app.Service
 import com.carbonplayer.model.entity.ParcelableMusicTrack
 import com.carbonplayer.model.entity.exception.PlaybackException
 
-class MusicPlayback (
+class MusicPlayback(
         service: Service,
         callback: (PlayState) -> Unit,
         trackCb: (Int, ParcelableMusicTrack) -> Unit,

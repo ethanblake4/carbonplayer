@@ -1,7 +1,6 @@
 package com.carbonplayer.model.network.entity;
 
 import com.carbonplayer.model.entity.SongID;
-import com.carbonplayer.model.entity.enums.StorageType;
 import com.carbonplayer.model.entity.enums.StreamQuality;
 
 
@@ -33,7 +32,8 @@ public class DownloadRequest {
         CANCELED
     }
 
-    public DownloadRequest(SongID id, String trackTitle, int priority, long seekMillis, FileLocation fileLocation, boolean explicit, StreamQuality requestedQuality, StreamQuality existingQuality) {
+    public DownloadRequest(SongID id, String trackTitle, int priority, long seekMillis, FileLocation fileLocation,
+                           boolean explicit, StreamQuality requestedQuality, StreamQuality existingQuality) {
         if (trackTitle == null) {
             throw new IllegalArgumentException("The track title is required");
         } else if (seekMillis < 0) {
@@ -48,7 +48,8 @@ public class DownloadRequest {
             this.existingQuality = existingQuality;
             this.fileLocation = fileLocation;
         } else {
-            throw new IllegalArgumentException("If existing quality is known, requested quality must exceed it: existing=" + existingQuality + " requested=" + requestedQuality);
+            throw new IllegalArgumentException("If existing quality is known, requested quality must exceed it: existing="
+                    + existingQuality + " requested=" + requestedQuality);
         }
     }
 
@@ -64,7 +65,7 @@ public class DownloadRequest {
         return this.seekMillis;
     }
 
-    public FileLocation getFileLocation(){
+    public FileLocation getFileLocation() {
         return fileLocation;
     }
 
@@ -80,14 +81,17 @@ public class DownloadRequest {
     }
 
     public String toString() {
-        return "DownloadRequest{id='" + this.id + '\'' + ", mSourceAccount=" + '\'' + ", trackTitle='" + this.trackTitle + '\'' + ", seekMillis=" + this.seekMillis + "} ";
+        return "DownloadRequest{id='" + this.id + '\'' + ", mSourceAccount=" + '\'' +
+                ", trackTitle='" + this.trackTitle + '\'' + ", seekMillis=" + this.seekMillis + "} ";
     }
 
-    public State getState(){
+    public State getState() {
         return state;
     }
 
-    public void setState(State state) {this.state = state;}
+    public void setState(State state) {
+        this.state = state;
+    }
 
     protected int getMinPriority() {
         return PRIORITY_AUTOCACHE;

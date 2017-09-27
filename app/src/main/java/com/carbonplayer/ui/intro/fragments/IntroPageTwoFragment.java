@@ -20,7 +20,9 @@ import butterknife.Unbinder;
 public final class IntroPageTwoFragment extends Fragment {
 
     Unbinder unbinder;
-    @BindView(R.id.introOAuthStart) Button startOAuth;
+
+    @BindView(R.id.introOAuthStart)
+    Button startOAuth;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -37,7 +39,7 @@ public final class IntroPageTwoFragment extends Fragment {
     }
 
     @Override
-    public void onDestroyView(){
+    public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
     }

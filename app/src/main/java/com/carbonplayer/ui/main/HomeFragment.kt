@@ -13,21 +13,20 @@ import com.bumptech.glide.RequestManager
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.exception.ServerRejectionException
-import com.carbonplayer.model.entity.proto.innerjam.ContentPageV1Proto.ContentPage.*
+import com.carbonplayer.model.entity.proto.innerjam.ContentPageV1Proto.ContentPage.PageTypeCase
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeResponse
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.FullBleedSection
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adaptivehome.FullBleedListAdapter
 import com.carbonplayer.utils.IdentityUtils
-import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import kotlinx.android.synthetic.main.adaptivehome.*
 import kotlinx.android.synthetic.main.adaptivehome.view.*
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import timber.log.Timber
 
-class HomeFragment: Fragment() {
+class HomeFragment : Fragment() {
 
     lateinit var adapter: FullBleedListAdapter
     lateinit var layoutManager: RecyclerView.LayoutManager
@@ -68,7 +67,7 @@ class HomeFragment: Fragment() {
 
     fun refresh() {
         Protocol.listenNow(activity, CarbonPlayerApplication.instance.homePdContextToken)
-                .retry ({ tries, err ->
+                .retry({ tries, err ->
                     if (err !is ServerRejectionException) return@retry false
                     if (err.rejectionReason !=
                             ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED)
@@ -95,14 +94,14 @@ class HomeFragment: Fragment() {
 
                 main_recycler.adapter = FullBleedListAdapter(
                         homePage.fullBleedModuleList.modulesList.filter { m ->
-                                m.singleSection.contentCase.let {
-                                    it == FullBleedSection.ContentCase.TALLPLAYABLECARDLIST ||
-                                    it == FullBleedSection.ContentCase.WIDEPLAYABLECARDLIST ||
-                                    it == FullBleedSection.ContentCase.SQUAREPLAYABLECARDLIST
-                                }
-                            },
-                        {mod: FullBleedModuleV1Proto.FullBleedModule -> Timber.d(mod.toString())},
-                                requestManager, main_recycler)
+                            m.singleSection.contentCase.let {
+                                it == FullBleedSection.ContentCase.TALLPLAYABLECARDLIST ||
+                                        it == FullBleedSection.ContentCase.WIDEPLAYABLECARDLIST ||
+                                        it == FullBleedSection.ContentCase.SQUAREPLAYABLECARDLIST
+                            }
+                        },
+                        { mod: FullBleedModuleV1Proto.FullBleedModule -> Timber.d(mod.toString()) },
+                        requestManager, main_recycler)
             }
         }
     }

@@ -32,33 +32,33 @@ public final class MusicLibrary {
 
     private Realm realm;
 
-    private MusicLibrary(){
+    private MusicLibrary() {
         realm = Realm.getDefaultInstance();
     }
 
-    public static MusicLibrary getInstance(){
-        if(instance == null) instance = new MusicLibrary();
+    public static MusicLibrary getInstance() {
+        if (instance == null) instance = new MusicLibrary();
         return instance;
     }
 
-    public void config(Activity context, Action1<Throwable> onError, Action0 onSuccess){
+    public void config(Activity context, Action1<Throwable> onError, Action0 onSuccess) {
         final FinalBool failed = new FinalBool();
         Protocol.INSTANCE.getConfig(context)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(entries -> {
-                    for (ConfigEntry e : entries) {
-                        if (e.getName().equals("isNautilusUser"))
-                            if (e.getValue().equals("false")) {
-                                failed.set(true);
-                                onError.call(new NoNautilusException());
+                            for (ConfigEntry e : entries) {
+                                if (e.getName().equals("isNautilusUser"))
+                                    if (e.getValue().equals("false")) {
+                                        failed.set(true);
+                                        onError.call(new NoNautilusException());
+                                    }
                             }
-                    }
 
-                    if (!failed.get()) onSuccess.call();
+                            if (!failed.get()) onSuccess.call();
 
-                },
-                onError);
+                        },
+                        onError);
     }
 
     @UiThread
@@ -77,21 +77,20 @@ public final class MusicLibrary {
 
                             received.increment();
 
-                            if(track.getArtistId() == null) {
+                            if (track.getArtistId() == null) {
                                 ar = realm.where(Artist.class)
                                         .equalTo("artistId", "unknownID")
                                         .findFirst();
-                                if(ar == null) {
+                                if (ar == null) {
                                     ar = new Artist("unknownId", "Unknown Artist");
+                                    realm.insert(ar);
                                 }
                             } else {
                                 ar = realm.where(Artist.class)
-                                        .equalTo("artistId",
-                                                track.getArtistId().first().getValue())
+                                        .equalTo("artistId", track.getArtistId().first().getValue())
                                         .findFirst();
                                 if (ar == null) {
-                                    ar = new Artist(
-                                            track.getArtistId().first().getValue(), track);
+                                    ar = new Artist(track.getArtistId().first().getValue(), track);
                                     realm.insert(ar);
                                 }
                             }
@@ -112,7 +111,7 @@ public final class MusicLibrary {
                                 else {
                                     Album ma = new Album(track);
                                     realm.insert(ma);
-                                    if((ar != null ? ar.getAlbums() : null) != null)
+                                    if ((ar != null ? ar.getAlbums() : null) != null)
                                         ar.getAlbums().add(ma);
                                 }
                             }
@@ -149,9 +148,9 @@ public final class MusicLibrary {
                 onError, onSuccess);
     }
 
-    private static boolean albumMatchesTrack(Album a, MusicTrack t){
-        if(a==null || t==null) return false;
-        return ( t.getAlbumId() != null && a.getId() != null && a.getId().equals(t.getAlbumId()) ) ||
+    private static boolean albumMatchesTrack(Album a, MusicTrack t) {
+        if (a == null || t == null) return false;
+        return (t.getAlbumId() != null && a.getId() != null && a.getId().equals(t.getAlbumId())) ||
                 (t.getAlbum() != null && a.getArtist().equals(t.getArtist()) && a.getTitle().equals(t.getAlbum()));
     }
 
@@ -179,13 +178,13 @@ public final class MusicLibrary {
                 .asObservable();
     }
 
-    public RealmResults<MusicTrack> getAllAlbumTracks(String albumId){
+    public RealmResults<MusicTrack> getAllAlbumTracks(String albumId) {
         return realm.where(MusicTrack.class)
                 .equalTo("albumId", albumId)
                 .findAllSorted("trackNumber", Sort.ASCENDING);
     }
 
-    public MusicTrack getTrack(String id){
+    public MusicTrack getTrack(String id) {
         return realm.where(MusicTrack.class)
                 .equalTo(MusicTrack.ID, id)
                 .findFirst();

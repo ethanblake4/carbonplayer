@@ -5,6 +5,7 @@ import android.content.Context;
 import com.carbonplayer.R;
 
 import java.io.IOException;
+
 public class ServerRejectionException extends IOException {
     private final RejectionReason mRejectionReason;
 
@@ -24,8 +25,8 @@ public class ServerRejectionException extends IOException {
         this.mRejectionReason = reason;
     }
 
-    public String getDescription(Context context){
-        switch (mRejectionReason){
+    public String getDescription(Context context) {
+        switch (mRejectionReason) {
             case ANOTHER_STREAM_BEING_PLAYED:
                 return context.getString(R.string.serverrejectionexception_another_stream_being_played);
             case STREAM_RATE_LIMIT_REACHED:

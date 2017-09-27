@@ -53,33 +53,32 @@ import timber.log.Timber;
 /**
  * Contains methods used to authenticate to Google services,
  * as well as to retrieve a Play Music OAuth token.
- *
+ * <p>
  * There are several steps used when authenticating:
  * 1) Obtain an Android master token. Normally, this is only called by Google Play services
- *    when setting up a device for the first time. It is needed for steps #2 and #4.
+ * when setting up a device for the first time. It is needed for steps #2 and #4.
  * 2) Obtain a ClientLogin token using the master token. This token is used for retrieving
- *    a user's music library.
+ * a user's music library.
  * 3) Obtain a carbonplayer OAuth token. This is used for retrieving streaming URLs.
  * 4) Obtain a Google Play Music oAuth token by simulating Google Play Services API calls.
- *    Most of the code this step is taken from the microG project. This token is required
- *    for newer features such as the adaptive homepage.
+ * Most of the code this step is taken from the microG project. This token is required
+ * for newer features such as the adaptive homepage.
  */
 public final class GoogleLogin {
 
     // The Google public key
     private static final String googleDefaultPublicKey =
             "AAAAgMom/1a/v0lblO2Ubrt60J2gcuXSljGFQXgcyZWveWLEwo6prwgi3iJIZdodyhKZ" +
-            "QrNWp5nKJ3srRXcUW+F1BD3baEVGcmEgqaLZUNBjm057pKRI16kB0YppeGx5qIQ5QjKz" +
-            "sR8ETQbKLNWgRY0QRNVz34kMJR3P/LgHax/6rmf5AAAAAwEAAQ==";
+                    "QrNWp5nKJ3srRXcUW+F1BD3baEVGcmEgqaLZUNBjm057pKRI16kB0YppeGx5qIQ5QjKz" +
+                    "sR8ETQbKLNWgRY0QRNVz34kMJR3P/LgHax/6rmf5AAAAAwEAAQ==";
 
     private static final String LOGIN_SDK_VERSION = String.valueOf(Build.VERSION.SDK_INT);
 
     /**
-     * @param login - your mail, should looks like myemail@gmail.com
+     * @param login    - your mail, should looks like myemail@gmail.com
      * @param password - your password
-     *
      * @return a base64 string containing the encrypted password
-     *
+     * <p>
      * Function credits - Dima Kovalenko (http://codedigging.com/blog/2014-06-09-about-encryptedpasswd/)
      **/
     @SuppressWarnings("static-access")
@@ -97,7 +96,7 @@ public final class GoogleLogin {
 
         // 2. Calculating the first BigInteger
         int i = readInt(binaryKey, 0);
-        byte [] half = new byte[i];
+        byte[] half = new byte[i];
         System.arraycopy(binaryKey, 4, half, 0, i);
         BigInteger firstKeyInteger = new BigInteger(1, half);
 
@@ -138,7 +137,7 @@ public final class GoogleLogin {
         // output[0] = 0 (always 0!)
         // output[1...4] = first 4 bytes of SHA-1 of the public key
         // output[5...132] = encrypted login+password ("\u0000" is used as a separator)
-        byte[] output = new byte [133];
+        byte[] output = new byte[133];
         System.arraycopy(signature, 0, output, 0, signature.length);
         System.arraycopy(encrypted, 0, output, signature.length, encrypted.length);
 
@@ -146,18 +145,22 @@ public final class GoogleLogin {
         return Base64.encodeToString(output, Base64.URL_SAFE + Base64.NO_WRAP);
     }
 
-   /**
-    * Aux. method, it takes 4 bytes from a byte array and turns the bytes to int
-    *
-    * Function credits - Dima Kovalenko (http://codedigging.com/blog/2014-06-09-about-encryptedpasswd/)
-    */
+    /**
+     * Aux. method, it takes 4 bytes from a byte array and turns the bytes to int
+     * <p>
+     * Function credits - Dima Kovalenko (http://codedigging.com/blog/2014-06-09-about-encryptedpasswd/)
+     */
     private static int readInt(byte[] arrayOfByte, int start) {
-        return (0xFF & arrayOfByte[start]) << 24 | (0xFF & arrayOfByte[(start + 1)]) << 16 | (0xFF & arrayOfByte[(start + 2)]) << 8 | 0xFF & arrayOfByte[(start + 3)];
+        return (0xFF & arrayOfByte[start]) << 24 |
+                (0xFF & arrayOfByte[(start + 1)]) << 16 |
+                (0xFF & arrayOfByte[(start + 2)]) << 8 |
+                0xFF & arrayOfByte[(start + 3)];
     }
 
     /**
      * Performs a Google login call
-     * @param url URL
+     *
+     * @param url     URL
      * @param builder URI builder containing login params
      * @return ArrayMap of response values
      */
@@ -185,28 +188,28 @@ public final class GoogleLogin {
             writer.flush();
             writer.close();
             os.close();
-            int responseCode=conn.getResponseCode();
+            int responseCode = conn.getResponseCode();
 
             if (responseCode == HttpsURLConnection.HTTP_OK) {
                 String line;
-                BufferedReader br=new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                while ((line=br.readLine()) != null) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                while ((line = br.readLine()) != null) {
                     String[] s = line.split("=");
                     response.put(s[0], s[1]);
                 }
-            }else{
+            } else {
                 return null;
             }
 
             conn.connect();
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
         return response;
     }
 
-    private static ArrayMap<String, String> okLoginCall(String url, FormBody body){
+    private static ArrayMap<String, String> okLoginCall(String url, FormBody body) {
         OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient();
         ArrayMap<String, String> response = new ArrayMap<>();
         Request request = new Request.Builder()
@@ -216,7 +219,7 @@ public final class GoogleLogin {
                 .build();
         try {
             Response r = client.newCall(request).execute();
-            if(r.isSuccessful()) {
+            if (r.isSuccessful()) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(r.body().byteStream()));
                 String line;
                 while ((line = br.readLine()) != null) {
@@ -228,13 +231,13 @@ public final class GoogleLogin {
                 Timber.d(r.body().string());
                 return null;
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return response;
     }
 
-    private static String performMasterLogin(String email, String password, String androidId){
+    private static String performMasterLogin(String email, String password, String androidId) {
 
         ArrayMap<String, String> response;
         Uri.Builder builder = new Uri.Builder();
@@ -251,18 +254,22 @@ public final class GoogleLogin {
                     .appendQueryParameter("source", "android")
                     .appendQueryParameter("androidId", androidId)
                     .appendQueryParameter("device_country", IdentityUtils.getDeviceCountryCode())
-                    .appendQueryParameter("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
+                    .appendQueryParameter("operatorCountry",
+                            IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
                     .appendQueryParameter("lang", IdentityUtils.getDeviceLanguage())
                     .appendQueryParameter("sdk_version", LOGIN_SDK_VERSION);
 
             response = loginCall(url, builder);
 
-            if(response == null) return null;
+            if (response == null) return null;
 
-            if(!response.containsKey("Token")) {Log.d("GPS", "issue"); return null; }
+            if (!response.containsKey("Token")) {
+                Log.d("GPS", "issue");
+                return null;
+            }
             return response.get("Token");
 
-        }catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -270,7 +277,7 @@ public final class GoogleLogin {
 
     }
 
-    private static String okPerformMasterLogin(String email, String password, String androidId){
+    private static String okPerformMasterLogin(String email, String password, String androidId) {
 
         FormBody body;
 
@@ -284,7 +291,8 @@ public final class GoogleLogin {
                     .add("source", "android")
                     .add("androidId", androidId)
                     .add("device_country", IdentityUtils.getDeviceCountryCode())
-                    .add("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
+                    .add("operatorCountry",
+                            IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
                     .add("lang", IdentityUtils.getDeviceLanguage())
                     .add("sdk_version", LOGIN_SDK_VERSION)
                     .build();
@@ -296,13 +304,16 @@ public final class GoogleLogin {
         ArrayMap<String, String> response;
         response = okLoginCall("https://android.clients.google.com/auth", body);
 
-        if(response == null) return null;
+        if (response == null) return null;
 
-        if(!response.containsKey("Token")) {Log.d("GPS", "issue"); return null; }
+        if (!response.containsKey("Token")) {
+            Log.d("GPS", "issue");
+            return null;
+        }
         return response.get("Token");
     }
 
-    private static String okPerformOAuth(String email, String masterToken, String androidId){
+    private static String okPerformOAuth(String email, String masterToken, String androidId) {
         FormBody body = new FormBody.Builder()
                 .add("accountType", "HOSTED_OR_GOOGLE")
                 .add("Email", email)
@@ -315,20 +326,21 @@ public final class GoogleLogin {
                 .add("app", "com.google.android.music")
                 .add("client_sig", "38918a453d07199354f8b19af05ec6562ced5788")
                 .add("device_country", IdentityUtils.getDeviceCountryCode().toLowerCase())
-                .add("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
+                .add("operatorCountry",
+                        IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
                 .add("lang", IdentityUtils.getDeviceLanguage().toLowerCase())
                 .add("sdk_version", LOGIN_SDK_VERSION)
                 .build();
         ArrayMap<String, String> response;
         response = okLoginCall("https://android.clients.google.com/auth", body);
 
-        if(response == null) return null;
+        if (response == null) return null;
 
-        if(!response.containsKey("Auth")) return null;
+        if (!response.containsKey("Auth")) return null;
         return response.get("Auth");
     }
 
-    private static String performOAuth(String email, String masterToken, String androidId){
+    private static String performOAuth(String email, String masterToken, String androidId) {
 
         ArrayMap<String, String> response;
         Uri.Builder builder = new Uri.Builder();
@@ -348,18 +360,19 @@ public final class GoogleLogin {
                     .appendQueryParameter("app", "com.google.android.music")
                     .appendQueryParameter("client_sig", "38918a453d07199354f8b19af05ec6562ced5788")
                     .appendQueryParameter("device_country", IdentityUtils.getDeviceCountryCode())
-                    .appendQueryParameter("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
+                    .appendQueryParameter("operatorCountry",
+                            IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
                     .appendQueryParameter("lang", IdentityUtils.getDeviceLanguage())
                     .appendQueryParameter("sdk_version", LOGIN_SDK_VERSION);
 
             response = loginCall(url, builder);
 
-            if(response == null) return null;
+            if (response == null) return null;
 
-            if(!response.containsKey("Auth")) return null;
+            if (!response.containsKey("Auth")) return null;
             return response.get("Auth");
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -368,8 +381,9 @@ public final class GoogleLogin {
 
     /**
      * Simple Observable wrapper of login code
-     * @param context activity context
-     * @param email user email
+     *
+     * @param context  activity context
+     * @param email    user email
      * @param password user password
      * @return Observable which will produce err
      */
@@ -386,7 +400,7 @@ public final class GoogleLogin {
                     okPerformMasterLogin(email, password, androidId) :
                     performMasterLogin(email, password, androidId);
 
-            if(masterToken == null) {
+            if (masterToken == null) {
                 subscriber.onError(Exceptions.propagate(new Exception()));
                 subscriber.onCompleted();
             }
@@ -397,7 +411,7 @@ public final class GoogleLogin {
                     okPerformOAuth(email, masterToken, androidId) :
                     performOAuth(email, masterToken, androidId);
 
-            if(oAuthToken == null) {
+            if (oAuthToken == null) {
                 subscriber.onError(new Exception());
                 subscriber.onCompleted();
             }
@@ -408,16 +422,18 @@ public final class GoogleLogin {
             String mAuthToken = null;
             try {
                 Account[] accounts = AccountManager.get(context).getAccounts();
-                for(Account a: accounts){
-                    Timber.d("|%s|",a.name);
+                for (Account a : accounts) {
+                    Timber.d("|%s|", a.name);
                     Timber.d(a.type);
-                    if(a.type.equals("com.google") && a.name.equals(email)){
-                        mAuthToken = GoogleAuthUtil.getToken(context, a, "oauth2:https://www.googleapis.com/auth/skyjam");
+                    if (a.type.equals("com.google") && a.name.equals(email)) {
+                        mAuthToken = GoogleAuthUtil.getToken(context, a,
+                                "oauth2:https://www.googleapis.com/auth/skyjam");
                     }
                 }
-                if(mAuthToken==null){
+                if (mAuthToken == null) {
                     //noinspection deprecation
-                    mAuthToken = GoogleAuthUtil.getToken(context, email, "oauth2:https://www.googleapis.com/auth/skyjam");
+                    mAuthToken = GoogleAuthUtil.getToken(context, email,
+                            "oauth2:https://www.googleapis.com/auth/skyjam");
                 }
 
             } catch (IOException | GoogleAuthException ex) {
@@ -429,7 +445,7 @@ public final class GoogleLogin {
             String playOAuth = getMusicOAuth(context, masterToken);
             Timber.d("playOAuth: %s", playOAuth == null ? "null" : playOAuth);
 
-            if(playOAuth != null) CarbonPlayerApplication.Companion.getInstance().preferences.PlayMusicOAuth = playOAuth;
+            if (playOAuth != null) CarbonPlayerApplication.Companion.getInstance().preferences.PlayMusicOAuth = playOAuth;
 
             prefs().BearerAuth = mAuthToken;
             prefs().save();
@@ -457,7 +473,8 @@ public final class GoogleLogin {
                 .add("system_partition", "1")
                 .add("Token", authToken)
                 .add("device_country", IdentityUtils.getDeviceCountryCode().toLowerCase())
-                .add("operatorCountry", IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
+                .add("operatorCountry",
+                        IdentityUtils.getOperatorCountryCode(CarbonPlayerApplication.Companion.getInstance()))
                 .add("lang", IdentityUtils.getDeviceLanguage().toLowerCase())
                 .add("sdk_version", LOGIN_SDK_VERSION)
                 .build();
@@ -466,11 +483,11 @@ public final class GoogleLogin {
         response = okLoginCall("https://android.clients.google.com/auth", body);
 
 
-        if(response == null) {
+        if (response == null) {
             return null;
         }
 
-        if(!response.containsKey("Auth")) return null;
+        if (!response.containsKey("Auth")) return null;
         return response.get("Auth");
 
     }
@@ -480,20 +497,20 @@ public final class GoogleLogin {
         prefs().save();
     }
 
-    public static Completable retryGoogleAuth(@NonNull Context context, @NonNull String email){
+    public static Completable retryGoogleAuth(@NonNull Context context, @NonNull String email) {
         return Completable.create(subscriber -> {
 
             String mAuthToken = null;
             try {
                 Account[] accounts = AccountManager.get(context).getAccounts();
-                for(Account a: accounts){
+                for (Account a : accounts) {
                     Timber.d("|%s|", a.name);
                     Timber.d(a.type);
-                    if(a.type.equals("com.google") && a.name.equals(email)){
+                    if (a.type.equals("com.google") && a.name.equals(email)) {
                         mAuthToken = GoogleAuthUtil.getToken(context, a, "oauth2:https://www.googleapis.com/auth/skyjam");
                     }
                 }
-                if(mAuthToken==null){
+                if (mAuthToken == null) {
                     Account a = new Account(email, "com.google");
                     mAuthToken = GoogleAuthUtil.getToken(context, a, "oauth2:https://www.googleapis.com/auth/skyjam");
                 }
@@ -513,14 +530,14 @@ public final class GoogleLogin {
         String mAuthToken = null;
         String email = prefs().userEmail;
         Account[] accounts = AccountManager.get(context).getAccounts();
-        for(Account a: accounts){
+        for (Account a : accounts) {
             Timber.d("|%s|", a.name);
             Timber.d(a.type);
-            if(a.type.equals("com.google") && a.name.equals(email)){
+            if (a.type.equals("com.google") && a.name.equals(email)) {
                 mAuthToken = GoogleAuthUtil.getToken(context, a, "oauth2:https://www.googleapis.com/auth/skyjam");
             }
         }
-        if(mAuthToken==null){
+        if (mAuthToken == null) {
             //noinspection deprecation
             mAuthToken = GoogleAuthUtil.getToken(context, email, "oauth2:https://www.googleapis.com/auth/skyjam");
         }
@@ -529,7 +546,7 @@ public final class GoogleLogin {
         prefs().save();
     }
 
-    public static Completable retryGoogleAuth(@NonNull Context context){
+    public static Completable retryGoogleAuth(@NonNull Context context) {
         return retryGoogleAuth(context, prefs().userEmail);
     }
 

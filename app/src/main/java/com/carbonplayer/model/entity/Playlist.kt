@@ -10,7 +10,7 @@ import java.util.*
  * Album data class
  */
 
-open class Playlist (
+open class Playlist(
 
         @PrimaryKey var id: String = "",
         var kind: String = "",
@@ -33,23 +33,23 @@ open class Playlist (
 ) : RealmObject() {
 
     @Throws(JSONException::class)
-    constructor(json: JSONObject) : this (
+    constructor(json: JSONObject) : this(
             json.getString("id"),
             json.getString("kind"),
             json.getString("name"),
-            if(json.has("deleted")) json.getBoolean("deleted") else false,
-            if(json.has("type")) json.getString("type") else null,
-            "lastModifiedTimestamp".let {if (json.has(it)) Date(json.getString(it).toLong()) else null},
-            "recentTimestamp".let {if (json.has(it)) Date(json.getString(it).toLong()) else null},
+            if (json.has("deleted")) json.getBoolean("deleted") else false,
+            if (json.has("type")) json.getString("type") else null,
+            "lastModifiedTimestamp".let { if (json.has(it)) Date(json.getString(it).toLong()) else null },
+            "recentTimestamp".let { if (json.has(it)) Date(json.getString(it).toLong()) else null },
             json.getString("shareToken"),
-            "ownerProfilePhotoUrl".let {if(json.has(it)) json.getString(it) else null},
-            "ownerName".let { if(json.has(it)) json.getString(it) else null },
-            "accessControlled".let {if (json.has(it)) json.getBoolean(it) else false},
-            "shareState".let { if(json.has(it)) json.getString(it) else null},
-            "creationTimestamp".let {if (json.has(it)) Date(json.getString(it).toLong()) else null},
-            "albumArtRef".let {if(json.has(it)) json.getJSONObject(it).getString("url") else null},
-            "description".let {if (json.has(it)) json.getString(it) else ""},
-            "explicitType".let { if(json.has(it)) json.getString(it) else null},
-            "contentType".let { if(json.has(it)) json.getString(it) else null}
+            "ownerProfilePhotoUrl".let { if (json.has(it)) json.getString(it) else null },
+            "ownerName".let { if (json.has(it)) json.getString(it) else null },
+            "accessControlled".let { if (json.has(it)) json.getBoolean(it) else false },
+            "shareState".let { if (json.has(it)) json.getString(it) else null },
+            "creationTimestamp".let { if (json.has(it)) Date(json.getString(it).toLong()) else null },
+            "albumArtRef".let { if (json.has(it)) json.getJSONObject(it).getString("url") else null },
+            "description".let { if (json.has(it)) json.getString(it) else "" },
+            "explicitType".let { if (json.has(it)) json.getString(it) else null },
+            "contentType".let { if (json.has(it)) json.getString(it) else null }
     )
 }

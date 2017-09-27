@@ -11,7 +11,7 @@ import java.util.*
  * Album data class
  */
 
-open class Album (
+open class Album(
         var kind: String = "",
         @PrimaryKey var id: String = "",
         var recentTimestamp: Date? = null,
@@ -31,42 +31,42 @@ open class Album (
 
 ) : RealmObject() {
 
-    constructor(json: JSONObject) : this (
+    constructor(json: JSONObject) : this(
             json.getString("kind"),
             json.getString("albumId"),
-            "recentTimestamp".let {if(json.has(it)) Date(json.getString(it).toLong()) else null },
+            "recentTimestamp".let { if (json.has(it)) Date(json.getString(it).toLong()) else null },
             json.getString("name"),
             json.getString("albumArtist"),
             json.getString("artist"),
-            "composer".let {if(json.has(it)) json.getString(it) else "" },
-            "year".let {if(json.has(it)) json.getInt(it) else 0 },
-            "genre".let {if(json.has(it)) json.getString(it) else ""},
-            "albumArtRef".let {if(json.has(it)) json.getString(it) else "" },
+            "composer".let { if (json.has(it)) json.getString(it) else "" },
+            "year".let { if (json.has(it)) json.getInt(it) else 0 },
+            "genre".let { if (json.has(it)) json.getString(it) else "" },
+            "albumArtRef".let { if (json.has(it)) json.getString(it) else "" },
             json.getJSONArray("artistId").let {
                 val ret = RealmList<RealmString>()
                 (0..it.length()).mapTo(ret) { n -> RealmString(it.getString(n)) }
                 ret
             },
-            if(json.has("tracks")) json.getJSONArray("tracks").let {
+            if (json.has("tracks")) json.getJSONArray("tracks").let {
                 val ret = RealmList<RealmString>()
                 (0..it.length()).mapTo(ret) { n ->
                     RealmString(it.getJSONObject(n).getString(MusicTrack.ID))
                 }
                 ret
             } else RealmList(),
-            "description".let {if(json.has(it)) json.getString(it) else null },
+            "description".let { if (json.has(it)) json.getString(it) else null },
             "description_attribution".let {
-                if(json.has(it)) Attribution(json.getJSONObject(it)) else null
+                if (json.has(it)) Attribution(json.getJSONObject(it)) else null
             },
-            "explicitType".let {if(json.has(it)) json.getString(it) else null },
-            "contentType".let {if(json.has(it)) json.getString(it) else null }
+            "explicitType".let { if (json.has(it)) json.getString(it) else null },
+            "contentType".let { if (json.has(it)) json.getString(it) else null }
     )
 
-    constructor(track: MusicTrack) : this("", track.albumId?: "unknownID", track.recentTimestamp,
-            if (track.album != "") (track.album?: "") else "Unknown album",
-            "", track.artist?: "",
-            track.composer?: "", track.year?: 0, track.genre?: "", track.albumArtURL?: "",
-            track.artistId?: RealmList(), RealmList(RealmString(track.trackId)))
+    constructor(track: MusicTrack) : this("", track.albumId ?: "unknownID", track.recentTimestamp,
+            if (track.album != "") (track.album ?: "") else "Unknown album",
+            "", track.artist ?: "",
+            track.composer ?: "", track.year ?: 0, track.genre ?: "", track.albumArtURL ?: "",
+            track.artistId ?: RealmList(), RealmList(RealmString(track.trackId)))
 
 
     var title = _title

@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        applicationContext.contentResolver.registerContentObserver (
+        applicationContext.contentResolver.registerContentObserver(
                 android.provider.Settings.System.CONTENT_URI, true,
                 volumeObserver)
 
@@ -55,12 +55,13 @@ class MainActivity : AppCompatActivity() {
 
         npHelper = NowPlayingHelper(this)
 
-        bottomNavContainer.setPadding(0, 0, 0, IdentityUtils.getNavbarHeight(resources))
+        bottomNavContainer.setPadding(0, 0, 0,
+                IdentityUtils.getNavbarHeight(resources))
         bottom_nav.selectedItemId = R.id.action_home
 
         bottom_nav.setOnNavigationItemSelectedListener { item ->
 
-            var initialFrag = when(item.itemId) {
+            var initialFrag = when (item.itemId) {
                 R.id.action_topcharts -> TopChartsPageFragment()
                 R.id.action_home -> HomeFragment()
                 R.id.action_library -> LibraryFragment()
@@ -75,7 +76,7 @@ class MainActivity : AppCompatActivity() {
                 val transaction = fragmentManager.beginTransaction()
                         .replace(R.id.main_controller_container, initialFrag)
 
-                if(Build.VERSION.SDK_INT >= 24) {
+                if (Build.VERSION.SDK_INT >= 24) {
                     transaction.commitNow()
                 } else transaction.commit()
 
@@ -131,7 +132,7 @@ class MainActivity : AppCompatActivity() {
         val pop = PopupMenu(this, view)
         pop.inflate(R.menu.album_popup)
         pop.setOnMenuItemClickListener { item ->
-            when(item.itemId) {
+            when (item.itemId) {
                 R.id.menu_play_next -> {
                     npHelper.trackQueue.insertNext(trackList)
                 }
@@ -149,7 +150,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if(keyCode == KeyEvent.KEYCODE_BACK) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
             onBackPressed() // Fixes issue with HTC One
             return true
         }
@@ -169,7 +170,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         Timber.d("backStackEntry count %d", fragmentManager.backStackEntryCount)
-        if(fragmentManager.backStackEntryCount > 0) {
+        if (fragmentManager.backStackEntryCount > 0) {
             Timber.d("popping")
             fragmentManager.popBackStack()
         } else this.finish()

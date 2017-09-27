@@ -13,10 +13,9 @@ import kotlinx.android.synthetic.main.activity_main.view.*
 
 class LibraryFragment : Fragment() {
 
-    lateinit var adapter : FragmentStatePagerAdapter
+    lateinit var adapter: FragmentStatePagerAdapter
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
 
         val view = inflater.inflate(R.layout.activity_main, container, false)
 

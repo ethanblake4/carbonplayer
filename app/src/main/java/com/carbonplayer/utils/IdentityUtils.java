@@ -121,7 +121,8 @@ public final class IdentityUtils {
 
     public static Duration getTimezoneOffsetProtoDuration() {
         return Duration.newBuilder()
-                .setSeconds(TimeUnit.MILLISECONDS.toSeconds(TimeZone.getDefault().getOffset(new Date().getTime()))).build();
+                .setSeconds(TimeUnit.MILLISECONDS.toSeconds(TimeZone.getDefault().getOffset(new Date().getTime())))
+                .build();
     }
 
     public static String localeCode(){
@@ -142,7 +143,8 @@ public final class IdentityUtils {
     }
 
     public static NetworkType networkType(Context context) {
-        NetworkInfo activeNetwork = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+        NetworkInfo activeNetwork = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE))
+                .getActiveNetworkInfo();
 
         if (activeNetwork != null && activeNetwork.isConnectedOrConnecting()) {
             switch (activeNetwork.getType()) {

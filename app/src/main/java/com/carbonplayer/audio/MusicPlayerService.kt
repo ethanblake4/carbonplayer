@@ -77,7 +77,7 @@ class MusicPlayerService : Service(), MusicFocusable {
             Constants.ACTION.PREVIOUS -> {
                 Timber.i("Clicked Previous")
                 playback.prevTrack()
-                if(!playback.isUnpaused()) {
+                if (!playback.isUnpaused()) {
                     playback.play()
                 }
                 //emit(Constants.EVENT.PrevSong)
@@ -99,7 +99,7 @@ class MusicPlayerService : Service(), MusicFocusable {
             Constants.ACTION.NEXT -> {
                 Timber.i("Clicked Next")
                 playback.nextTrack()
-                if(!playback.isUnpaused()) {
+                if (!playback.isUnpaused()) {
                     playback.play()
                 }
                 //emit(Constants.EVENT.NextSong)
@@ -136,9 +136,9 @@ class MusicPlayerService : Service(), MusicFocusable {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
 
-        previousIntent  = newIntent<MusicPlayerService>(Constants.ACTION.PREVIOUS)
+        previousIntent = newIntent<MusicPlayerService>(Constants.ACTION.PREVIOUS)
         playPauseIntent = newIntent<MusicPlayerService>(Constants.ACTION.PLAYPAUSE)
-        nextIntent      = newIntent<MusicPlayerService>(Constants.ACTION.NEXT)
+        nextIntent = newIntent<MusicPlayerService>(Constants.ACTION.NEXT)
 
         val bundle = intent.extras
         val tracks = Parcels.unwrap<List<ParcelableMusicTrack>>(
@@ -147,11 +147,11 @@ class MusicPlayerService : Service(), MusicFocusable {
         val stateBuilder = PlaybackStateCompat.Builder()
                 .setActions(
                         PlaybackStateCompat.ACTION_PLAY or
-                        PlaybackStateCompat.ACTION_PAUSE or
-                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
-                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
-                        PlaybackStateCompat.ACTION_PLAY_PAUSE or
-                        PlaybackStateCompat.ACTION_SEEK_TO)
+                                PlaybackStateCompat.ACTION_PAUSE or
+                                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                                PlaybackStateCompat.ACTION_PLAY_PAUSE or
+                                PlaybackStateCompat.ACTION_SEEK_TO)
 
         playback = MusicPlayback(this, { playState ->
             when (playState) {
@@ -180,12 +180,12 @@ class MusicPlayerService : Service(), MusicFocusable {
                 MusicPlayback.PlayState.PLAYING -> {
                     if (!wifiLock.isHeld) wifiLock.acquire()
                     mediaSession.setPlaybackState(
-                            stateBuilder.setState(if(playback.isUnpaused())
+                            stateBuilder.setState(if (playback.isUnpaused())
                                 PlaybackStateCompat.STATE_PLAYING else
                                 PlaybackStateCompat.STATE_PAUSED,
-                            playback.getCurrentPosition(), 1.0f).build())
+                                    playback.getCurrentPosition(), 1.0f).build())
 
-                    emit(if(playback.isUnpaused()) Constants.EVENT.Playing else
+                    emit(if (playback.isUnpaused()) Constants.EVENT.Playing else
                         Constants.EVENT.Paused)
                 }
             }
@@ -302,7 +302,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 .setShowWhen(false)
                 .apply { bitmap?.let { setLargeIcon(it) } }
 
-        if(!initialized) {
+        if (!initialized) {
             startForeground(Constants.ID.MUSIC_PLAYER_SERVICE,
                     builder.build())
             initialized = true
@@ -322,10 +322,10 @@ class MusicPlayerService : Service(), MusicFocusable {
 
     private fun emit(e: Int, obj: Any?, recurse: Boolean = false) {
         //Timber.d("Emitting %d to %d clients", e, clients.size)
-        if(clients.size == 0) {
+        if (clients.size == 0) {
             messageQueue.add(Pair(e, obj))
         } else {
-            if(!recurse) {
+            if (!recurse) {
                 messageQueue.forEach { (first, second) -> emit(first, second, true) }
                 messageQueue.clear()
             }
@@ -378,7 +378,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 Constants.MESSAGE.REGISTER_CLIENT -> {
                     Timber.d("Registering 1 client")
                     clients.add(msg.replyTo)
-                    if(sendStateOnRegistered) {
+                    if (sendStateOnRegistered) {
                         sendStateOnRegistered = false
                         Timber.d("Sending service state")
                         emit(Constants.EVENT.SendQueue)

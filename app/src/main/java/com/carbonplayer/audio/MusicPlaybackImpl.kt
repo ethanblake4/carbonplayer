@@ -26,7 +26,7 @@ import rx.Subscription
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
-class MusicPlaybackImpl (
+class MusicPlaybackImpl(
         val service: Service,
         val playback: MusicPlayback,
         val callback: (MusicPlayback.PlayState) -> Unit,
@@ -72,7 +72,7 @@ class MusicPlaybackImpl (
         loop = Thread(Runnable {
             Timber.i("Thread created")
 
-            while(true) {
+            while (true) {
                 execLoop()
                 Thread.sleep(83)
             }
@@ -88,16 +88,16 @@ class MusicPlaybackImpl (
 
     fun pause() {
         Timber.d("Pausing playback")
-        if(exoPlayer.playWhenReady) exoPlayer.playWhenReady = false
+        if (exoPlayer.playWhenReady) exoPlayer.playWhenReady = false
     }
 
     fun play() {
         Timber.d("Playing")
-        if(!playerIsPrepared) {
+        if (!playerIsPrepared) {
             exoPlayer.prepare(dynamicSource)
             playerIsPrepared = true
         }
-        if(!exoPlayer.playWhenReady) exoPlayer.playWhenReady = true
+        if (!exoPlayer.playWhenReady) exoPlayer.playWhenReady = true
     }
 
     fun newQueue(queue: List<ParcelableMusicTrack>) {
@@ -113,10 +113,10 @@ class MusicPlaybackImpl (
     }
 
     fun skipToTrack(index: Int) {
-        if(mirroredQueue.size > index) {
+        if (mirroredQueue.size > index) {
             var todo = { onbuffer(1f) }
 
-            if(!mirroredContentQueue[index].downloadInitialized) {
+            if (!mirroredContentQueue[index].downloadInitialized) {
                 mirroredContentQueue[index].initDownload()
                 todo = {
                     subscription?.unsubscribe()
@@ -135,8 +135,8 @@ class MusicPlaybackImpl (
     }
 
     fun nextTrack() {
-        if(mirroredQueue.size > trackNum + 1) {
-            if(!mirroredContentQueue[trackNum + 1].downloadInitialized) {
+        if (mirroredQueue.size > trackNum + 1) {
+            if (!mirroredContentQueue[trackNum + 1].downloadInitialized) {
                 mirroredContentQueue[trackNum + 1].initDownload()
             }
             disallowNextAutoInc = true
@@ -148,7 +148,7 @@ class MusicPlaybackImpl (
     }
 
     fun prevTrack(alwaysSkip: Boolean = false) {
-        if(!alwaysSkip && exoPlayer.currentPosition > SKIP_ON_PREVIOUS) {
+        if (!alwaysSkip && exoPlayer.currentPosition > SKIP_ON_PREVIOUS) {
             exoPlayer.seekTo(0L)
         } else if (trackNum > 0) {
             if (!mirroredContentQueue[trackNum - 1].downloadInitialized) {
@@ -165,7 +165,7 @@ class MusicPlaybackImpl (
     }
 
     fun seekTo(pos: Long) {
-        if(mirroredQueue[trackNum].durationMillis >= pos)
+        if (mirroredQueue[trackNum].durationMillis >= pos)
             exoPlayer.seekTo(pos)
     }
 
@@ -174,7 +174,7 @@ class MusicPlaybackImpl (
         mirroredQueue.addAll(tracks)
         val sources = MutableList(tracks.size, { z ->
             val sourcePair = sourceFromTrack(tracks[z])
-            if(z == 0 && downloadFirst && !sourcePair.first.isDownloaded) {
+            if (z == 0 && downloadFirst && !sourcePair.first.isDownloaded) {
                 sourcePair.first.initDownload()
             }
             mirroredContentQueue.add(sourcePair.first)
@@ -192,7 +192,7 @@ class MusicPlaybackImpl (
         val sources = MutableList(tracks.size, { z ->
             sourceFromTrack(tracks[z])
         })
-        mirroredContentQueue.addAll(trackNum + 1, sources.map {it.first})
+        mirroredContentQueue.addAll(trackNum + 1, sources.map { it.first })
         dynamicSource.addMediaSources(trackNum + 1, sources.map { it.second })
     }
 
@@ -232,17 +232,17 @@ class MusicPlaybackImpl (
     }
 
     private fun execLoop() {
-        if(exoPlayer.playWhenReady) {
+        if (exoPlayer.playWhenReady) {
             // Playing
             if (exoPlayer.playbackState == Player.STATE_READY) {
 
                 lastKnownWindowIndex = exoPlayer.currentWindowIndex
 
-                if(inc++ % 100 == 0) {
+                if (inc++ % 100 == 0) {
                     Timber.d("Position: %s", exoPlayer.currentPosition)
                 }
 
-                if(exoPlayer.currentPosition > DELAY_ADD_ITEM &&
+                if (exoPlayer.currentPosition > DELAY_ADD_ITEM &&
                         mirroredQueue.size > trackNum + 1
                         && !mirroredContentQueue[trackNum + 1].downloadInitialized) {
                     Timber.i("Init download for next track")
@@ -280,10 +280,10 @@ class MusicPlaybackImpl (
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
         var newState = MusicPlayback.PlayState.NOT_PLAYING
 
-        when(playbackState) {
+        when (playbackState) {
             Player.STATE_IDLE -> {
                 Timber.d("Playback state: IDLE")
-                if(playWhenReady) newState = MusicPlayback.PlayState.STARTING
+                if (playWhenReady) newState = MusicPlayback.PlayState.STARTING
             }
             Player.STATE_BUFFERING -> {
                 Timber.d("Playback state: BUFFERING")
@@ -291,14 +291,14 @@ class MusicPlaybackImpl (
             }
             Player.STATE_READY -> {
                 Timber.d("Playback state: READY")
-                if(playWhenReady) newState = MusicPlayback.PlayState.PLAYING
+                if (playWhenReady) newState = MusicPlayback.PlayState.PLAYING
             }
             Player.STATE_ENDED -> {
                 Timber.d("Playback state: ENDED")
             }
         }
 
-        if(newState != mirroredPlayState) {
+        if (newState != mirroredPlayState) {
             mirroredPlayState = newState
         }
 
@@ -306,16 +306,16 @@ class MusicPlaybackImpl (
     }
 
     override fun onLoadingChanged(isLoading: Boolean) {
-        Timber.d("Loading: "+ if(isLoading) "true" else "false")
+        Timber.d("Loading: " + if (isLoading) "true" else "false")
     }
 
     override fun onPositionDiscontinuity() {
         Timber.d("Position Discontinuity")
-        if(exoPlayer.currentWindowIndex == lastKnownWindowIndex + 1 && !disallowNextAutoInc) {
+        if (exoPlayer.currentWindowIndex == lastKnownWindowIndex + 1 && !disallowNextAutoInc) {
             trackNum++
             Timber.i("Discontinuity -> Next Track")
             ontrackchanged(trackNum, mirroredQueue[trackNum])
-            if(mirroredContentQueue[trackNum].isDownloaded) {
+            if (mirroredContentQueue[trackNum].isDownloaded) {
                 onbuffer(1.0f)
             } else {
                 subscription?.unsubscribe()
@@ -324,7 +324,7 @@ class MusicPlaybackImpl (
             }
         }
 
-        if(disallowNextAutoInc) disallowNextAutoInc = false
+        if (disallowNextAutoInc) disallowNextAutoInc = false
     }
 
     override fun onTimelineChanged(timeline: Timeline?, manifest: Any?) {

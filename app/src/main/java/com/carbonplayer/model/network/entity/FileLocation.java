@@ -13,7 +13,7 @@ public class FileLocation {
     private StorageType storageType;
     private File fullPath;
 
-    public FileLocation(StorageType storageType, File fullPath){
+    public FileLocation(StorageType storageType, File fullPath) {
         this.storageType = storageType;
         this.fullPath = fullPath;
     }

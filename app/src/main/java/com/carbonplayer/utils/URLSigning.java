@@ -2,12 +2,11 @@ package com.carbonplayer.utils;
 
 import android.util.Base64;
 
+import org.apache.http.util.EncodingUtils;
+
 import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-
-import org.apache.http.util.EncodingUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -20,7 +19,9 @@ import timber.log.Timber;
 
 public class URLSigning {
 
-    public static String sign(String song_id, String salt) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
+    public static String sign(String song_id, String salt)
+            throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
+
         byte[] _s1 = Base64.decode("VzeC4H4h+T2f0VI180nVX8x+Mb5HiTtGnKgH52Otj8ZCGDz9jRW" +
                 "yHb6QXK0JskSiOgzQfwTY5xgLLSdUSreaLVMsVVWfxfa8Rw==", Base64.DEFAULT);
         byte[] _s2 = Base64.decode("ZAPnhUkYwQ6y5DdQxWThbvhJHN8msQ1rqJw0ggKdufQjelrKuiG" +

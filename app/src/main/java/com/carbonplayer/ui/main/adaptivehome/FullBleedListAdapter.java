@@ -64,12 +64,12 @@ public final class FullBleedListAdapter
         ViewHolder(View v) {
             super(v);
             ButterKnife.bind(this, v);
-            v.setOnClickListener( view -> callback.invoke(module) );
+            v.setOnClickListener(view -> callback.invoke(module));
         }
 
-        void init () {
+        void init() {
 
-            if(!module.hasModuleSubtitle() || (module.hasModuleSubtitle() &&
+            if (!module.hasModuleSubtitle() || (module.hasModuleSubtitle() &&
                     module.getModuleSubtitle().getText().length() == 0))
                 cardTitle.setText(module.getModuleTitle().getText());
             else {
@@ -87,13 +87,13 @@ public final class FullBleedListAdapter
 
             SpannableString itemTitle = new SpannableString("");
 
-            switch(module.getSingleSection().getContentCase()) {
+            switch (module.getSingleSection().getContentCase()) {
                 case SQUAREPLAYABLECARDLIST:
                     TitleSectionV1Proto.TitleSection ts = module.getSingleSection()
                             .getSquarePlayableCardList().getCards(0).getTitleSection();
 
-                    itemTitle = new SpannableString(ts.getTitle().getText()+"\n"+
-                    ts.getSubtitle().getText());
+                    itemTitle = new SpannableString(ts.getTitle().getText() + "\n" +
+                            ts.getSubtitle().getText());
                     break;
                 case WIDEPLAYABLECARDLIST:
                     itemTitle = new SpannableString(module.getSingleSection()
@@ -103,19 +103,19 @@ public final class FullBleedListAdapter
                     TitleSectionV1Proto.TitleSection ts2 = module.getSingleSection()
                             .getTallPlayableCardList().getCards(0).getTitleSection();
 
-                    itemTitle = new SpannableString(ts2.getTitle().getText()+"\n"+
+                    itemTitle = new SpannableString(ts2.getTitle().getText() + "\n" +
                             ts2.getSubtitle().getText());
             }
 
             itemText.setText(itemTitle);
 
             gradient.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                    new int[] {
-                    ColorUtils.modifyAlpha(ProtoUtils.colorFrom(
-                        module.getBackgroundColor()), 0.1f),
-                    ColorUtils.modifyAlpha(ProtoUtils.colorFrom(
-                        module.getBackgroundImageReference().getRepresentativeColor()), 1.0f)
-            }));
+                    new int[]{
+                            ColorUtils.modifyAlpha(ProtoUtils.colorFrom(
+                                    module.getBackgroundColor()), 0.1f),
+                            ColorUtils.modifyAlpha(ProtoUtils.colorFrom(
+                                    module.getBackgroundImageReference().getRepresentativeColor()), 1.0f)
+                    }));
 
             image.setBackgroundColor(ProtoUtils.colorFrom(
                     module.getBackgroundImageReference().getRepresentativeColor()));
@@ -129,7 +129,7 @@ public final class FullBleedListAdapter
     }
 
     @Override
-    public void onViewRecycled(ViewHolder vh){
+    public void onViewRecycled(ViewHolder vh) {
         //recycler.removeOnScrollListener(vh.listener);
         requestManager.clear(vh.image);
     }
@@ -137,7 +137,7 @@ public final class FullBleedListAdapter
     // Create new views (invoked by the layout manager)
     @Override
     public FullBleedListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
-                                                       int viewType) {
+                                                              int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.full_bleed_module, parent, false);
@@ -161,7 +161,6 @@ public final class FullBleedListAdapter
 
         return vh;
     }
-
 
 
     // Replace the contents of a view (invoked by the layout manager)

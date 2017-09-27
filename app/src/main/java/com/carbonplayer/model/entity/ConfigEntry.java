@@ -13,8 +13,8 @@ public class ConfigEntry {
         this.value = value;
     }
 
-    public ConfigEntry(JSONObject j) throws JSONException{
-        this.name =  j.getString("key");
+    public ConfigEntry(JSONObject j) throws JSONException {
+        this.name = j.getString("key");
         this.value = j.getString("value");
     }
 

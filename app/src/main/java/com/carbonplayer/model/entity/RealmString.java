@@ -8,9 +8,10 @@ import io.realm.RealmObject;
 public class RealmString extends RealmObject {
     private String val;
 
-    public RealmString(){}
+    public RealmString() {
+    }
 
-    public RealmString(String val){
+    public RealmString(String val) {
         this.val = val;
     }
 
@@ -23,7 +24,7 @@ public class RealmString extends RealmObject {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return val;
     }
 }

@@ -4,7 +4,7 @@ import io.realm.RealmObject
 import org.json.JSONObject
 import java.util.*
 
-open class PlaylistEntry (
+open class PlaylistEntry(
         var kind: String = "",
         var id: String = "",
         var clientId: String = "",
@@ -17,19 +17,17 @@ open class PlaylistEntry (
         var source: String = "",
         var track: MusicTrack? = null
 ) : RealmObject() {
-        constructor(json: JSONObject, track: MusicTrack? = null) : this (
-                json.getString("kind"),
-                json.getString("id"),
-                json.getString("clientId"),
-                json.getString("playlistId"),
-                json.getString("absolutePosition"),
-                json.getString("trackId"),
-                Date(json.getString("creationTimestamp").toLong()),
-                Date(json.getString("lastModifiedTimestamp").toLong()),
-                json.getBoolean("deleted"),
-                json.getString("source"),
-                track ?: if(json.has("track"))
-                    MusicTrack(json.getJSONObject("track"))
-                else null
-        )
+    constructor(json: JSONObject, track: MusicTrack? = null) : this(
+            json.getString("kind"),
+            json.getString("id"),
+            json.getString("clientId"),
+            json.getString("playlistId"),
+            json.getString("absolutePosition"),
+            json.getString("trackId"),
+            Date(json.getString("creationTimestamp").toLong()),
+            Date(json.getString("lastModifiedTimestamp").toLong()),
+            json.getBoolean("deleted"),
+            json.getString("source"),
+            track ?: if (json.has("track")) MusicTrack(json.getJSONObject("track")) else null
+    )
 }

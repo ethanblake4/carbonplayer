@@ -60,8 +60,8 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
                 thumb.setTransitionName(playlist.getId() + "i");
                 contentRoot.setTransitionName(playlist.getId() + "cr");
-                titleText.setTransitionName(playlist.getId()+"t");
-                detailText.setTransitionName(playlist.getId()+"d");
+                titleText.setTransitionName(playlist.getId() + "t");
+                detailText.setTransitionName(playlist.getId() + "d");
 
                 //context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(), mainColor, titleText, detailText);
             });
@@ -75,8 +75,8 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
                 return true;
             });
 
-            titleText.setMaxWidth((screenWidthPx/2)-(MathUtils.dpToPx(context, 50)));
-            detailText.setMaxWidth((screenWidthPx/2)-(MathUtils.dpToPx(context, 32)));
+            titleText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 50)));
+            detailText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 32)));
         }
     }
 
@@ -93,14 +93,14 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     }
 
     @Override
-    public void onViewRecycled(ViewHolder v){
+    public void onViewRecycled(ViewHolder v) {
         requestManager.clear(v.thumb);
     }
 
     // Create new views (invoked by the layout manager)
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent,
-                                                       int viewType) {
+                                         int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.grid_item_layout, parent, false);
@@ -127,7 +127,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         holder.titleText.setText(playlist.getName());
         holder.playlist = playlist;
 
-        if(playlist.getAlbumArtURL() != null && !playlist.getAlbumArtURL().equals("")) {
+        if (playlist.getAlbumArtURL() != null && !playlist.getAlbumArtURL().equals("")) {
             requestManager.load(playlist.getAlbumArtURL())
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                     .transition(DrawableTransitionOptions.withCrossFade(200))
@@ -138,7 +138,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
                                     .intoTextColor(holder.titleText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
                                     .intoTextColor(holder.detailText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
                                     .intoCallBack(palette -> {
-                                        if(palette != null) {
+                                        if (palette != null) {
                                             Palette.Swatch vibra = palette.getVibrantSwatch();
                                             if (vibra != null)
                                                 holder.mainColor = palette.getVibrantSwatch().getRgb();

@@ -9,7 +9,6 @@ import com.carbonplayer.model.entity.enums.StreamQuality;
 
 import java.lang.reflect.Field;
 
-import okhttp3.CookieJar;
 import timber.log.Timber;
 
 /**
@@ -57,34 +56,39 @@ public class Preferences {
     }
 
     public void load(){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(CarbonPlayerApplication.Companion.getInstance());
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(CarbonPlayerApplication.Companion.getInstance());
 
         for (Field f : getClass().getDeclaredFields()) {
             String name = f.getName();
             if(prefs.contains(name)) {
                 if(f.getType().isEnum()){
                     try {
-                        getClass().getField(name).set(this, f.getType().getEnumConstants()[prefs.getInt(name, 0)]);
+                        getClass().getField(name).set(this,
+                                f.getType().getEnumConstants()[prefs.getInt(name, 0)]);
                     } catch (Exception e){
                         Timber.e(e, "Preferences: fail loading enum %s", name);
                     }
                     continue;
                 }
                 try {
+                    Field field = getClass().getField(name);
                     switch (f.getType().toString()) {
-                        case "int": getClass().getField(name).set(this, prefs.getInt(name, 0));
+                        case "int": field.set(this, prefs.getInt(name, 0));
                             break;
-                        case "class java.lang.String": getClass().getField(name).set(this, prefs.getString(name, null));
+                        case "class java.lang.String": field.set(this, prefs.getString(name, null));
                             break;
-                        case "boolean": getClass().getField(name).set(this, prefs.getBoolean(name, false));
+                        case "boolean": field.set(this, prefs.getBoolean(name, false));
                             break;
-                        case "long": getClass().getField(name).set(this, prefs.getLong(name, 0));
+                        case "long": field.set(this, prefs.getLong(name, 0));
                             break;
-                        default: Timber.d("Load: Unrecognized type %s", f.getType().toString());
+                        default: Timber.d("Load: Unrecognized type %s",
+                                f.getType().toString());
                             break;
                     }
                 } catch(Exception e) {
-                    Timber.e(e, "Preferences: failed to load %s \"%s\"", f.getType().toString(), name);
+                    Timber.e(e, "Preferences: failed to load %s \"%s\"",
+                            f.getType().toString(), name);
                 }
             }
 

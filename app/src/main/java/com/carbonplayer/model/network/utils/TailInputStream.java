@@ -2,12 +2,12 @@ package com.carbonplayer.model.network.utils;
 
 import android.content.Context;
 
+import com.carbonplayer.model.network.entity.StreamingContent;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import com.carbonplayer.model.network.entity.StreamingContent;
 
 import timber.log.Timber;
 
@@ -54,7 +54,7 @@ public class TailInputStream extends InputStream {
             if (read >= 0 || !streamingContent.isFinished()) {
                 return read;
             }
-                Timber.i("read(%s): %s; ret=-1", streamingContent, totalRead);
+            Timber.i("read(%s): %s; ret=-1", streamingContent, totalRead);
 
             return -1;
         } catch (InterruptedException e) {

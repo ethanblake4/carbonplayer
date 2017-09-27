@@ -25,7 +25,7 @@ internal class SongListAdapter(
         lateinit var id: SongID
 
         init {
-            v.findViewById<View>(R.id.songLayoutRoot).setOnClickListener { _ -> clicked(id)}
+            v.findViewById<View>(R.id.songLayoutRoot).setOnClickListener { _ -> clicked(id) }
         }
     }
 

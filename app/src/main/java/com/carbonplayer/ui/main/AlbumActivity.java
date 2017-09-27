@@ -100,31 +100,31 @@ public class AlbumActivity extends AppCompatActivity {
 
         //noinspection SuspiciousNameCombination
         Glide.with(this).load(mAlbum.getAlbumArtURL())
-            .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth).diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
-            .listener(
-                GlidePalette.with(mAlbum.getAlbumArtURL())
-                    .use(GlidePalette.Profile.VIBRANT)
-                    .intoBackground(constraintLayoutRoot)
-                    .intoTextColor(primaryText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
-                    .intoTextColor(secondaryText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
-                    .intoCallBack(palette -> {
-                        if(Color.red(ColorUtils.contrastColor(palette.getVibrantColor(Color.DKGRAY))) > 200) {
-                            Timber.d("red>200");
-                            fab.setBackgroundTintList(ColorStateList.valueOf(palette.getLightVibrantColor(Color.WHITE)));
-                            //nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getLightVibrantColor(Color.WHITE));
-                        } else {
-                            Timber.d("not");
-                            ColorStateList s = ColorStateList.valueOf(palette.getDarkVibrantColor(Color.DKGRAY));
-                            ColorStateList t = ColorStateList.valueOf(palette.getVibrantColor(Color.WHITE));
-                            Timber.d(s.toString());
-                            Timber.d(t.toString());
-                            fab.setBackgroundTintList(s);
-                            fab.setImageTintList(t);
-                            //nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getDarkVibrantColor(Color.DKGRAY));
-                        }
-                    })
-            )
-            .into(albumart);
+                .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth).diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
+                .listener(
+                        GlidePalette.with(mAlbum.getAlbumArtURL())
+                                .use(GlidePalette.Profile.VIBRANT)
+                                .intoBackground(constraintLayoutRoot)
+                                .intoTextColor(primaryText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
+                                .intoTextColor(secondaryText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
+                                .intoCallBack(palette -> {
+                                    if (Color.red(ColorUtils.contrastColor(palette.getVibrantColor(Color.DKGRAY))) > 200) {
+                                        Timber.d("red>200");
+                                        fab.setBackgroundTintList(ColorStateList.valueOf(palette.getLightVibrantColor(Color.WHITE)));
+                                        //nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getLightVibrantColor(Color.WHITE));
+                                    } else {
+                                        Timber.d("not");
+                                        ColorStateList s = ColorStateList.valueOf(palette.getDarkVibrantColor(Color.DKGRAY));
+                                        ColorStateList t = ColorStateList.valueOf(palette.getVibrantColor(Color.WHITE));
+                                        Timber.d(s.toString());
+                                        Timber.d(t.toString());
+                                        fab.setBackgroundTintList(s);
+                                        fab.setImageTintList(t);
+                                        //nowPlayingHelper.getDetailsView().setBackgroundColor(palette.getDarkVibrantColor(Color.DKGRAY));
+                                    }
+                                })
+                )
+                .into(albumart);
 
         fab.setVisibility(View.INVISIBLE);
         new Handler().postDelayed(() -> {
@@ -149,7 +149,7 @@ public class AlbumActivity extends AppCompatActivity {
         songList.setNestedScrollingEnabled(false);
 
         // use a linear layout manager
-        mLayoutManager = new LinearLayoutManager(AlbumActivity.this){
+        mLayoutManager = new LinearLayoutManager(AlbumActivity.this) {
             /*@Override
             public boolean canScrollVertically() { return false; }*/
         };
@@ -170,20 +170,20 @@ public class AlbumActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed(){
+    public void onBackPressed() {
         fab.hide();
         super.onBackPressed();
     }
 
     @OnClick(R.id.play_fab)
-    void playFABClicked(){
+    void playFABClicked() {
 //        ..nowPlayingHelper.makePlayingScreen(albumart.getDrawable());
         nowPlayingHelper.newQueue(tracks);
     }
 
-    public void setTransformedTextPosition(int transform){
-        secondaryText.layout(secondaryText.getLeft(), secondaryText.getTop()+transform,
-                secondaryText.getRight(), secondaryText.getBottom()+transform);
+    public void setTransformedTextPosition(int transform) {
+        secondaryText.layout(secondaryText.getLeft(), secondaryText.getTop() + transform,
+                secondaryText.getRight(), secondaryText.getBottom() + transform);
     }
 
     private ViewTreeObserver.OnScrollChangedListener scrollListener = new ViewTreeObserver.OnScrollChangedListener() {
@@ -198,7 +198,7 @@ public class AlbumActivity extends AppCompatActivity {
     private ViewTreeObserver.OnGlobalLayoutListener layoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
         @Override
         public void onGlobalLayout() {
-            fab.setY(albumart.getHeight()-fabOffset);
+            fab.setY(albumart.getHeight() - fabOffset);
         }
     };
 

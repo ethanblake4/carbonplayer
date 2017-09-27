@@ -29,6 +29,7 @@ import com.carbonplayer.ui.intro.fragments.IntroPageThreeFragment;
 import com.carbonplayer.ui.intro.fragments.IntroPageTwoFragment;
 import com.carbonplayer.utils.IdentityUtils;
 import com.carbonplayer.utils.JavascriptUtils;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import icepick.Icepick;
@@ -44,12 +45,20 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
     private static final int NUM_PAGES = 3;
 
-    @BindView(R.id.introPager) ViewPager mPager;
-    @BindView(R.id.next) ImageButton nextButton;
+    @BindView(R.id.introPager)
+    ViewPager mPager;
 
-    @State boolean enableSwitching;
-    @State int currentPage = 0;
-    @State int savedPageState = 0;
+    @BindView(R.id.next)
+    ImageButton nextButton;
+
+    @State
+    boolean enableSwitching;
+
+    @State
+    int currentPage = 0;
+
+    @State
+    int savedPageState = 0;
 
     WebView web;
 
@@ -89,7 +98,8 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         //thwart plans
     }
 
-    @Override public void onSaveInstanceState(Bundle outState) {
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         savedPageState = currentPage;
         Icepick.saveInstanceState(this, outState);
@@ -104,28 +114,31 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         if (position == 0) nextButton.setAlpha(1.0f - positionOffset);
         if (position == 1 && !enableSwitching && positionOffsetPixels >= 50) {
             mPager.setCurrentItem(1, true);
-            mPager.setScrollX(Math.min(mPager.getScrollX(), width - (width*savedPageState) + 150));
+            mPager.setScrollX(Math.min(mPager.getScrollX(), width - (width * savedPageState) + 150));
         } else if (position == 1 && enableSwitching && positionOffsetPixels <= width - 50) {
             mPager.setCurrentItem(2, true);
-            mPager.setScrollX(Math.max(mPager.getScrollX(), ((width * 2) - (width*savedPageState)) - 150));
+            mPager.setScrollX(Math.max(mPager.getScrollX(), ((width * 2) - (width * savedPageState)) - 150));
         } else if (position == 2 && enableSwitching && positionOffsetPixels >= 50) {
             mPager.setCurrentItem(2, true);
-            mPager.setScrollX(Math.min(mPager.getScrollX(), ((width * 2) - (width*savedPageState)) + 150));
+            mPager.setScrollX(Math.min(mPager.getScrollX(), ((width * 2) - (width * savedPageState)) + 150));
         }
     }
 
     @Override
-    public void onPageScrollStateChanged(int state) {}
+    public void onPageScrollStateChanged(int state) {
+    }
 
     @Override
-    public void onPageSelected(int position) {if (position >= 1) nextButton.setAlpha(0.0f);}
+    public void onPageSelected(int position) {
+        if (position >= 1) nextButton.setAlpha(0.0f);
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     public void beginAuthentication() {
 
         Dialog authDialog = new Dialog(IntroActivity.this);
 
-        if(CarbonPlayerApplication.Companion.getInstance().getUseWebAuthDialog()) {
+        if (CarbonPlayerApplication.Companion.getInstance().getUseWebAuthDialog()) {
             authDialog.setContentView(R.layout.auth_dialog);
 
             presenter.setAuthDialog(authDialog);
@@ -156,8 +169,8 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
             authDialog.setContentView(R.layout.auth_dialog_std);
             presenter.setAuthDialog(authDialog);
             authDialog.findViewById(R.id.sign_in_dialog_button).setOnClickListener(v -> {
-                String user = ((EditText)authDialog.findViewById(R.id.sign_in_username_email)).getText().toString();
-                String pass = ((EditText)authDialog.findViewById(R.id.sign_in_dialog_password)).getText().toString();
+                String user = ((EditText) authDialog.findViewById(R.id.sign_in_username_email)).getText().toString();
+                String pass = ((EditText) authDialog.findViewById(R.id.sign_in_dialog_password)).getText().toString();
                 presenter.tryLogin(user, pass);
             });
 
@@ -168,7 +181,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         authDialog.setCancelable(true);
     }
 
-    public void callbackWithJson(String json){
+    public void callbackWithJson(String json) {
         presenter.callbackWithJson(json);
     }
 
@@ -197,7 +210,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         presenter.onActivityResult(requestCode, resultCode, data);
     }
 
-    void makeLibraryError(@StringRes int desc){
+    void makeLibraryError(@StringRes int desc) {
         Timber.e(getString(desc));
         ((TextView) findViewById(R.id.introSettingup)).setText(R.string.intro_slide3_error);
         ((TextView) findViewById(R.id.introSlide3Desc)).setText(desc);
@@ -206,15 +219,15 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         findViewById(R.id.nautilusFailedOKButton).setEnabled(true);
     }
 
-    void endSuccessfully(){
+    void endSuccessfully() {
         SharedPreferences getPrefs = PreferenceManager
                 .getDefaultSharedPreferences(getBaseContext());
         getPrefs.edit().putBoolean("firstStart", false).apply();
         this.finish();
     }
 
-    void slide3Progress(boolean playlist, int p){
-        ((TextView)findViewById(R.id.introSlide3Desc)).setText(playlist ?
+    void slide3Progress(boolean playlist, int p) {
+        ((TextView) findViewById(R.id.introSlide3Desc)).setText(playlist ?
                 getString(R.string.intro_slide3_desc3) :
                 getString(R.string.intro_slide3_desc2, p));
     }

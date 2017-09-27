@@ -11,8 +11,8 @@ import com.carbonplayer.utils.IdentityUtils
 import java.util.*
 
 object ClientContextFactory {
-    
-    fun create(context: Context) : ClientContext{
+
+    fun create(context: Context): ClientContext {
         val clientContext = ClientContext.newBuilder()
         clientContext.type = ClientContextV1Proto.ClientType.ANDROID
         clientContext.buildVersion = CarbonPlayerApplication.instance.googleBuildNumberLong
@@ -26,8 +26,8 @@ object ClientContextFactory {
         clientContext.phoneskyVersion = 80430500
         return clientContext.build()
     }
-    
-    private fun capabilities() : List<Capability> {
+
+    private fun capabilities(): List<Capability> {
         return ArrayList<Capability>().apply {
             add(enableCapability(CapabilityType.INNERJAM_WIDE_PLAYABLE_CARD))
             add(enableCapability(CapabilityType.INNERJAM_TALL_PLAYABLE_CARD))
@@ -44,7 +44,7 @@ object ClientContextFactory {
     }
 
     private fun enableCapability(type: CapabilityType): Capability =
-        makeCapability(type, Capability.CapabilityStatus.ENABLED)
+            makeCapability(type, Capability.CapabilityStatus.ENABLED)
 
     private fun supportCapability(type: CapabilityType): Capability =
             makeCapability(type, Capability.CapabilityStatus.SUPPORTED)
@@ -55,5 +55,5 @@ object ClientContextFactory {
                 .setId(CapabilityId.newBuilder().setType(type).build())
                 .setStatus(status).build()
     }
-    
+
 }

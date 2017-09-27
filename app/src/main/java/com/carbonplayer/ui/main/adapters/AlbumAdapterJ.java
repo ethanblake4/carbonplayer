@@ -46,6 +46,7 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
         @BindView(R.id.imgthumb) ImageView thumb;
         @BindView(R.id.primaryText) TextView titleText;
         @BindView(R.id.detailText) TextView detailText;
+
         Album album;
         int size;
         int mainColor;
@@ -59,23 +60,24 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
 
                 thumb.setTransitionName(album.getId() + "i");
                 contentRoot.setTransitionName(album.getId() + "cr");
-                titleText.setTransitionName(album.getId()+"t");
-                detailText.setTransitionName(album.getId()+"d");
+                titleText.setTransitionName(album.getId() + "t");
+                detailText.setTransitionName(album.getId() + "d");
 
-                context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(), mainColor, titleText, detailText);
+                context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(),
+                        mainColor, titleText, detailText);
             });
 
             ViewTreeObserver vto = thumb.getViewTreeObserver();
             vto.addOnPreDrawListener(() -> {
                 size = thumb.getMeasuredWidth();
                 ((FrameLayout.LayoutParams) contentRoot.getLayoutParams())
-                    .setMargins(0, size, 0, 0);
+                        .setMargins(0, size, 0, 0);
                 contentRoot.postInvalidate();
                 return true;
             });
 
-            titleText.setMaxWidth((screenWidthPx/2)-(MathUtils.dpToPx(context, 50)));
-            detailText.setMaxWidth((screenWidthPx/2)-(MathUtils.dpToPx(context, 32)));
+            titleText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 50)));
+            detailText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 32)));
         }
     }
 
@@ -91,14 +93,14 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
     }
 
     @Override
-    public void onViewRecycled(ViewHolder v){
+    public void onViewRecycled(ViewHolder v) {
         requestManager.clear(v.thumb);
     }
 
     // Create new views (invoked by the layout manager)
     @Override
     public AlbumAdapterJ.ViewHolder onCreateViewHolder(ViewGroup parent,
-                                                      int viewType) {
+                                                       int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.grid_item_layout, parent, false);
@@ -126,7 +128,7 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
         holder.detailText.setText(a.getArtist());
         holder.album = a;
 
-        if(a.getAlbumArtURL() != null && !a.getAlbumArtURL().equals("")) {
+        if (a.getAlbumArtURL() != null && !a.getAlbumArtURL().equals("")) {
             requestManager.load(a.getAlbumArtURL())
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                     .transition(DrawableTransitionOptions.withCrossFade(200))
@@ -137,7 +139,7 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
                                     .intoTextColor(holder.titleText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
                                     .intoTextColor(holder.detailText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
                                     .intoCallBack(palette -> {
-                                        if(palette != null) {
+                                        if (palette != null) {
                                             Palette.Swatch vibra = palette.getVibrantSwatch();
                                             if (vibra != null)
                                                 holder.mainColor = palette.getVibrantSwatch().getRgb();

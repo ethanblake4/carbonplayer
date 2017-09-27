@@ -4,6 +4,7 @@ package com.carbonplayer.audio
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.model.entity.ParcelableMusicTrack
 import com.carbonplayer.utils.parcelable
+
 /**
  * Track queue which mirrors data in [MusicPlayerService]
  */

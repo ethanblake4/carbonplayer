@@ -21,7 +21,8 @@ public class MusicTrack extends RealmObject {
 
     public static final String ID = "id";
 
-    @PrimaryKey private String id;
+    @PrimaryKey
+    private String id;
     private String clientId;
     private Date recentTimestamp;
     private boolean deleted; //?
@@ -46,7 +47,8 @@ public class MusicTrack extends RealmObject {
     private RealmList<RealmLong> localPlays;
     private long localTrackSizeBytes;
 
-    public MusicTrack(){}
+    public MusicTrack() {
+    }
 
     public MusicTrack(String id, Date recentTimestamp, boolean deleted, String title, String artist, String composer,
                       String album, Integer year, String comment, Integer trackNumber, String genre, int durationMillis,
@@ -79,54 +81,54 @@ public class MusicTrack extends RealmObject {
 
 
     public MusicTrack(JSONObject trackJson) throws JSONException {
-        if(!trackJson.getString("kind").equals("sj#track")) return;
+        if (!trackJson.getString("kind").equals("sj#track")) return;
 
-        if(trackJson.has("id"))
+        if (trackJson.has("id"))
             id = trackJson.getString("id");
-        else if(trackJson.has("clientId"))
+        else if (trackJson.has("clientId"))
             id = "client" + trackJson.getString("clientId");
 
-        if(trackJson.has("clientId"))
+        if (trackJson.has("clientId"))
             clientId = trackJson.getString("clientId");
-        if(trackJson.has("recentTimestamp"))
-            recentTimestamp = new Date(Long.parseLong(trackJson.getString("recentTimestamp").substring(0,10)));
-        if(trackJson.has("deleted"))
+        if (trackJson.has("recentTimestamp"))
+            recentTimestamp = new Date(Long.parseLong(trackJson.getString("recentTimestamp").substring(0, 10)));
+        if (trackJson.has("deleted"))
             deleted = trackJson.getBoolean("deleted");
-        if(trackJson.has("title"))
+        if (trackJson.has("title"))
             title = trackJson.getString("title");
-        if(trackJson.has("artist"))
+        if (trackJson.has("artist"))
             artist = trackJson.getString("artist");
-        if(trackJson.has("composer"))
+        if (trackJson.has("composer"))
             composer = trackJson.getString("composer");
         album = trackJson.getString("album");
-        if(trackJson.has("year"))
+        if (trackJson.has("year"))
             year = trackJson.getInt("year");
-        if(trackJson.has("comment"))
+        if (trackJson.has("comment"))
             comment = trackJson.getString("comment");
-        if(trackJson.has("trackNumber"))
+        if (trackJson.has("trackNumber"))
             trackNumber = trackJson.getInt("trackNumber");
-        if(trackJson.has("genre"))
+        if (trackJson.has("genre"))
             genre = trackJson.getString("genre");
         durationMillis = Integer.parseInt(trackJson.getString("durationMillis"));
-        if(trackJson.has("beatsPerMinute"))
+        if (trackJson.has("beatsPerMinute"))
             beatsPerMinute = trackJson.getInt("beatsPerMinute");
-        if(trackJson.has("albumArtRef"))
+        if (trackJson.has("albumArtRef"))
             albumArtURL = trackJson.getJSONArray("albumArtRef").getJSONObject(0).getString("url");
-        if(trackJson.has("artistArtRef"))
+        if (trackJson.has("artistArtRef"))
             artistArtURL = trackJson.getJSONArray("artistArtRef").getJSONObject(0).getString("url");
-        if(trackJson.has("playCount"))
+        if (trackJson.has("playCount"))
             playCount = trackJson.getInt("playCount");
-        if(trackJson.has("rating"))
+        if (trackJson.has("rating"))
             rating = trackJson.getString("rating");
         estimatedSize = Integer.parseInt(trackJson.getString("estimatedSize"));
-        if(trackJson.has("albumId"))
+        if (trackJson.has("albumId"))
             albumId = trackJson.getString("albumId");
-        if(trackJson.has("artistID")) {
+        if (trackJson.has("artistId")) {
             JSONArray artist_ids = trackJson.getJSONArray("artistId");
             artistId = new RealmList<>();
             for (int i = 0; i < artist_ids.length(); i++) artistId.add(new RealmString(artist_ids.getString(i)));
         }
-        if(trackJson.has("nid")) nid = trackJson.getString("nid");
+        if (trackJson.has("nid")) nid = trackJson.getString("nid");
         localTrackSizeBytes = 0;
     }
 
@@ -138,9 +140,13 @@ public class MusicTrack extends RealmObject {
         this.id = id;
     }
 
-    public String getClientId() {return clientId;}
+    public String getClientId() {
+        return clientId;
+    }
 
-    public void setClientId(String clientId) {this.clientId = clientId;}
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
 
     public Date getRecentTimestamp() {
         return recentTimestamp;
@@ -294,17 +300,25 @@ public class MusicTrack extends RealmObject {
         this.artistId = artistId;
     }
 
-    public String getNid() {return nid;}
+    public String getNid() {
+        return nid;
+    }
 
-    public void setNid(String nid) { this.nid = nid; }
+    public void setNid(String nid) {
+        this.nid = nid;
+    }
 
     public void addPlay() {
         localPlays.add(new RealmLong(System.currentTimeMillis()));
     }
 
-    public void setLocalTrackSizeBytes(long localTrackSizeBytes) {this.localTrackSizeBytes = localTrackSizeBytes;}
+    public void setLocalTrackSizeBytes(long localTrackSizeBytes) {
+        this.localTrackSizeBytes = localTrackSizeBytes;
+    }
 
-    public long getLocalTrackSizeBytes() {return localTrackSizeBytes;}
+    public long getLocalTrackSizeBytes() {
+        return localTrackSizeBytes;
+    }
 
     public long getCacheImportance(PlaySource source) {
         int cacheImportance;
@@ -314,7 +328,7 @@ public class MusicTrack extends RealmObject {
                     (int) Math.round(10 - Math.pow(((
                             System.currentTimeMillis() - play.get()) / 864000000L), 2)));
         }
-        switch(source){
+        switch (source) {
             case RECENTS:
                 cacheImportance += 20;
                 break;
@@ -337,9 +351,9 @@ public class MusicTrack extends RealmObject {
         return cacheImportance;
     }
 
-    public String getMostUsefulID(){
-        if(nid != null) return nid;
-        if(clientId != null) return clientId;
+    public String getMostUsefulID() {
+        if (nid != null) return nid;
+        if (clientId != null) return clientId;
         return id;
     }
 
@@ -348,14 +362,19 @@ public class MusicTrack extends RealmObject {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("MusicTrack: {");
-        sb.append("id: "); sb.append(id);
-        sb.append(", title: "); sb.append(title);
-        sb.append(", album: "); sb.append(album);
-        sb.append(", trackNumber: "); sb.append(trackNumber);
-        sb.append(", album id: "); sb.append(albumId);
+        sb.append("id: ");
+        sb.append(id);
+        sb.append(", title: ");
+        sb.append(title);
+        sb.append(", album: ");
+        sb.append(album);
+        sb.append(", trackNumber: ");
+        sb.append(trackNumber);
+        sb.append(", album id: ");
+        sb.append(albumId);
         sb.append("}");
 
         return sb.toString();

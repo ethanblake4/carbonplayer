@@ -3,6 +3,7 @@ package com.carbonplayer.ui.intro;
 import android.app.Dialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
+
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.model.entity.exception.NoNautilusException;
@@ -34,11 +35,11 @@ class IntroPresenter {
     private boolean jsonCallbackCompleted = false;
     private final int REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR = 547;
 
-    IntroPresenter(@NonNull IntroActivity activity){
+    IntroPresenter(@NonNull IntroActivity activity) {
         mActivity = activity;
     }
 
-    void setAuthDialog(@NonNull Dialog authDialog){
+    void setAuthDialog(@NonNull Dialog authDialog) {
         this.authDialog = authDialog;
     }
 
@@ -60,11 +61,11 @@ class IntroPresenter {
         }
     }
 
-    void tryLogin(String username, String password){
+    void tryLogin(String username, String password) {
         Timber.d("retrieved username=|%s| and password=|%s|", username, password);
         if (!username.contains("@")) username = username + "@gmail.com";
 
-        try{
+        try {
             authDialog.dismiss();
         } catch (NullPointerException e) {
             Timber.e(e.toString());
@@ -75,31 +76,31 @@ class IntroPresenter {
         authDialog = null;
 
         GoogleLogin.login(mActivity, username, password)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                    this::doConfig,
-                    this::handleLoginException
-            );
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        this::doConfig,
+                        this::handleLoginException
+                );
     }
 
     void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR){
-            if (resultCode == RESULT_OK){
+        if (requestCode == REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR) {
+            if (resultCode == RESULT_OK) {
                 GoogleLogin.retryGoogleAuth(mActivity, username)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                            this::doConfig,
-                            this::handleLoginException
-                    );
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                this::doConfig,
+                                this::handleLoginException
+                        );
             } else {
                 mActivity.makeLibraryError(R.string.intro_slide3_issue);
             }
         }
     }
 
-    private void handleLoginException(Throwable t){
+    private void handleLoginException(Throwable t) {
         if (t instanceof GooglePlayServicesAvailabilityException) {
             // The Google Play services APK is old, disabled, or not present.
             // Show a dialog created by Google Play services that allows
@@ -113,7 +114,7 @@ class IntroPresenter {
                 dialog.show();
             });
         } else if (t instanceof UserRecoverableAuthException) {
-            mActivity.runOnUiThread(()-> {
+            mActivity.runOnUiThread(() -> {
                 Intent intent = ((UserRecoverableAuthException) t).getIntent();
                 mActivity.startActivityForResult(intent,
                         REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
@@ -124,8 +125,8 @@ class IntroPresenter {
         }
     }
 
-    private void doConfig(){
-        if(!jsonCallbackCompleted) {
+    private void doConfig() {
+        if (!jsonCallbackCompleted) {
             jsonCallbackCompleted = true;
             MusicLibrary.getInstance().config(mActivity,
                     t -> {
@@ -136,12 +137,12 @@ class IntroPresenter {
         }
     }
 
-    private void getLibrary(){
+    private void getLibrary() {
         mActivity.slide3Progress(false, 0);
         MusicLibrary.getInstance().updateMusicLibrary(mActivity,
-            t -> mActivity.makeLibraryError(R.string.intro_slide3_issue),
-            i -> mActivity.slide3Progress(i.first, i.second),
-            mActivity::endSuccessfully);
+                t -> mActivity.makeLibraryError(R.string.intro_slide3_issue),
+                i -> mActivity.slide3Progress(i.first, i.second),
+                mActivity::endSuccessfully);
     }
 
 }

@@ -60,8 +60,8 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
 
                 thumb.setTransitionName(artist.getArtistId() + "i");
                 contentRoot.setTransitionName(artist.getArtistId() + "cr");
-                titleText.setTransitionName(artist.getArtistId()+"t");
-                detailText.setTransitionName(artist.getArtistId()+"d");
+                titleText.setTransitionName(artist.getArtistId() + "t");
+                detailText.setTransitionName(artist.getArtistId() + "d");
 
                 //context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(), mainColor, titleText, detailText);
             });
@@ -75,8 +75,8 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
                 return true;
             });
 
-            titleText.setMaxWidth((screenWidthPx/2)-(MathUtils.dpToPx(context, 50)));
-            detailText.setMaxWidth((screenWidthPx/2)-(MathUtils.dpToPx(context, 32)));
+            titleText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 50)));
+            detailText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 32)));
         }
     }
 
@@ -93,7 +93,7 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     }
 
     @Override
-    public void onViewRecycled(ViewHolder v){
+    public void onViewRecycled(ViewHolder v) {
         requestManager.clear(v.thumb);
     }
 
@@ -127,7 +127,7 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         holder.titleText.setText(artist.getName());
         holder.artist = artist;
 
-        if(artist.getArtistArtRef() != null && !artist.getArtistArtRef().equals("")) {
+        if (artist.getArtistArtRef() != null && !artist.getArtistArtRef().equals("")) {
             requestManager.load(artist.getArtistArtRef())
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                     .transition(DrawableTransitionOptions.withCrossFade(200))
@@ -138,7 +138,7 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
                                     .intoTextColor(holder.titleText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
                                     .intoTextColor(holder.detailText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
                                     .intoCallBack(palette -> {
-                                        if(palette != null) {
+                                        if (palette != null) {
                                             Palette.Swatch vibra = palette.getVibrantSwatch();
                                             if (vibra != null)
                                                 holder.mainColor = palette.getVibrantSwatch().getRgb();

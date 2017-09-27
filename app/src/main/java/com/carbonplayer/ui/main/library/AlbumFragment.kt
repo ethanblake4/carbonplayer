@@ -78,7 +78,7 @@ class AlbumFragment : Fragment() {
         root.primaryText.transitionName = album.id + "t"
         root.secondaryText.transitionName = album.id + "d"
 
-        root.songgroup_scrollview.setScrollViewCallbacks(object: ObservableScrollViewCallbacks {
+        root.songgroup_scrollview.setScrollViewCallbacks(object : ObservableScrollViewCallbacks {
             override fun onUpOrCancelMotionEvent(scrollState: ScrollState?) {}
 
             override fun onScrollChanged(scrollY: Int, firstScroll: Boolean, dragging: Boolean) {
@@ -110,24 +110,26 @@ class AlbumFragment : Fragment() {
                 .listener(
                         GlidePalette.with(album.albumArtURL)
                                 .use(0)
-                                .intoCallBack { palette -> palette?.let {
-                                    if (Color.red(ColorUtils.contrastColor(
-                                            it.getVibrantColor(Color.DKGRAY))) > 200) {
-                                        Timber.d("red>200")
-                                        root.play_fab.backgroundTintList =
-                                                ColorStateList.valueOf(
-                                                        it.getLightVibrantColor(Color.WHITE))
-                                    } else {
-                                        Timber.d("not")
-                                        val s = ColorStateList.valueOf(
-                                                it.getDarkVibrantColor(Color.DKGRAY))
-                                        val t = ColorStateList.valueOf(
-                                                it.getVibrantColor(Color.WHITE))
-                                        Timber.d(s.toString())
-                                        Timber.d(t.toString())
-                                        root.play_fab.backgroundTintList = s
-                                        root.play_fab.imageTintList = t
-                                    } }
+                                .intoCallBack { palette ->
+                                    palette?.let {
+                                        if (Color.red(ColorUtils.contrastColor(
+                                                it.getVibrantColor(Color.DKGRAY))) > 200) {
+                                            Timber.d("red>200")
+                                            root.play_fab.backgroundTintList =
+                                                    ColorStateList.valueOf(
+                                                            it.getLightVibrantColor(Color.WHITE))
+                                        } else {
+                                            Timber.d("not")
+                                            val s = ColorStateList.valueOf(
+                                                    it.getDarkVibrantColor(Color.DKGRAY))
+                                            val t = ColorStateList.valueOf(
+                                                    it.getVibrantColor(Color.WHITE))
+                                            Timber.d(s.toString())
+                                            Timber.d(t.toString())
+                                            root.play_fab.backgroundTintList = s
+                                            root.play_fab.imageTintList = t
+                                        }
+                                    }
                                 }
                 )
                 .into(root.main_backdrop)

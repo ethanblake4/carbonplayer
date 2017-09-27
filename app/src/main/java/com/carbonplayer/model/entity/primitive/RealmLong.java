@@ -5,7 +5,8 @@ import io.realm.RealmObject;
 public class RealmLong extends RealmObject {
     private long val;
 
-    public RealmLong() {}
+    public RealmLong() {
+    }
 
     public RealmLong(long value) {
         set(value);
@@ -15,7 +16,7 @@ public class RealmLong extends RealmObject {
         this.val = value;
     }
 
-    public long get(){
+    public long get() {
         return val;
     }
 }

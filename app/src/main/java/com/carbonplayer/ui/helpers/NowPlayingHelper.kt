@@ -27,8 +27,6 @@ import kotlinx.android.synthetic.main.nowplaying.view.*
 import timber.log.Timber
 
 
-
-
 /**
  * Manages now playing UI and sends commands to [com.carbonplayer.audio.MusicPlayerService]
  */
@@ -98,7 +96,7 @@ class NowPlayingHelper(private val activity: Activity) {
             ContextCompat.startForegroundService(activity, intent)
         }
 
-        if(isServiceRunning()) {
+        if (isServiceRunning()) {
             val intent = newIntent().apply {
                 action = Constants.ACTION.SEND_STATE
                 maybeBind(this)
@@ -116,10 +114,10 @@ class NowPlayingHelper(private val activity: Activity) {
 
         activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.5f
         activity.nowplaying_frame.npui_volumeHi.translationY = dispW * 1.5f
-        activity.nowplaying_frame.npui_volumeLow.x = dispW/4f - buttonHalfWidth
-        activity.nowplaying_frame.npui_volumeHi.x = dispW - (dispW/4f) - buttonHalfWidth
-        activity.nowplaying_frame.volume_fab.x = ((1f-volumePercent()) * dispW/4f) +
-                (volumePercent() * (dispW - dispW/4f - 2* buttonHalfWidth))
+        activity.nowplaying_frame.npui_volumeLow.x = dispW / 4f - buttonHalfWidth
+        activity.nowplaying_frame.npui_volumeHi.x = dispW - (dispW / 4f) - buttonHalfWidth
+        activity.nowplaying_frame.volume_fab.x = ((1f - volumePercent()) * dispW / 4f) +
+                (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth))
 
         activity.nowplaying_frame.callback = { up ->
 
@@ -151,19 +149,19 @@ class NowPlayingHelper(private val activity: Activity) {
             activity.nowplaying_frame.npui_fastrewind.run {
                 postOnAnimation {
                     translationY = (up * dispW / 3)
-                    x = ((dispW/4f - buttonHalfWidth) * up) + (prevInitialX * (1f - up))
+                    x = ((dispW / 4f - buttonHalfWidth) * up) + (prevInitialX * (1f - up))
                 }
             }
             activity.nowplaying_frame.npui_playpause.run {
                 postOnAnimation {
                     translationY = (up * dispW / 3)
-                    x= (((dispW / 2f) - buttonHalfWidth) * up) + (playPauseInitialX * (1f - up))
+                    x = (((dispW / 2f) - buttonHalfWidth) * up) + (playPauseInitialX * (1f - up))
                 }
             }
             activity.nowplaying_frame.npui_fastforward.run {
                 postOnAnimation {
                     translationY = (up * dispW / 3)
-                    x =  ((dispW - (dispW/4f) - buttonHalfWidth))  * up + (nextInitialX * (1f - up))
+                    x = ((dispW - (dispW / 4f) - buttonHalfWidth)) * up + (nextInitialX * (1f - up))
                 }
             }
 
@@ -180,7 +178,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
     private fun maybeBind(intent: Intent) {
         Timber.d("Should bind to service?")
-        if(!serviceStarted) {
+        if (!serviceStarted) {
             Timber.d("Binding to service")
             activity.bindService(intent, connection, Context.BIND_DEBUG_UNBIND)
             serviceStarted = true
@@ -188,7 +186,7 @@ class NowPlayingHelper(private val activity: Activity) {
     }
 
     fun maybeHandleVolumeEvent() {
-        if(volumePercent() != lastVolumePercent) {
+        if (volumePercent() != lastVolumePercent) {
             activity.nowplaying_frame.volume_fab.animate()
                     .x(((1f - volumePercent()) * dispW / 4f) +
                             (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth)))
@@ -196,9 +194,9 @@ class NowPlayingHelper(private val activity: Activity) {
         }
     }
 
-    fun handleVolumeEvent(event: Int) : Boolean {
+    fun handleVolumeEvent(event: Int): Boolean {
         if (event == KeyEvent.KEYCODE_VOLUME_DOWN || event == KeyEvent.KEYCODE_VOLUME_UP) {
-            if( activity.nowplaying_frame.isUp ) {
+            if (activity.nowplaying_frame.isUp) {
                 audioManager.adjustStreamVolume(
                         AudioManager.STREAM_MUSIC,
                         if (event == KeyEvent.KEYCODE_VOLUME_UP) AudioManager.ADJUST_RAISE
@@ -210,7 +208,7 @@ class NowPlayingHelper(private val activity: Activity) {
         return false
     }
 
-    fun volumePercent() : Float {
+    fun volumePercent(): Float {
         return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() /
                 audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
     }
@@ -223,7 +221,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
     private fun newIntent(): Intent = Intent(activity, MusicPlayerService::class.java)
 
-    private val trackQueueCallback = object: TrackQueue.TrackQueueCallback {
+    private val trackQueueCallback = object : TrackQueue.TrackQueueCallback {
         override fun replace(tracks: MutableList<ParcelableMusicTrack>) {
             val intent = newIntent().apply {
 
@@ -287,7 +285,7 @@ class NowPlayingHelper(private val activity: Activity) {
                     //Timber.d("Received bufferProgress %f", msg.obj as Float)
                 }
                 Constants.EVENT.TrackPlaying -> {
-                    if(activity.nowplaying_frame.visibility != View.VISIBLE) {
+                    if (activity.nowplaying_frame.visibility != View.VISIBLE) {
                         revealPlayerUI()
                     }
                     val track = msg.obj as ParcelableMusicTrack

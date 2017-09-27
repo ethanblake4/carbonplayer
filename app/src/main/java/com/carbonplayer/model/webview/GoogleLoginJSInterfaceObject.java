@@ -10,13 +10,13 @@ import com.carbonplayer.ui.intro.IntroActivity;
 public class GoogleLoginJSInterfaceObject {
     private IntroActivity callingActivity;
 
-    public GoogleLoginJSInterfaceObject(IntroActivity i){
+    public GoogleLoginJSInterfaceObject(IntroActivity i) {
         callingActivity = i;
     }
 
     @JavascriptInterface
-    public void returnResult(String message){
-        if(message.startsWith("{")){
+    public void returnResult(String message) {
+        if (message.startsWith("{")) {
             callingActivity.callbackWithJson(message);
         }
     }

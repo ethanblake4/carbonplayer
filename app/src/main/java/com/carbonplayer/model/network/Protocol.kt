@@ -43,7 +43,7 @@ import java.util.*
 object Protocol {
 
     private val SJ_URL = "https://mclients.googleapis.com/sj/v2.5/"
-    val PA_URL = "https://music-pa.googleapis.com/"
+    val PA_URL = "https://music-pa.googleapis.com/v1/ij/"
     private val STREAM_URL = "https://android.clients.google.com/music/mplay"
     private val TYPE_JSON = MediaType.parse("application/json; charset=utf-8")
     private val MAX_RESULTS = 250
@@ -101,7 +101,7 @@ object Protocol {
                 val entity = AndroidHttpClient.getCompressedEntity(
                         homeRequest.toByteArray(), context.contentResolver)
                 entity.setContentType("application/x-protobuf")
-                val httpRequest = HttpPost(PA_URL + "v1/ij/gethome?alt=proto")
+                val httpRequest = HttpPost(PA_URL + "gethome?alt=proto")
                 httpRequest.entity = entity
                 httpRequest.setHeader("X-Device-ID", deviceId)
                 httpRequest.setHeader("X-Device-Logging-ID", IdentityUtils.getLoggingID(context))
@@ -238,22 +238,19 @@ object Protocol {
             try {
                 digest = URLSigning.sign(song_id, salt)
             } catch (e: NoSuchAlgorithmException) {
-                subscriber.onError(e)
+                subscriber.onError(Exceptions.propagate(e))
             } catch (e: UnsupportedEncodingException) {
-                subscriber.onError(e)
+                subscriber.onError(Exceptions.propagate(e))
             } catch (e: InvalidKeyException) {
-                subscriber.onError(e)
+                subscriber.onError(Exceptions.propagate(e))
             }
 
             val getParams = Uri.Builder()
-            try {
-                if (song_id.startsWith("T") || song_id.startsWith("D"))
-                    getParams.appendQueryParameter("mjck", song_id)
-                else
-                    getParams.appendQueryParameter("songid", song_id)
-            } catch (e: Exception) {
-                subscriber.onError(e)
-            }
+
+            if (song_id.startsWith("T") || song_id.startsWith("D"))
+                getParams.appendQueryParameter("mjck", song_id)
+            else
+                getParams.appendQueryParameter("songid", song_id)
 
             getParams
                     .appendQueryParameter("targetkbps", "180")
@@ -327,7 +324,7 @@ object Protocol {
                         }
                     } else if (r.code() in 200..299) {
                         subscriber.onError(ResponseCodeException(String.format(Locale.getDefault(),
-                                        "Unexpected response code %d", r.code())))
+                                "Unexpected response code %d", r.code())))
                     } else {
                         subscriber.onError(Exception(r.body()!!.string()))
                     }

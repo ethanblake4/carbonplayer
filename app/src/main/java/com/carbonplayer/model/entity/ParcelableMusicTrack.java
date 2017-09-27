@@ -10,7 +10,7 @@ import org.parceler.Parcel;
  */
 @SuppressWarnings("unused")
 @Parcel
-public class ParcelableMusicTrack{
+public class ParcelableMusicTrack {
     int position;
     String id;
     String clientId;
@@ -26,7 +26,8 @@ public class ParcelableMusicTrack{
     String rating;
     int estimatedSize;
 
-    ParcelableMusicTrack() {}
+    ParcelableMusicTrack() {
+    }
 
     public ParcelableMusicTrack(int position, String id, String title,
                                 String artist, String album, int year,
@@ -47,7 +48,7 @@ public class ParcelableMusicTrack{
         this.estimatedSize = estimatedSize;
     }
 
-    public ParcelableMusicTrack(MusicTrack source){
+    public ParcelableMusicTrack(MusicTrack source) {
         this.id = source.getTrackId();
         this.clientId = source.getClientId();
         this.nid = source.getNid();
@@ -182,7 +183,7 @@ public class ParcelableMusicTrack{
     }
 
     private int orZero(Integer in) {
-        if(in == null) return 0;
+        if (in == null) return 0;
         return in;
     }
 

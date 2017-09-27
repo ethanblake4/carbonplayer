@@ -56,7 +56,7 @@ public class StreamingContent {
         this.songID = songId;
         this.quality = quality;
 
-        if(!TrackCache.has(context, songId, quality)) {
+        if (!TrackCache.has(context, songId, quality)) {
             Timber.i("Creating new DownloadRequest");
             downloadRequest =
                     new DownloadRequest(songId, trackTitle, 100,
@@ -84,24 +84,24 @@ public class StreamingContent {
 
     }
 
-    public void initDownload(){
+    public void initDownload() {
         downloadInitialized = true;
         Timber.i("InitDownload for %s", this.toString());
-        if(downloadRequest == null) return;
+        if (downloadRequest == null) return;
 
         ProgressResponseBody.ProgressListener listener = (bytesRead, contentLength, done) ->
-                downloadProgress.onNext((float)((bytesRead/100.0)/(contentLength/100.0)));
+                downloadProgress.onNext((float) ((bytesRead / 100.0) / (contentLength / 100.0)));
         ArrayList<okhttp3.Protocol> protocols = new ArrayList<>();
         protocols.add(okhttp3.Protocol.HTTP_1_1);
         OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient(
                 new OkHttpClient.Builder()
-                .protocols(protocols)
-                .addNetworkInterceptor(chain -> {
-                    Response originalResponse = chain.proceed(chain.request());
-                    return originalResponse.newBuilder()
-                            .body(new ProgressResponseBody(originalResponse.body(), listener))
-                            .build();
-                }));
+                        .protocols(protocols)
+                        .addNetworkInterceptor(chain -> {
+                            Response originalResponse = chain.proceed(chain.request());
+                            return originalResponse.newBuilder()
+                                    .body(new ProgressResponseBody(originalResponse.body(), listener))
+                                    .build();
+                        }));
 
         Protocol.INSTANCE.getStreamURL(context, songID.getNautilusID())
                 .retry((tries, err) -> {
@@ -123,9 +123,9 @@ public class StreamingContent {
                         len = response.body().contentLength();
                         long writ = 0;
 
-                        while(writ < len) {
-                            sink.write(source, Math.min(2048, len-writ));
-                            writ += Math.min(2048, len-writ);
+                        while (writ < len) {
+                            sink.write(source, Math.min(2048, len - writ));
+                            writ += Math.min(2048, len - writ);
                             synchronized (StreamingContent.this) {
                                 notifyAll();
                             }
@@ -148,7 +148,7 @@ public class StreamingContent {
                     downloadRequest.setState(DownloadRequest.State.FAILED);
                 });
 
-        downloadProgress.subscribe(val -> completed = (long)((len/10000f) * val) * 10000L);
+        downloadProgress.subscribe(val -> completed = (long) ((len / 10000f) * val) * 10000L);
     }
 
     public String toString() {
@@ -162,7 +162,7 @@ public class StreamingContent {
         return downloadProgress;
     }
 
-    public SongID getId(){
+    public SongID getId() {
         return songID;
     }
 
@@ -183,7 +183,7 @@ public class StreamingContent {
         File location = null;
         if (this.filepath != null) {
             location = new File(this.filepath);
-        } else if(downloadRequest != null){
+        } else if (downloadRequest != null) {
             location = downloadRequest.getFileLocation().getFullPath();
         }
         Timber.d("StreamFile: location: %s", location);
@@ -218,19 +218,19 @@ public class StreamingContent {
     }
 
 
-    public void setWaitAllowed(boolean waitAllowed){
+    public void setWaitAllowed(boolean waitAllowed) {
         this.waitAllowed = waitAllowed;
     }
 
     public synchronized boolean isFinished() {
-        if(downloadRequest == null) return true;
+        if (downloadRequest == null) return true;
         DownloadRequest.State state = downloadRequest.getState();
         return state == DownloadRequest.State.COMPLETED || state == DownloadRequest.State.CANCELED
                 || state == DownloadRequest.State.FAILED;
     }
 
     public synchronized boolean isDownloaded() {
-        if(downloadRequest == null) return true;
+        if (downloadRequest == null) return true;
         DownloadRequest.State state = downloadRequest.getState();
         return state == DownloadRequest.State.COMPLETED;
     }
