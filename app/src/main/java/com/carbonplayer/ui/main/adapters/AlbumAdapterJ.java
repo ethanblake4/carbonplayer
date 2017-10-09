@@ -3,7 +3,6 @@ package com.carbonplayer.ui.main.adapters;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.support.annotation.ColorInt;
-import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -21,8 +20,9 @@ import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.ui.main.MainActivity;
-import com.carbonplayer.utils.MathUtils;
-import com.github.florent37.glidepalette.BitmapPalette;
+import com.carbonplayer.utils.general.MathUtils;
+import com.carbonplayer.utils.ui.PaletteUtil;
+import com.futuremind.recyclerviewfastscroll.SectionTitleProvider;
 import com.github.florent37.glidepalette.GlidePalette;
 
 import java.util.List;
@@ -34,11 +34,18 @@ import butterknife.ButterKnife;
  * Displays albums in variable-size grid view
  */
 
-public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder> {
+public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder>
+        implements SectionTitleProvider {
+
     private List<Album> mDataset;
     private MainActivity context;
     private int screenWidthPx;
     private RequestManager requestManager;
+
+    @Override
+    public String getSectionTitle(int position) {
+        return mDataset.get(position).getTitle().substring(0, 1).toUpperCase();
+    }
 
     class ViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.gridLayoutRoot) View layoutRoot;
@@ -48,8 +55,8 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
         @BindView(R.id.detailText) TextView detailText;
 
         Album album;
+        PaletteUtil.SwatchPair swatchPair;
         int size;
-        int mainColor;
 
         ViewHolder(View v) {
             super(v);
@@ -63,8 +70,7 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
                 titleText.setTransitionName(album.getId() + "t");
                 detailText.setTransitionName(album.getId() + "d");
 
-                context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(),
-                        mainColor, titleText, detailText);
+                context.gotoAlbum2(album, (FrameLayout)layoutRoot);
             });
 
             ViewTreeObserver vto = thumb.getViewTreeObserver();
@@ -128,25 +134,23 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
         holder.detailText.setText(a.getArtist());
         holder.album = a;
 
-        if (a.getAlbumArtURL() != null && !a.getAlbumArtURL().equals("")) {
+        if (!a.getAlbumArtURL().equals("")) {
             requestManager.load(a.getAlbumArtURL())
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                     .transition(DrawableTransitionOptions.withCrossFade(200))
-                    .listener(
-                            GlidePalette.with(a.getAlbumArtURL())
-                                    .use(GlidePalette.Profile.VIBRANT)
-                                    .intoBackground(holder.contentRoot)
-                                    .intoTextColor(holder.titleText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
-                                    .intoTextColor(holder.detailText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
-                                    .intoCallBack(palette -> {
-                                        if (palette != null) {
-                                            Palette.Swatch vibra = palette.getVibrantSwatch();
-                                            if (vibra != null)
-                                                holder.mainColor = palette.getVibrantSwatch().getRgb();
-                                            else holder.mainColor = Color.parseColor("#ff333333");
-                                        }
-                                    })
-                                    .crossfade(true, 500)
+                    .listener(GlidePalette.with(a.getAlbumArtURL())
+                            .use(GlidePalette.Profile.VIBRANT)
+                            .intoCallBack(palette -> {
+                                if (palette != null) {
+                                    PaletteUtil.SwatchPair pair =
+                                            PaletteUtil.getSwatches(context, palette);
+                                    holder.swatchPair = pair;
+
+                                    PaletteUtil.crossfadeBackground(holder.contentRoot, pair.getPrimary());
+                                    PaletteUtil.crossfadeTitle(holder.titleText, pair.getPrimary());
+                                    PaletteUtil.crossfadeSubtitle(holder.detailText, pair.getPrimary());
+                                }
+                            })
                     )
                     .into(holder.thumb);
 

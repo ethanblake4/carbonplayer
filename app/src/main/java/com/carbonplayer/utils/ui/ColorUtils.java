@@ -1,4 +1,4 @@
-package com.carbonplayer.utils;
+package com.carbonplayer.utils.ui;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -10,6 +10,8 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.graphics.Palette;
+
+import com.carbonplayer.utils.general.MathUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -123,6 +125,15 @@ public class ColorUtils {
         float[] hsl = new float[3];
         android.support.v4.graphics.ColorUtils.colorToHSL(color, hsl);
         return isDark(hsl);
+    }
+
+    public static boolean colorsAreSimilar(@ColorInt int color1, @ColorInt int color2) {
+
+        double perceptiveDifference =
+                Math.abs(0.299 * Color.red(color1) - 0.299 * Color.red(color2)) +
+                Math.abs(0.587 * Color.green(color1) - 0.587 * Color.green(color2)) +
+                Math.abs(0.114 * Color.blue(color1) - 0.114 * Color.blue(color2));
+        return perceptiveDifference < 40;
     }
 
     @ColorInt public static int contrastColor(@ColorInt int color)

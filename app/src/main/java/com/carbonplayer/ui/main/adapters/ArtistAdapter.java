@@ -21,7 +21,8 @@ import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.Artist;
 import com.carbonplayer.ui.main.MainActivity;
-import com.carbonplayer.utils.MathUtils;
+import com.carbonplayer.utils.general.MathUtils;
+import com.futuremind.recyclerviewfastscroll.SectionTitleProvider;
 import com.github.florent37.glidepalette.BitmapPalette;
 import com.github.florent37.glidepalette.GlidePalette;
 
@@ -34,7 +35,8 @@ import butterknife.ButterKnife;
  * Displays albums in variable-size grid view
  */
 
-public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder> {
+public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder>
+        implements SectionTitleProvider {
 
     private List<Artist> dataset;
     private MainActivity context;
@@ -160,5 +162,10 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
     @Override
     public int getItemCount() {
         return dataset.size();
+    }
+
+    @Override
+    public String getSectionTitle(int position) {
+        return dataset.get(position).getName().substring(0, 1);
     }
 }

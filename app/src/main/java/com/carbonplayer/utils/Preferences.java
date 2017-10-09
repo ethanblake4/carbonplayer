@@ -3,9 +3,12 @@ package com.carbonplayer.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 
 import com.carbonplayer.CarbonPlayerApplication;
+import com.carbonplayer.model.entity.enums.PaletteMode;
 import com.carbonplayer.model.entity.enums.StreamQuality;
+import com.carbonplayer.utils.general.IdentityUtils;
 
 import java.lang.reflect.Field;
 
@@ -26,6 +29,9 @@ public class Preferences {
 
     public StreamQuality preferredStreamQualityWifi = StreamQuality.HIGH;
     public StreamQuality preferredStreamQualityMobile = StreamQuality.MEDIUM;
+
+    @NonNull public PaletteMode primaryPaletteMode = PaletteMode.POPULOUS;
+    @NonNull public PaletteMode secondaryPaletteMode = PaletteMode.VIBRANT;
 
     public String masterToken;
     public String BearerAuth;
@@ -91,7 +97,6 @@ public class Preferences {
                             f.getType().toString(), name);
                 }
             }
-
         }
     }
 

@@ -5,7 +5,6 @@
     android:id="@+id/nowplaying_frame"
     android:layout_width="match_parent"
     android:layout_height="56dp"
-    android:background="@color/colorPrimary"
     android:visibility="visible">
 
     <com.carbonplayer.ui.widget.SquareImageView

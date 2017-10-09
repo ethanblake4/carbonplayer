@@ -62,7 +62,7 @@ class MusicPlayerService : Service(), MusicFocusable {
     internal val messenger = Messenger(IncomingHandler())
 
     override fun onCreate() {
-
+        super.onCreate()
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -290,7 +290,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                         .setShowCancelButton(true)
                         .setShowActionsInCompactView(*intArrayOf(0, 1, 2))
                         .setMediaSession(mediaSession.sessionToken))
-                .setChannelId("Carbon")
+                .setChannelId("default")
                 .setContentIntent(contentIntent)
                 .setSmallIcon(R.drawable.ic_play)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)

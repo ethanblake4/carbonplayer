@@ -2,93 +2,93 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
-    android:layout_height="271dp"
-    android:layout_width="match_parent"
     android:id="@+id/gridLayoutRoot"
-    android:background="#292929"
-    android:layout_marginTop="2dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:layout_marginBottom="2dp"
-    android:layout_marginStart="2dp"
-    android:layout_marginRight="2dp"
-    android:layout_marginLeft="2dp"
     android:layout_marginEnd="2dp"
-    android:foreground="?attr/selectableItemBackground">
+    android:layout_marginLeft="2dp"
+    android:layout_marginRight="2dp"
+    android:layout_marginStart="2dp"
+    android:layout_marginTop="2dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:orientation="vertical">
 
     <com.carbonplayer.ui.widget.SquareImageView
-        android:layout_width="match_parent"
-        android:src="@drawable/unknown_music_track"
         android:id="@+id/imgthumb"
-        android:transitionName="imgthumb"
-        tools:ignore="ContentDescription"
-        android:scaleType="centerCrop"
-        android:cropToPadding="false"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:adjustViewBounds="false" />
+        android:adjustViewBounds="false"
+        android:cropToPadding="false"
+        android:scaleType="centerCrop"
+        android:src="@drawable/unknown_music_track"
+        android:transitionName="imgthumb"
+        tools:ignore="ContentDescription" />
 
     <android.support.constraint.ConstraintLayout
+        android:id="@+id/gridLayoutContentRoot"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:background="#292929"
         android:orientation="vertical"
         android:transitionName="albumdetails"
-        android:layout_marginTop="201dp"
-        android:layout_height="70dp"
-        android:layout_width="match_parent"
-        android:id="@+id/gridLayoutContentRoot"
-        android:background="#292929">
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="201dp">
 
         <TextView
-            android:text="Item Name"
-            android:transitionName="albumName"
+            android:id="@+id/primaryText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/primaryText"
-            android:textSize="18sp"
-            android:fontFamily="sans-serif-medium"
-            tools:ignore="HardcodedText"
-            android:scrollHorizontally="true"
+            android:layout_marginStart="16dp"
             android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
             android:maxLines="1"
             android:maxWidth="160dp"
+            android:scrollHorizontally="true"
+            android:text="Item Name"
+            android:textSize="18sp"
+            android:transitionName="albumName"
+            app:layout_constraintBottom_toTopOf="@+id/guideline3"
             app:layout_constraintLeft_toLeftOf="parent"
-            android:layout_marginStart="16dp"
-            app:layout_constraintBottom_toTopOf="@+id/guideline3" />
+            tools:ignore="HardcodedText" />
 
         <TextView
 
-            android:text="Details"
+            android:id="@+id/detailText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/detailText"
-            android:textSize="16sp"
-            android:transitionName="artistName"
-            android:scrollHorizontally="true"
+            android:layout_marginTop="4dp"
             android:ellipsize="end"
             android:maxLines="1"
+            android:scrollHorizontally="true"
+            android:text="Details"
+            android:textSize="16sp"
+            android:transitionName="artistName"
             app:layout_constraintLeft_toLeftOf="@+id/primaryText"
             app:layout_constraintTop_toTopOf="@+id/guideline3"
-            android:layout_marginTop="4dp"
             tools:ignore="HardcodedText" />
 
         <android.support.constraint.Guideline
+            android:id="@+id/guideline3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/guideline3"
             android:orientation="horizontal"
             app:layout_constraintGuide_percent="0.5"
-            tools:layout_editor_absoluteY="34dp"
-            tools:layout_editor_absoluteX="0dp" />
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="34dp" />
 
         <ImageButton
+            android:id="@+id/imageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:srcCompat="@drawable/ic_more"
-            android:id="@+id/imageButton"
-            android:background="?attr/selectableItemBackground"
-            android:tint="#ccc"
-            android:padding="4dp"
             android:layout_marginEnd="8dp"
-            app:layout_constraintRight_toRightOf="parent"
             android:layout_marginTop="8dp"
+            android:background="?attr/selectableItemBackground"
+            android:padding="4dp"
+            android:tint="#ccc"
+            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_more"
             tools:ignore="ContentDescription" />
 
     </android.support.constraint.ConstraintLayout>

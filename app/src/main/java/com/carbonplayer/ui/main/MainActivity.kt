@@ -11,6 +11,7 @@ import android.transition.Fade
 import android.transition.TransitionInflater
 import android.view.KeyEvent
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -20,11 +21,12 @@ import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
+import com.carbonplayer.ui.main.library.AlbumController
 import com.carbonplayer.ui.main.library.AlbumFragment
 import com.carbonplayer.ui.main.library.LibraryFragment
-import com.carbonplayer.utils.BundleBuilder
-import com.carbonplayer.utils.IdentityUtils
-import com.carbonplayer.utils.VolumeObserver
+import com.carbonplayer.utils.general.BundleBuilder
+import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.ui.VolumeObserver
 import icepick.Icepick
 import kotlinx.android.synthetic.main.controller_main.*
 import timber.log.Timber
@@ -33,6 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var npHelper: NowPlayingHelper
     val volumeObserver = VolumeObserver({ npHelper.maybeHandleVolumeEvent() })
+    var albumController: AlbumController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -61,7 +64,7 @@ class MainActivity : AppCompatActivity() {
 
         bottom_nav.setOnNavigationItemSelectedListener { item ->
 
-            var initialFrag = when (item.itemId) {
+            val initialFrag = when (item.itemId) {
                 R.id.action_topcharts -> TopChartsPageFragment()
                 R.id.action_home -> HomeFragment()
                 R.id.action_library -> LibraryFragment()
@@ -72,7 +75,11 @@ class MainActivity : AppCompatActivity() {
 
             main_controller_container.animate().alpha(0.0f).setDuration(200).start()
 
+            Timber.d("Will add new fragment")
+
             Handler().postDelayed({
+
+                Timber.d("Adding new fragment")
                 val transaction = fragmentManager.beginTransaction()
                         .replace(R.id.main_controller_container, initialFrag)
 
@@ -87,6 +94,8 @@ class MainActivity : AppCompatActivity() {
 
             true
         }
+
+        Timber.d("Adding HomeFragment")
 
         val initialFrag = HomeFragment()
         initialFrag.exitTransition = Fade()
@@ -126,6 +135,11 @@ class MainActivity : AppCompatActivity() {
                 .replace(R.id.main_controller_container, frag)
                 .addToBackStack("base")
                 .commit()
+    }
+
+    fun gotoAlbum2(album: Album, layoutRoot: FrameLayout) {
+        albumController = AlbumController(album.id)
+        albumController!!.makeAlbum(this, main_controller_container, layoutRoot)
     }
 
     fun showAlbumPopup(view: View, trackList: List<MusicTrack>) {

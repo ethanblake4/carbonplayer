@@ -14,18 +14,18 @@ import com.carbonplayer.model.entity.ParcelableMusicTrack
 import org.parceler.Parcels
 import timber.log.Timber
 
-fun MutableList<ParcelableMusicTrack>.asParcel() : Parcelable =
-    Parcels.wrap<MutableList<ParcelableMusicTrack>>(this)
+fun MutableList<ParcelableMusicTrack>.asParcel(): Parcelable =
+        Parcels.wrap<MutableList<ParcelableMusicTrack>>(this)
 
-fun List<MusicTrack>.parcelable() : MutableList<ParcelableMusicTrack> =
+fun List<MusicTrack>.parcelable(): MutableList<ParcelableMusicTrack> =
         MutableList(size, { i -> get(i).parcelable() })
 
-inline fun <reified T: Context> Context.newIntent(
+inline fun <reified T : Context> Context.newIntent(
         action: String,
         noinline f: Intent.() -> Unit = {}
-): Intent = Intent(this, T::class.java).apply(f).apply({this.action = action})
+): Intent = Intent(this, T::class.java).apply(f).apply({ this.action = action })
 
-inline fun <reified T: Context> Context.newIntent(
+inline fun <reified T : Context> Context.newIntent(
         noinline f: Intent.() -> Unit = {}
 ): Intent = Intent(this, T::class.java).apply(f)
 
@@ -33,29 +33,31 @@ fun Context.pendingActivityIntent(
         i: Intent,
         requestCode: Int = 0,
         flags: Int = 0
-) : PendingIntent = PendingIntent.getActivity(this, requestCode, i, flags)
+): PendingIntent = PendingIntent.getActivity(this, requestCode, i, flags)
 
 fun Context.pendingServiceIntent(
         i: Intent,
         requestCode: Int = 0,
         flags: Int = 0
-) : PendingIntent = PendingIntent.getService(this, requestCode, i, flags)
+): PendingIntent = PendingIntent.getService(this, requestCode, i, flags)
 
 fun Context.loadImageBitmap(
         url: String,
         completed: (Bitmap?) -> Unit
-) { Glide.with(this)
-        .asBitmap()
-        .load(url)
-        .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>() {
-            override fun onLoadFailed(errorDrawable: Drawable?) {
-                super.onLoadFailed(errorDrawable)
-                Timber.i("image load fail")
-                completed(null)
-            }
+) {
+    Glide.with(this)
+            .asBitmap()
+            .load(url)
+            .into<SimpleTarget<Bitmap>>(object : SimpleTarget<Bitmap>() {
+                override fun onLoadFailed(errorDrawable: Drawable?) {
+                    super.onLoadFailed(errorDrawable)
+                    Timber.i("image load fail")
+                    completed(null)
+                }
 
-            override fun onResourceReady(resource: Bitmap, t: Transition<in Bitmap>) {
-                Timber.i("image load complete")
-                completed(resource)
-            }
-        }) }
+                override fun onResourceReady(resource: Bitmap, t: Transition<in Bitmap>) {
+                    Timber.i("image load complete")
+                    completed(resource)
+                }
+            })
+}

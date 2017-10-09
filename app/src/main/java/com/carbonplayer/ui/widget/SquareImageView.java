@@ -4,7 +4,6 @@ import android.content.Context;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.ImageView;
 
 /**
  * A extension of ImageView that is always 1:1 aspect ratio.
@@ -12,6 +11,10 @@ import android.widget.ImageView;
  * @author Nick Butcher https://github.com/nickbutcher/plaid/
  */
 public class SquareImageView extends AppCompatImageView {
+
+    public SquareImageView(Context context) {
+        super (context);
+    }
 
     public SquareImageView(Context context, AttributeSet attrs) {
         super(context, attrs);

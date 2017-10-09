@@ -7,7 +7,7 @@ import com.carbonplayer.model.entity.proto.context.ClientContextV1Proto.Capabili
 import com.carbonplayer.model.entity.proto.context.ClientContextV1Proto.ClientContext
 import com.carbonplayer.model.entity.proto.identifiers.CapabilityIdV1Proto.CapabilityId
 import com.carbonplayer.model.entity.proto.identifiers.CapabilityIdV1Proto.CapabilityId.CapabilityType
-import com.carbonplayer.utils.IdentityUtils
+import com.carbonplayer.utils.general.IdentityUtils
 import java.util.*
 
 object ClientContextFactory {

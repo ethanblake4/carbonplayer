@@ -1,4 +1,4 @@
-package com.carbonplayer.utils;
+package com.carbonplayer.utils.ui;
 /*
  * Copyright 2015 Google Inc.
  *

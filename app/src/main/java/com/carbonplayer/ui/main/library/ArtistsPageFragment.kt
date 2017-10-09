@@ -16,6 +16,7 @@ import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.ArtistAdapter
 import kotlinx.android.synthetic.main.single_recycler_layout.view.*
 import rx.Subscription
+import timber.log.Timber
 
 class ArtistsPageFragment : Fragment() {
 
@@ -27,6 +28,9 @@ class ArtistsPageFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View {
+
+        Timber.d("Artists - onCreateView. savedInstanceState= %s",
+                if(savedInstanceState == null) "null" else "not null")
 
         val view = inflater.inflate(R.layout.single_recycler_layout, container, false)
         view.main_recycler.hasFixedSize()
@@ -44,6 +48,7 @@ class ArtistsPageFragment : Fragment() {
                 .subscribe { artists ->
                     adapter = ArtistAdapter(artists, activity as MainActivity, requestManager)
                     view.main_recycler.adapter = adapter
+                    view.fastscroll.setRecyclerView(view.main_recycler)
                     recyclerState?.let {
                         view.main_recycler.layoutManager.onRestoreInstanceState(it)
                     }

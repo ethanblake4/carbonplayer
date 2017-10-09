@@ -1,4 +1,4 @@
-package com.carbonplayer.utils
+package com.carbonplayer.utils.general
 
 import android.os.Bundle
 import android.os.Parcelable

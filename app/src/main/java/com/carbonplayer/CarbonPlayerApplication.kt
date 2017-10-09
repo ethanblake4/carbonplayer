@@ -1,23 +1,28 @@
 package com.carbonplayer
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.net.http.AndroidHttpClient
 import android.os.Build
-import butterknife.ButterKnife
 import com.carbonplayer.model.entity.Album
+import com.carbonplayer.model.entity.enums.PaletteMode
+import com.carbonplayer.utils.jobs.CarbonJobCreator
 import com.carbonplayer.utils.CrashReportingTree
 import com.carbonplayer.utils.Preferences
+import com.evernote.android.job.JobManager
 import com.facebook.stetho.Stetho
 import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.Util
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider
-import icepick.Icepick
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import okhttp3.OkHttpClient
 import rx.plugins.RxJavaHooks
 import timber.log.Timber
+
 
 /**
  * Application base class, contains version and instance-specific variables
@@ -44,6 +49,8 @@ class CarbonPlayerApplication : Application() {
 
         preferences = Preferences()
         preferences.load()
+        preferences.primaryPaletteMode = PaletteMode.POPULOUS
+        preferences.save()
 
         okHttpClient = OkHttpClient.Builder()
                 .addNetworkInterceptor(StethoInterceptor()).build()
@@ -58,11 +65,13 @@ class CarbonPlayerApplication : Application() {
                             .enableWebKitInspector(RealmInspectorModulesProvider.builder(this).build())
                             .build())
 
-            ButterKnife.setDebug(true)
-            Icepick.setDebug(true)
+            //ButterKnife.setDebug(true)
+            //Icepick.setDebug(true)
         } else {
             Timber.plant(CrashReportingTree())
         }
+
+        JobManager.create(this).addJobCreator(CarbonJobCreator())
 
         RxJavaHooks.setOnError { e -> Timber.e(e, e.toString()) }
 
@@ -70,6 +79,18 @@ class CarbonPlayerApplication : Application() {
         // Configure default configuration for Realm
         val realmConfig = RealmConfiguration.Builder().build()
         Realm.setDefaultConfiguration(realmConfig)
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = getString(R.string.notification_channel_name)
+            val description = getString(R.string.notification_channel_desc)
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+
+            val mChannel = NotificationChannel("default", name, importance)
+            mChannel.description = description
+            mChannel.vibrationPattern = longArrayOf(0)
+            (applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+                    .createNotificationChannel(mChannel)
+        }
     }
 
     fun buildDataSourceFactory(bandwidthMeter: DefaultBandwidthMeter?): DataSource.Factory {

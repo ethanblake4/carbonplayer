@@ -16,7 +16,6 @@
 
 package com.carbonplayer.ui.widget;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -27,11 +26,10 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.util.Property;
-import android.widget.ImageView;
 
 import com.carbonplayer.R;
-import com.carbonplayer.utils.AnimUtils;
-import com.carbonplayer.utils.ColorUtils;
+import com.carbonplayer.utils.ui.AnimUtils;
+import com.carbonplayer.utils.ui.ColorUtils;
 
 
 /**

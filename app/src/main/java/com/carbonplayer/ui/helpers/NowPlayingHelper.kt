@@ -21,6 +21,9 @@ import com.carbonplayer.audio.TrackQueue
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.model.entity.ParcelableMusicTrack
 import com.carbonplayer.utils.*
+import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.general.MathUtils
+import com.carbonplayer.utils.ui.AnimUtils
 import kotlinx.android.synthetic.main.controller_main.*
 import kotlinx.android.synthetic.main.nowplaying.*
 import kotlinx.android.synthetic.main.nowplaying.view.*
@@ -314,7 +317,7 @@ class NowPlayingHelper(private val activity: Activity) {
         messenger?.send(Message.obtain(null, Constants.MESSAGE.UNREGISTER_CLIENT).apply {
             replyTo = replyMessenger
         })
-        activity.unbindService(connection)
+        if(isServiceRunning()) activity.unbindService(connection)
     }
 
     @Suppress("DEPRECATION")

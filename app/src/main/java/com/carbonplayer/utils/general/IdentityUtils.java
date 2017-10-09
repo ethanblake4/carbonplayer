@@ -1,4 +1,4 @@
-package com.carbonplayer.utils;
+package com.carbonplayer.utils.general;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -17,6 +17,7 @@ import android.util.DisplayMetrics;
 import android.view.Display;
 
 import com.carbonplayer.model.entity.enums.NetworkType;
+import com.carbonplayer.utils.protocol.Gservices;
 import com.google.protobuf.Duration;
 
 import java.security.SecureRandom;

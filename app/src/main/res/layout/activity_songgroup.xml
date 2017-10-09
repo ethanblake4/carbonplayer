@@ -28,11 +28,10 @@
         android:id="@+id/songgroup_scrollview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:nestedScrollingEnabled="true"
-        android:background="@android:color/transparent">
+        android:background="@android:color/transparent"
+        android:nestedScrollingEnabled="true">
 
-        <include layout="@layout/songgroup_details"
-            />
+        <include layout="@layout/songgroup_details" />
 
     </com.github.ksoichiro.android.observablescrollview.ObservableScrollView>
 

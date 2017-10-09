@@ -1,4 +1,4 @@
-package com.carbonplayer.utils
+package com.carbonplayer.utils.ui
 
 import android.database.ContentObserver
 import android.os.Handler

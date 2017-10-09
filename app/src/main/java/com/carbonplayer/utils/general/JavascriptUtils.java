@@ -1,8 +1,7 @@
-package com.carbonplayer.utils;
+package com.carbonplayer.utils.general;
 
 import android.content.Context;
 import android.util.Base64;
-import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
 import java.io.IOException;

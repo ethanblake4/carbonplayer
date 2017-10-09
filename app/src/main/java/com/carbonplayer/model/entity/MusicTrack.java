@@ -1,6 +1,8 @@
 package com.carbonplayer.model.entity;
 
 import com.carbonplayer.model.entity.enums.PlaySource;
+import com.carbonplayer.model.entity.enums.StorageType;
+import com.carbonplayer.model.entity.enums.StreamQuality;
 import com.carbonplayer.model.entity.primitive.RealmLong;
 
 import org.json.JSONArray;
@@ -20,6 +22,9 @@ import io.realm.annotations.PrimaryKey;
 public class MusicTrack extends RealmObject {
 
     public static final String ID = "id";
+    public static final String HAS_CACHED_FILE = "hasCachedFile";
+    public static final String CACHED_FILE_QUALITY = "cachedFileQuality";
+    public static final String STORAGE_TYPE = "storageType";
 
     @PrimaryKey
     private String id;
@@ -46,6 +51,9 @@ public class MusicTrack extends RealmObject {
     private String nid;
     private RealmList<RealmLong> localPlays;
     private long localTrackSizeBytes;
+    private boolean hasCachedFile;
+    private int cachedFileQuality;
+    private int storageType;
 
     public MusicTrack() {
     }
@@ -53,7 +61,8 @@ public class MusicTrack extends RealmObject {
     public MusicTrack(String id, Date recentTimestamp, boolean deleted, String title, String artist, String composer,
                       String album, Integer year, String comment, Integer trackNumber, String genre, int durationMillis,
                       Integer beatsPerMinute, String albumArtURL, String artistArtURL, int playCount, String rating, int estimatedSize,
-                      String albumId, RealmList<RealmString> artistId, String clientId, String nid, long localTrackSizeBytes) {
+                      String albumId, RealmList<RealmString> artistId, String clientId, String nid, long localTrackSizeBytes,
+                      boolean hasCachedFile, StreamQuality cachedFileQuality, StorageType storageType) {
         this.id = id;
         this.recentTimestamp = recentTimestamp;
         this.clientId = clientId;
@@ -77,6 +86,10 @@ public class MusicTrack extends RealmObject {
         this.artistId = artistId;
         this.nid = nid;
         this.localTrackSizeBytes = localTrackSizeBytes;
+
+        this.hasCachedFile = hasCachedFile;
+        this.cachedFileQuality = cachedFileQuality.ordinal();
+        this.storageType = storageType.ordinal();
     }
 
 
@@ -319,6 +332,31 @@ public class MusicTrack extends RealmObject {
     public long getLocalTrackSizeBytes() {
         return localTrackSizeBytes;
     }
+
+    public boolean isHasCachedFile() {
+        return hasCachedFile;
+    }
+
+    public void setHasCachedFile(boolean hasCachedFile) {
+        this.hasCachedFile = hasCachedFile;
+    }
+
+    public StreamQuality getCachedFileQuality() {
+        return StreamQuality.values()[cachedFileQuality];
+    }
+
+    public void setCachedFileQuality(StreamQuality cachedFileQuality) {
+        this.cachedFileQuality = cachedFileQuality.ordinal();
+    }
+
+    public StorageType getStorageType() {
+        return StorageType.values()[storageType];
+    }
+
+    public void setStorageType(StorageType storageType) {
+        this.storageType = storageType.ordinal();
+    }
+
 
     public long getCacheImportance(PlaySource source) {
         int cacheImportance;

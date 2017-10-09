@@ -16,7 +16,6 @@
 
 package com.carbonplayer.ui.widget;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -28,8 +27,8 @@ import android.util.AttributeSet;
 import android.util.Property;
 
 import com.carbonplayer.R;
-import com.carbonplayer.utils.AnimUtils;
-import com.carbonplayer.utils.ColorUtils;
+import com.carbonplayer.utils.ui.AnimUtils;
+import com.carbonplayer.utils.ui.ColorUtils;
 
 
 /**
@@ -62,6 +61,12 @@ public class ParallaxScrimageView extends SquareImageView {
             return parallaxScrimageView.getOffset();
         }
     };
+
+    public ParallaxScrimageView(Context context) {
+        super (context);
+        scrimPaint = new Paint();
+        scrimPaint.setColor(ColorUtils.modifyAlpha(scrimColor, scrimAlpha));
+    }
 
     public ParallaxScrimageView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -108,6 +113,10 @@ public class ParallaxScrimageView extends SquareImageView {
             this.scrimColor = scrimColor;
             ViewCompat.postInvalidateOnAnimation(this);
         }
+    }
+
+    public void setParallaxFactor(Float factor) {
+        parallaxFactor = factor;
     }
 
     public void setScrimAlpha(@FloatRange(from = 0f, to = 1f) float alpha) {

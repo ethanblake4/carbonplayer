@@ -18,8 +18,8 @@ import com.carbonplayer.R;
 import com.carbonplayer.model.entity.proto.innerjam.elements.TitleSectionV1Proto;
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.FullBleedModule;
 import com.carbonplayer.ui.widget.ParallaxScrimageViewSz;
-import com.carbonplayer.utils.ColorUtils;
-import com.carbonplayer.utils.ProtoUtils;
+import com.carbonplayer.utils.ui.ColorUtils;
+import com.carbonplayer.utils.protocol.ProtoUtils;
 
 import java.util.List;
 

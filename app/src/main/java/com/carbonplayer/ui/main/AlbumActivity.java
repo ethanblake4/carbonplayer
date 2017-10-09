@@ -31,9 +31,9 @@ import com.carbonplayer.ui.main.adapters.SongListAdapter;
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback;
 import com.carbonplayer.ui.widget.ParallaxScrimageView;
 import com.carbonplayer.ui.widget.SquareView;
-import com.carbonplayer.utils.ColorUtils;
-import com.carbonplayer.utils.IdentityUtils;
-import com.carbonplayer.utils.MathUtils;
+import com.carbonplayer.utils.ui.ColorUtils;
+import com.carbonplayer.utils.general.IdentityUtils;
+import com.carbonplayer.utils.general.MathUtils;
 import com.github.florent37.glidepalette.BitmapPalette;
 import com.github.florent37.glidepalette.GlidePalette;
 

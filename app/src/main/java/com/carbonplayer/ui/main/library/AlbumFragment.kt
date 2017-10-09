@@ -27,9 +27,9 @@ import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback
-import com.carbonplayer.utils.ColorUtils
-import com.carbonplayer.utils.IdentityUtils
-import com.carbonplayer.utils.MathUtils
+import com.carbonplayer.utils.ui.ColorUtils
+import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.general.MathUtils
 import com.github.florent37.glidepalette.GlidePalette
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import com.github.ksoichiro.android.observablescrollview.ScrollState

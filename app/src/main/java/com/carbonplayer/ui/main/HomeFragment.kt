@@ -19,7 +19,7 @@ import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1P
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.FullBleedSection
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adaptivehome.FullBleedListAdapter
-import com.carbonplayer.utils.IdentityUtils
+import com.carbonplayer.utils.general.IdentityUtils
 import kotlinx.android.synthetic.main.adaptivehome.*
 import kotlinx.android.synthetic.main.adaptivehome.view.*
 import rx.android.schedulers.AndroidSchedulers

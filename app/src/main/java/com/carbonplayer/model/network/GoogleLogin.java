@@ -14,7 +14,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.carbonplayer.CarbonPlayerApplication;
-import com.carbonplayer.utils.IdentityUtils;
+import com.carbonplayer.utils.general.IdentityUtils;
 import com.carbonplayer.utils.Preferences;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;

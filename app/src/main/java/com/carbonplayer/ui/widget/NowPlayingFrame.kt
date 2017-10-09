@@ -6,8 +6,8 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import android.widget.Scroller
-import com.carbonplayer.utils.IdentityUtils
-import com.carbonplayer.utils.MathUtils
+import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.general.MathUtils
 import timber.log.Timber
 
 

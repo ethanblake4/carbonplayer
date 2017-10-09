@@ -97,6 +97,7 @@ class MusicPlaybackImpl(
             exoPlayer.prepare(dynamicSource)
             playerIsPrepared = true
         }
+        if (!loop.isAlive) loop.start()
         if (!exoPlayer.playWhenReady) exoPlayer.playWhenReady = true
     }
 
@@ -183,6 +184,8 @@ class MusicPlaybackImpl(
         subscription?.unsubscribe()
         subscription = mirroredContentQueue[trackNum].progressMonitor()
                 .subscribe({ b -> onbuffer(b) })
+
+        if (!loop.isAlive) loop.start()
 
         dynamicSource.addMediaSources(sources)
     }

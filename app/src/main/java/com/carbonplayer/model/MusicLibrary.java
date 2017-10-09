@@ -82,7 +82,7 @@ public final class MusicLibrary {
                                         .equalTo("artistId", "unknownID")
                                         .findFirst();
                                 if (ar == null) {
-                                    ar = new Artist("unknownId", "Unknown Artist");
+                                    ar = new Artist("unknownID", "Unknown Artist");
                                     realm.insert(ar);
                                 }
                             } else {

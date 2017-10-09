@@ -1,4 +1,4 @@
-package com.carbonplayer.utils
+package com.carbonplayer.utils.protocol
 
 import android.graphics.Color
 import android.support.annotation.ColorInt

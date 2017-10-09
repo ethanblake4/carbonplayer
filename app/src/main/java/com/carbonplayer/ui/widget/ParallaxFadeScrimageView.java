@@ -18,9 +18,7 @@ package com.carbonplayer.ui.widget;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
-import android.graphics.Shader;
 import android.graphics.drawable.GradientDrawable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.FloatRange;
@@ -31,9 +29,8 @@ import android.util.Property;
 
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto.ImageReference;
-import com.carbonplayer.utils.AnimUtils;
-import com.carbonplayer.utils.ColorUtils;
-import com.carbonplayer.utils.MathUtils;
+import com.carbonplayer.utils.ui.AnimUtils;
+import com.carbonplayer.utils.ui.ColorUtils;
 
 
 /**

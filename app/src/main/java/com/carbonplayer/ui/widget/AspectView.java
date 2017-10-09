@@ -6,7 +6,7 @@ import android.view.View;
 
 import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto;
 
-import static com.carbonplayer.utils.MathUtils.aspectHeightMultiple;
+import static com.carbonplayer.utils.general.MathUtils.aspectHeightMultiple;
 
 
 public class AspectView extends View {

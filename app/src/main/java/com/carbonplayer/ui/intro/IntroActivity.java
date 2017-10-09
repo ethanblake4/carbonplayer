@@ -27,8 +27,8 @@ import com.carbonplayer.model.webview.GoogleLoginJSInterfaceObject;
 import com.carbonplayer.ui.intro.fragments.IntroPageOneFragment;
 import com.carbonplayer.ui.intro.fragments.IntroPageThreeFragment;
 import com.carbonplayer.ui.intro.fragments.IntroPageTwoFragment;
-import com.carbonplayer.utils.IdentityUtils;
-import com.carbonplayer.utils.JavascriptUtils;
+import com.carbonplayer.utils.general.IdentityUtils;
+import com.carbonplayer.utils.general.JavascriptUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

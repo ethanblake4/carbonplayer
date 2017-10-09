@@ -1,4 +1,4 @@
-package com.carbonplayer.utils;
+package com.carbonplayer.utils.general;
 
 import android.content.Context;
 import android.content.res.Resources;

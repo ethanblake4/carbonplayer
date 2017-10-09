@@ -4,29 +4,68 @@ package com.carbonplayer.model.entity;
 import android.content.Context;
 
 import com.carbonplayer.CarbonPlayerApplication;
+import com.carbonplayer.model.entity.enums.PlaySource;
+import com.carbonplayer.model.entity.enums.StorageType;
 import com.carbonplayer.model.entity.enums.StreamQuality;
 import com.carbonplayer.model.entity.primitive.Null;
 
 import java.io.File;
 import java.io.IOException;
 
-import io.realm.RealmList;
-import io.realm.RealmObject;
+import io.realm.Realm;
+import io.realm.RealmResults;
 import rx.Observable;
 import timber.log.Timber;
 
-/**
- * Created by ethanelshyeb on 7/20/17.
- */
 
-public class TrackCache extends RealmObject {
-    public RealmList<MusicTrack> cachedTracks;
+public class TrackCache {
 
     public static boolean has(Context context, SongID id, StreamQuality quality) {
         String[] cacheFiles = context.getCacheDir().list((dir, name) -> name.startsWith(id.getId()));
         if (cacheFiles.length == 0) return false;
         if (cacheFiles.length > 1) removeLowerQualities(context, id);
         return true;
+    }
+
+    public static void evictCache(Context context, long targetSize) {
+
+        Realm realm = Realm.getDefaultInstance();
+        RealmResults<MusicTrack> res = realm.where(MusicTrack.class)
+                .equalTo(MusicTrack.HAS_CACHED_FILE, true)
+                .equalTo(MusicTrack.STORAGE_TYPE, StorageType.CACHE.ordinal())
+                .findAll();
+
+        long cacheSize = dirSize(context.getCacheDir());
+        //long
+        long averageSize = cacheSize / res.size();
+        long averageImportance = 50;
+
+        for(MusicTrack track : res) {
+            long size = track.getLocalTrackSizeBytes();
+            long importance = track.getCacheImportance(PlaySource.SONGS);
+
+
+
+        }
+    }
+
+    private static long dirSize(File dir) {
+
+        if (dir.exists()) {
+            long result = 0;
+            File[] fileList = dir.listFiles();
+            for(int i = 0; i < fileList.length; i++) {
+                // Recursive call if it's a directory
+                if(fileList[i].isDirectory()) {
+                    result += dirSize(fileList [i]);
+                } else {
+                    // Sum the file size in bytes
+                    result += fileList[i].length();
+                }
+            }
+            return result; // return the file size
+        }
+        return 0;
     }
 
     public static Observable<Null> removeLowerQualities(Context context) {

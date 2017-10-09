@@ -3,6 +3,9 @@
 
     <string name="app_name">Carbon Player</string>
 
+    <string name="notification_channel_name">Default</string>
+    <string name="notification_channel_desc">The default notification channel.</string>
+
     <!--///// Intro /////-->
     <string name="title_activity_intro">IntroActivity</string>
 

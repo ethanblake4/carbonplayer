@@ -17,8 +17,8 @@ import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeRequest
 import com.carbonplayer.model.network.utils.ClientContextFactory
 import com.carbonplayer.model.network.utils.IOUtils
-import com.carbonplayer.utils.IdentityUtils
-import com.carbonplayer.utils.URLSigning
+import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.protocol.URLSigning
 import io.realm.Realm
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
