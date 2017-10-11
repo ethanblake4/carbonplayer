@@ -72,16 +72,13 @@ public class StreamingContent {
             this.downloadRequest = null;
             downloadProgress.onNext(1.0f);
             completed = file.length();
-
         }
 
     }
 
     public StreamingContent(Context context, SongID songId, String trackTitle,
                             StreamQuality quality) {
-
         this(context, songId, trackTitle, quality, true);
-
     }
 
     public void initDownload() {

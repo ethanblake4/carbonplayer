@@ -24,23 +24,23 @@ import com.github.ksoichiro.android.observablescrollview.ObservableScrollView
 import kotlinx.android.synthetic.main.grid_item_layout.view.*
 
 
-class AlbumController (
+class AlbumController(
         val albumId: String
 ) {
-    lateinit var oLayoutRoot : FrameLayout
-    lateinit var newImg : ParallaxScrimageView
-    lateinit var newScroll : ObservableScrollView
+    lateinit var oLayoutRoot: FrameLayout
+    lateinit var newImg: ParallaxScrimageView
+    lateinit var newScroll: ObservableScrollView
     lateinit var newContainer: FrameLayout
     lateinit var newLinear: LinearLayout
     lateinit var newLinear2: LinearLayout
-    lateinit var newContent : SizeFrameLayout
-    lateinit var newOTitle : TextView
-    lateinit var newOSubtitle : TextView
-    lateinit var newTitle : TextView
-    lateinit var newSubtitle : TextView
-    lateinit var newRecycler : RecyclerView
+    lateinit var newContent: SizeFrameLayout
+    lateinit var newOTitle: TextView
+    lateinit var newOSubtitle: TextView
+    lateinit var newTitle: TextView
+    lateinit var newSubtitle: TextView
+    lateinit var newRecycler: RecyclerView
 
-    fun makeAlbum(context: Context, viewRoot: ViewGroup, gridLayoutRoot: FrameLayout ) {
+    fun makeAlbum(context: Context, viewRoot: ViewGroup, gridLayoutRoot: FrameLayout) {
         val handler = Handler(context.mainLooper)
 
         oLayoutRoot = gridLayoutRoot
@@ -69,14 +69,18 @@ class AlbumController (
         newSubtitle = TextView(context)
 
         val t = SpannableString(oContent.primaryText.text)
-                .apply {setSpan(StyleSpan(Typeface.BOLD), 0,
-                        oContent.primaryText.text.length,
-                        SpannableString.SPAN_INCLUSIVE_INCLUSIVE)}
+                .apply {
+                    setSpan(StyleSpan(Typeface.BOLD), 0,
+                            oContent.primaryText.text.length,
+                            SpannableString.SPAN_INCLUSIVE_INCLUSIVE)
+                }
 
         val t2 = SpannableString(oContent.detailText.text)
-                .apply {setSpan(StyleSpan(Typeface.BOLD), 0,
-                        oContent.detailText.text.length,
-                        SpannableString.SPAN_INCLUSIVE_INCLUSIVE)}
+                .apply {
+                    setSpan(StyleSpan(Typeface.BOLD), 0,
+                            oContent.detailText.text.length,
+                            SpannableString.SPAN_INCLUSIVE_INCLUSIVE)
+                }
 
         val ogPos = intArrayOf(0, 0)
         val ogContentPos = intArrayOf(0, 0)

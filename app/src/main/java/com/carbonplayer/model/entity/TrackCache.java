@@ -11,6 +11,8 @@ import com.carbonplayer.model.entity.primitive.Null;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -21,10 +23,22 @@ import timber.log.Timber;
 public class TrackCache {
 
     public static boolean has(Context context, SongID id, StreamQuality quality) {
-        String[] cacheFiles = context.getCacheDir().list((dir, name) -> name.startsWith(id.getId()));
+
+        File[] cacheFiles = context.getCacheDir()
+                .listFiles((dir, name) -> name.startsWith(id.getId()));
+
         if (cacheFiles.length == 0) return false;
-        if (cacheFiles.length > 1) removeLowerQualities(context, id);
-        return true;
+        if (cacheFiles.length > 1) {
+            File newFile = removeLowerQualities(cacheFiles);
+            String name = newFile == null ? null : newFile.getName();
+
+            if (name != null && Integer.parseInt(
+                    String.valueOf(name.charAt(name.length() - 1))) >= quality.ordinal()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static void evictCache(Context context, long targetSize) {
@@ -35,18 +49,67 @@ public class TrackCache {
                 .equalTo(MusicTrack.STORAGE_TYPE, StorageType.CACHE.ordinal())
                 .findAll();
 
-        long cacheSize = dirSize(context.getCacheDir());
-        //long
-        long averageSize = cacheSize / res.size();
-        long averageImportance = 50;
+        File cacheDir = context.getCacheDir();
+        File[] fileList = cacheDir.listFiles();
 
-        for(MusicTrack track : res) {
-            long size = track.getLocalTrackSizeBytes();
-            long importance = track.getCacheImportance(PlaySource.SONGS);
-
-
-
+        HashMap<String, LinkedList<File>> fileMap = new HashMap<>();
+        for (File f : fileList) {
+            String id = f.getName().split("--")[0];
+            if (!fileMap.containsKey(id)) {
+                LinkedList<File> lis = new LinkedList<>();
+                lis.add(f);
+                fileMap.put(id, lis);
+            } else {
+                fileMap.get(id).add(f);
+            }
         }
+
+        long cacheSize = dirSize(cacheDir);
+        long spaceNeeded = Math.max(0, cacheSize - targetSize);
+        long averageSize = (cacheSize / res.size()) / 100;
+        long averageImportance = 50;
+        float needClearingPercent = spaceNeeded / cacheSize;
+
+        float clearNumber = (averageImportance * averageSize) * needClearingPercent;
+
+        if (spaceNeeded == 0) return;
+
+        realm.executeTransaction(rlm -> {
+            for (MusicTrack track : res) {
+                long size = track.getLocalTrackSizeBytes();
+                long importance = track.getCacheImportance(PlaySource.SONGS);
+
+                if (size * importance < clearNumber) {
+                    track.setHasCachedFile(false);
+                    for (File f2 : fileMap.get(track.getTrackId())) {
+                        Timber.d("Deleting cached track %s (quality %s), success: %b",
+                                track.toString(),
+                                String.valueOf(f2.getName().charAt(f2.getName().length() - 1)),
+                                f2.delete());
+                    }
+                } else {
+                    int highestQuality = 0;
+                    for (File f2 : fileMap.get(track.getTrackId())) {
+                        int qual = Integer.parseInt(String.valueOf(
+                                f2.getName().charAt(f2.getName().length() - 1)));
+                        if (qual > highestQuality) {
+                            highestQuality = qual;
+                        }
+                    }
+
+                    for (File f2 : fileMap.get(track.getTrackId())) {
+                        int qual = Integer.parseInt(String.valueOf(
+                                f2.getName().charAt(f2.getName().length() - 1)));
+                        if (qual < highestQuality) {
+                            Timber.d("Deleting cached track %s (quality %s), success: %b",
+                                    track.toString(),
+                                    String.valueOf(f2.getName().charAt(f2.getName().length() - 1)),
+                                    f2.delete());
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private static long dirSize(File dir) {
@@ -54,10 +117,10 @@ public class TrackCache {
         if (dir.exists()) {
             long result = 0;
             File[] fileList = dir.listFiles();
-            for(int i = 0; i < fileList.length; i++) {
+            for (int i = 0; i < fileList.length; i++) {
                 // Recursive call if it's a directory
-                if(fileList[i].isDirectory()) {
-                    result += dirSize(fileList [i]);
+                if (fileList[i].isDirectory()) {
+                    result += dirSize(fileList[i]);
                 } else {
                     // Sum the file size in bytes
                     result += fileList[i].length();
@@ -79,17 +142,7 @@ public class TrackCache {
         });
     }
 
-
-    /**
-     * Removes all lower qualities of a song specified by {@param id}
-     *
-     * @param context Context to use
-     * @param id      {@link SongID} of the song to delete
-     * @return the remaining high quality file
-     */
-    public static File removeLowerQualities(Context context, SongID id) {
-        File[] cacheFiles = context.getCacheDir().listFiles((dir, name) -> name.startsWith(id.getId()));
-
+    private static File removeLowerQualities(File[] cacheFiles) {
         if (cacheFiles.length == 0) return null;
 
         int maxQuality = 0;
@@ -117,6 +170,19 @@ public class TrackCache {
         return maxQ;
     }
 
+    /**
+     * Removes all lower qualities of a song specified by {@param id}
+     *
+     * @param context Context to use
+     * @param id      {@link SongID} of the song to delete
+     * @return the remaining high quality file
+     */
+    public static File removeLowerQualities(Context context, SongID id) {
+        File[] cacheFiles = context.getCacheDir().listFiles(
+                (dir, name) -> name.startsWith(id.getId()));
+        return removeLowerQualities(cacheFiles);
+    }
+
     public static File getTrackFile(Context context, SongID id, StreamQuality newQuality) {
         File existingFile = removeLowerQualities(context, id);
         if (existingFile != null) return existingFile;
@@ -126,7 +192,8 @@ public class TrackCache {
                     .getPreferences().getPreferredStreamQuality(context);
         }
 
-        return new File(context.getCacheDir(), id.getId() + "--" + String.valueOf(newQuality.ordinal()));
+        return new File(context.getCacheDir(), id.getId() + "--" +
+                String.valueOf(newQuality.ordinal()));
     }
 
 }

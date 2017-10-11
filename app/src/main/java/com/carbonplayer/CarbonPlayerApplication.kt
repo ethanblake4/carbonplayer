@@ -8,9 +8,10 @@ import android.net.http.AndroidHttpClient
 import android.os.Build
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.enums.PaletteMode
-import com.carbonplayer.utils.jobs.CarbonJobCreator
 import com.carbonplayer.utils.CrashReportingTree
 import com.carbonplayer.utils.Preferences
+import com.carbonplayer.utils.jobs.CacheEvictionJob
+import com.carbonplayer.utils.jobs.CarbonJobCreator
 import com.evernote.android.job.JobManager
 import com.facebook.stetho.Stetho
 import com.facebook.stetho.okhttp3.StethoInterceptor
@@ -72,6 +73,7 @@ class CarbonPlayerApplication : Application() {
         }
 
         JobManager.create(this).addJobCreator(CarbonJobCreator())
+        CacheEvictionJob.schedule()
 
         RxJavaHooks.setOnError { e -> Timber.e(e, e.toString()) }
 
