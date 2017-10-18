@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -53,6 +54,8 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
         @BindView(R.id.imgthumb) ImageView thumb;
         @BindView(R.id.primaryText) TextView titleText;
         @BindView(R.id.detailText) TextView detailText;
+        @BindView(R.id.imageButton) ImageButton menuButton;
+
 
         Album album;
         PaletteUtil.SwatchPair swatchPair;
@@ -70,8 +73,16 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
                 titleText.setTransitionName(album.getId() + "t");
                 detailText.setTransitionName(album.getId() + "d");
 
-                context.gotoAlbum2(album, (FrameLayout)layoutRoot);
+                context.gotoAlbum(album, thumb, contentRoot, swatchPair.getPrimary().getTitleTextColor(),
+                        swatchPair.getPrimary().getRgb(), titleText, detailText);
+                //context.gotoAlbum2(album, (FrameLayout)layoutRoot);
             });
+
+            menuButton.setOnClickListener(view -> {
+                context.showAlbumPopup(view, album);
+            });
+
+
 
             ViewTreeObserver vto = thumb.getViewTreeObserver();
             vto.addOnPreDrawListener(() -> {

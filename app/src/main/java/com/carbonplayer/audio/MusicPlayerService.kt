@@ -104,6 +104,30 @@ class MusicPlayerService : Service(), MusicFocusable {
                 }
                 //emit(Constants.EVENT.NextSong)
             }
+            Constants.ACTION.INSERT_NEXT -> {
+                Timber.i("Insert next")
+                val bundle = intent.extras
+                val tracks = Parcels.unwrap<List<ParcelableMusicTrack>>(
+                        bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
+                playback.addNext(tracks)
+            }
+            Constants.ACTION.INSERT_AT_END -> {
+                Timber.i("Insert at end")
+                val bundle = intent.extras
+                val tracks = Parcels.unwrap<List<ParcelableMusicTrack>>(
+                        bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
+                playback.addTracks(tracks)
+            }
+            Constants.ACTION.REORDER -> {
+                val bundle = intent.extras
+
+                val from = bundle.getInt(Constants.KEY.REORDER_FROM)
+                val to = bundle.getInt(Constants.KEY.REORDER_TO)
+
+                Timber.i("Reorder %d %d", from, to)
+
+                playback.reorder(from, to)
+            }
             Constants.ACTION.SEND_QUEUE -> {
                 Timber.i("Sending Queue")
                 emit(Constants.EVENT.SendQueue)
@@ -147,11 +171,11 @@ class MusicPlayerService : Service(), MusicFocusable {
         val stateBuilder = PlaybackStateCompat.Builder()
                 .setActions(
                         PlaybackStateCompat.ACTION_PLAY or
-                                PlaybackStateCompat.ACTION_PAUSE or
-                                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
-                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
-                                PlaybackStateCompat.ACTION_PLAY_PAUSE or
-                                PlaybackStateCompat.ACTION_SEEK_TO)
+                        PlaybackStateCompat.ACTION_PAUSE or
+                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                        PlaybackStateCompat.ACTION_PLAY_PAUSE or
+                        PlaybackStateCompat.ACTION_SEEK_TO)
 
         playback = MusicPlayback(this, { playState ->
             when (playState) {
@@ -229,7 +253,6 @@ class MusicPlayerService : Service(), MusicFocusable {
         mediaSession.setCallback(mediaSessionCallback)
 
         fromNewQueue(tracks)
-        //loadImageAndDoUpdates()
     }
 
     private fun fromNewQueue(tracks: List<ParcelableMusicTrack>) {

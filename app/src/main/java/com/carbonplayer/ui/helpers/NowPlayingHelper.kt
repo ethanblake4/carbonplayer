@@ -20,7 +20,8 @@ import com.carbonplayer.audio.MusicPlayerService
 import com.carbonplayer.audio.TrackQueue
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.model.entity.ParcelableMusicTrack
-import com.carbonplayer.utils.*
+import com.carbonplayer.utils.Constants
+import com.carbonplayer.utils.asParcel
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.AnimUtils
@@ -47,6 +48,7 @@ class NowPlayingHelper(private val activity: Activity) {
     val audioManager = activity.applicationContext
             .getSystemService(Context.AUDIO_SERVICE) as AudioManager
     var lastVolumePercent = 0f
+    var playing = false
 
     private var connection: ServiceConnection? = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -177,6 +179,18 @@ class NowPlayingHelper(private val activity: Activity) {
 
     fun newQueue(tracks: List<MusicTrack>) {
         trackQueue.replace(tracks)
+    }
+
+    fun insertNext(tracks: List<MusicTrack>) {
+        if(trackQueue.size > 0) {
+            trackQueue.insertNext(tracks)
+        } else trackQueue.replace(tracks)
+    }
+
+    fun insertAtEnd(tracks: List<MusicTrack>) {
+        if(trackQueue.size > 0) {
+            trackQueue.insertAtEnd(tracks)
+        } else trackQueue.replace(tracks)
     }
 
     private fun maybeBind(intent: Intent) {

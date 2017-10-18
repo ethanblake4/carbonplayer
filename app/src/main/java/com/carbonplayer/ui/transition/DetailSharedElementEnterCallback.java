@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.carbonplayer.ui.main.AlbumActivity;
-import com.carbonplayer.ui.main.library.AlbumFragment;
+import com.carbonplayer.ui.main.library.AlbumController;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,15 +20,15 @@ public class DetailSharedElementEnterCallback extends SharedElementCallback {
 
     private final TransitionSet mTransitionSet;
     private final AlbumActivity mActivity;
-    private final AlbumFragment fragment;
+    private final AlbumController fragment;
 
     public Map<TextView, Pair<Integer, Integer>> textViewList = new HashMap<>();
 
-    public DetailSharedElementEnterCallback(AlbumFragment frag) {
+    /*public DetailSharedElementEnterCallback(AlbumController frag) {
         fragment = frag;
         mActivity = null;
 
-        Transition transitionWindow = fragment.getSharedElementEnterTransition();
+        //Transition transitionWindow = fragment.getSharedElementEnterTransition();
 
         if (!(transitionWindow instanceof TransitionSet)) {
             mTransitionSet = new TransitionSet();
@@ -37,8 +37,8 @@ public class DetailSharedElementEnterCallback extends SharedElementCallback {
             mTransitionSet = (TransitionSet) transitionWindow;
         }
 
-        fragment.setEnterSharedElementCallback(this);
-    }
+        //fragment.setEnterSharedElementCallback(this);
+    }*/
 
 
     public DetailSharedElementEnterCallback(AlbumActivity activity) {

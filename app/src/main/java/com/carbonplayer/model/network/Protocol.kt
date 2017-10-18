@@ -5,16 +5,14 @@ import android.content.Context
 import android.net.Uri
 import android.net.http.AndroidHttpClient
 import com.carbonplayer.CarbonPlayerApplication
-import com.carbonplayer.model.entity.ConfigEntry
-import com.carbonplayer.model.entity.MusicTrack
-import com.carbonplayer.model.entity.Playlist
-import com.carbonplayer.model.entity.PlaylistEntry
+import com.carbonplayer.model.entity.*
 import com.carbonplayer.model.entity.enums.NetworkType
 import com.carbonplayer.model.entity.enums.StreamQuality
 import com.carbonplayer.model.entity.exception.ResponseCodeException
 import com.carbonplayer.model.entity.exception.ServerRejectionException
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeRequest
+import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto
 import com.carbonplayer.model.network.utils.ClientContextFactory
 import com.carbonplayer.model.network.utils.IOUtils
 import com.carbonplayer.utils.general.IdentityUtils
@@ -126,6 +124,28 @@ object Protocol {
                 Timber.e(e, "IOException in listenNow")
                 subscriber.onError(e)
             }
+        }
+    }
+
+    fun getTopCharts(context: Context, offset: Int, pageSize: Int): Observable<TopChartsResponse> {
+        return Observable.fromCallable {
+            val client = CarbonPlayerApplication.instance.okHttpClient
+            val getParams = Uri.Builder()
+                    .appendQueryParameter("alt", "json")
+                    .appendQueryParameter("tracksOffset", offset.toString())
+                    .appendQueryParameter("albumsOffset", offset.toString())
+                    .appendQueryParameter("maxTracks", pageSize.toString())
+                    .appendQueryParameter("maxAlbums", pageSize.toString())
+            val request = defaultBuilder(context)
+                    .url(SJ_URL + "browse/topcharts?" + getParams)
+                    .header("Content-Type", "application/json")
+                    .build()
+
+            val response = client.newCall(request).execute()
+            if(response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                return@fromCallable TopChartsResponse(JSONObject(response.body().toString()))
+            }
+            throw ResponseCodeException()
         }
     }
 

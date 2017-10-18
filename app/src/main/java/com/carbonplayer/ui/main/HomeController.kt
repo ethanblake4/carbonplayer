@@ -1,13 +1,12 @@
 package com.carbonplayer.ui.main
 
-import android.app.Fragment
-import android.os.Bundle
 import android.support.design.widget.AppBarLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.carbonplayer.CarbonPlayerApplication
@@ -20,24 +19,21 @@ import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1P
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adaptivehome.FullBleedListAdapter
 import com.carbonplayer.utils.general.IdentityUtils
-import kotlinx.android.synthetic.main.adaptivehome.*
 import kotlinx.android.synthetic.main.adaptivehome.view.*
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import timber.log.Timber
 
-class HomeFragment : Fragment() {
+class HomeController : Controller() {
 
     lateinit var adapter: FullBleedListAdapter
     lateinit var layoutManager: RecyclerView.LayoutManager
     lateinit var requestManager: RequestManager
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        refresh()
-    }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
+
+
         val view = inflater.inflate(R.layout.adaptivehome, container, false)
         view.main_recycler.hasFixedSize()
 
@@ -61,12 +57,13 @@ class HomeFragment : Fragment() {
         })*/
 
         requestManager = Glide.with(activity)
+        refresh()
 
         return view
     }
 
     fun refresh() {
-        Protocol.listenNow(activity, CarbonPlayerApplication.instance.homePdContextToken)
+        Protocol.listenNow(activity!!, CarbonPlayerApplication.instance.homePdContextToken)
                 .retry({ tries, err ->
                     if (err !is ServerRejectionException) return@retry false
                     if (err.rejectionReason !=
@@ -92,7 +89,7 @@ class HomeFragment : Fragment() {
             PageTypeCase.HOMEPAGE -> {
                 val homePage = homeContentPage.homePage
 
-                main_recycler.adapter = FullBleedListAdapter(
+                view?.main_recycler?.adapter = FullBleedListAdapter(
                         homePage.fullBleedModuleList.modulesList.filter { m ->
                             m.singleSection.contentCase.let {
                                 it == FullBleedSection.ContentCase.TALLPLAYABLECARDLIST ||
@@ -101,7 +98,7 @@ class HomeFragment : Fragment() {
                             }
                         },
                         { mod: FullBleedModuleV1Proto.FullBleedModule -> Timber.d(mod.toString()) },
-                        requestManager, main_recycler)
+                        requestManager, view!!.main_recycler)
             }
         }
     }

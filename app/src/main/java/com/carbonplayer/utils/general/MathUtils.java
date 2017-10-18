@@ -7,9 +7,6 @@ import android.util.TypedValue;
 
 import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto.ImageReference;
 
-/**
- * Borrowed from github.com/nickbutcher/plaid/
- */
 public class MathUtils {
 
     private MathUtils() { }

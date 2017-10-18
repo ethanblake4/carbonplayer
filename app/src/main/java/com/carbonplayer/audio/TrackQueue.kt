@@ -22,13 +22,15 @@ class TrackQueue(val callback: TrackQueueCallback) {
     val parcelable: MutableList<ParcelableMusicTrack>
         get() = MutableList(queue.size, { i -> queue[i].parcelable() })
 
+    val size: Int get() = queue.size
+
     fun insertAtEnd(tracks: List<MusicTrack>, noCallback: Boolean = false) {
         queue.addAll(tracks)
         if (!noCallback) callback.insertAtEnd(tracks.parcelable())
     }
 
     fun insertNext(tracks: List<MusicTrack>, noCallback: Boolean = false) {
-        queue.addAll(position + 1, tracks)
+        queue.addAll(position, tracks)
         if (!noCallback) callback.insertNext(tracks.parcelable())
     }
 

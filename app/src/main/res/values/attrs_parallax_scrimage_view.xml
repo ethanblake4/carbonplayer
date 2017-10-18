@@ -6,4 +6,26 @@
         <attr name="scrimAlpha" format="float"/>
         <attr name="maxScrimAlpha" format="float"/>
     </declare-styleable>
+    <declare-styleable name="AspectView">
+        <attr name="aspect" format="enum">
+            <enum name="unspecified" value="0" />
+            <enum name="one_by_one" value="0" />
+            <enum name="two_by_one" value="0" />
+            <enum name="three_by_four" value="0" />
+            <enum name="four_by_three" value="0" />
+            <enum name="three_by_two" value="0" />
+            <enum name="five_by_one" value="0" />
+        </attr>
+    </declare-styleable>
+    <declare-styleable name="AspectParallaxScrimageView">
+        <attr name="imageAspect" format="enum">
+            <enum name="unspecified" value="0" />
+            <enum name="one_by_one" value="0" />
+            <enum name="two_by_one" value="0" />
+            <enum name="three_by_four" value="0" />
+            <enum name="four_by_three" value="0" />
+            <enum name="three_by_two" value="0" />
+            <enum name="five_by_one" value="0" />
+        </attr>
+    </declare-styleable>
 </resources>

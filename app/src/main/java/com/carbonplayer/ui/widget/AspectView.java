@@ -1,20 +1,34 @@
 package com.carbonplayer.ui.widget;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto;
+import com.carbonplayer.R;
+import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto.ImageReference;
 
 import static com.carbonplayer.utils.general.MathUtils.aspectHeightMultiple;
 
 
 public class AspectView extends View {
 
-        public ImageReferenceV1Proto.ImageReference.AspectRatio aspect =
-                ImageReferenceV1Proto.ImageReference.AspectRatio.TWO_BY_ONE;
+        public ImageReference.AspectRatio aspect =
+                ImageReference.AspectRatio.TWO_BY_ONE;
+
         public AspectView(Context context, AttributeSet attrs) {
+
             super(context, attrs);
+
+            final TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.AspectView);
+
+            if(a.hasValue(R.styleable.AspectView_aspect)) {
+                aspect = ImageReference.AspectRatio.forNumber(
+                        a.getInt(R.styleable.AspectView_aspect, 0));
+            }
+
+            a.recycle();
+
         }
 
         @Override
@@ -26,7 +40,7 @@ public class AspectView extends View {
                     MeasureSpec.EXACTLY));
         }
 
-        public void setAspect(ImageReferenceV1Proto.ImageReference.AspectRatio aspect) {
+        public void setAspect(ImageReference.AspectRatio aspect) {
             this.aspect = aspect;
         }
 

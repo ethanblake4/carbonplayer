@@ -1,32 +1,30 @@
 package com.carbonplayer.ui.main.library
 
-import android.app.Fragment
-import android.os.Bundle
-import android.support.design.widget.AppBarLayout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.bluelinelabs.conductor.Controller
+import com.bluelinelabs.conductor.Router
+import com.bluelinelabs.conductor.RouterTransaction
+import com.bluelinelabs.conductor.support.RouterPagerAdapter
 import com.carbonplayer.R
-import com.carbonplayer.ui.main.adapters.LibraryFragmentPagerAdapter
 import com.carbonplayer.utils.general.IdentityUtils
 import kotlinx.android.synthetic.main.activity_main.view.*
 import timber.log.Timber
 
 
+class LibraryController : Controller() {
 
-class LibraryFragment : Fragment() {
-
-    var adapter: LibraryFragmentPagerAdapter? = null
+    var adapter: RouterPagerAdapter? = null
     var curPage = 0
-    var currentPlFrag: PlaylistPageFragment? = null
-    var currentArFrag: ArtistsPageFragment? = null
-    var currentAlFrag: AlbumPageFragment? = null
+    var currentPlFrag: PlaylistPageController? = null
+    var currentArFrag: ArtistsPageController? = null
+    var currentAlFrag: AlbumPageController? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
-        Timber.d("Library - onCreateView. savedInstanceState= %s",
-                if(savedInstanceState == null) "null" else "not null")
+        /*Timber.d("Library - onCreateView. savedInstanceState= %s",
+                if(savedInstanceState == null) "null" else "not null")*/
 
         val view = inflater.inflate(R.layout.activity_main, container, false)
 
@@ -41,32 +39,31 @@ class LibraryFragment : Fragment() {
         //        IdentityUtils.getStatusBarHeight(resources) / 2
         /*(view.toolbar.layoutParams as AppBarLayout.LayoutParams).bottomMargin +=
                 IdentityUtils.getStatusBarHeight(resources) / 2*/
-        (view.tab_layout.layoutParams as AppBarLayout.LayoutParams).topMargin +=
-                IdentityUtils.getStatusBarHeight(resources) / 2
+        /*(view.tab_layout.layoutParams as AppBarLayout.LayoutParams).topMargin +=
+                IdentityUtils.getStatusBarHeight(resources) / 2*/
 
-        view.statusBarCover.layoutParams.height = IdentityUtils.getStatusBarHeight(resources)
+        //view.statusBarCover.layoutParams.height = IdentityUtils.getStatusBarHeight(resources)
 
         if(adapter == null) {
-            adapter = object : LibraryFragmentPagerAdapter(fragmentManager) {
-                override fun getItem(position: Int): Fragment {
-                    when (position) {
-                        0 -> {
-                            Timber.d("Adapter getItem@0 = PlaylistPage")
-                            currentPlFrag = currentPlFrag ?: PlaylistPageFragment()
-                            return currentPlFrag!!
-                        }
-                        1 -> {
-                            Timber.d("Adapter getItem@1 = ArtistsPage")
-                            currentArFrag = currentArFrag ?: ArtistsPageFragment()
-                            return currentArFrag!!
-                        }
-                        2 -> {
-                            Timber.d("Adapter getItem@3 = AlbumPage")
-                            currentAlFrag = currentAlFrag ?: AlbumPageFragment()
-                            return currentAlFrag!!
+            adapter = object : RouterPagerAdapter(this) {
+
+                override fun configureRouter(router: Router, position: Int) {
+                    if(!router.hasRootController()) {
+                        when (position) {
+                            0 -> {
+                                val control = PlaylistPageController()
+                                router.setRoot(RouterTransaction.with(control))
+                            }
+                            1 -> {
+                                val control = ArtistsPageController()
+                                router.setRoot(RouterTransaction.with(control))
+                            }
+                            2 -> {
+                                val control = AlbumPageController()
+                                router.setRoot(RouterTransaction.with(control))
+                            }
                         }
                     }
-                    return Fragment()
                 }
 
                 override fun getPageTitle(position: Int): CharSequence =
@@ -95,34 +92,34 @@ class LibraryFragment : Fragment() {
         view.tab_layout.setupWithViewPager(view.libraryPager)
 
         view.libraryPager.currentItem = curPage
-        adapter!!.clearCache()
+        //adapter!!.clearCache()
 
         return view
     }
 
-    override fun onPause() {
+    /*override fun onPause() {
         super.onPause()
         Timber.d("Library frag on pause state")
 
-    }
+    }*/
 
-    override fun onDestroyView() {
+    override fun onDestroyView(view: View) {
         curPage = view.libraryPager.currentItem
-        super.onDestroyView()
+        super.onDestroyView(view)
         Timber.d("Library frag on destroy view")
         try {
-            fragmentManager.beginTransaction().apply {
+            /*fragmentManager.beginTransaction().apply {
                 currentPlFrag?.let { remove(it) }
                 currentAlFrag?.let { remove(it) }
                 currentArFrag?.let { remove(it) }
-            }.commit()
+            }.commit()*/
         } catch (e: IllegalStateException) {
-            Timber.w(e, "IllegalStateException committing fragment removal in LibraryFragment," +
+            Timber.w(e, "IllegalStateException committing fragment removal in LibraryController," +
                     "likely the base activity is being destroyed")
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    /*override fun onSaveInstanceState(outState: Bundle?) {
         Timber.d("Library frag saving self state")
 //        outState?.putParcelable("pager", view.libraryPager.onSaveInstanceState())
         super.onSaveInstanceState(outState)
@@ -133,5 +130,5 @@ class LibraryFragment : Fragment() {
         super.onResume()
         //view.libraryPager.adapter.notifyDataSetChanged()
 
-    }
+    }*/
 }
