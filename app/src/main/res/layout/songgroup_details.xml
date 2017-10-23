@@ -24,34 +24,84 @@
             android:background="#333">
 
             <TextView
-                android:text="Main Text"
-                android:transitionName="albumName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:id="@+id/primaryText"
-                android:ellipsize="end"
-                android:textSize="36sp"
-                android:maxLines="1"
-                app:layout_constraintLeft_toLeftOf="@+id/constraintLayout6"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
                 android:layout_marginStart="42dp"
-                app:layout_constraintTop_toTopOf="@+id/constraintLayout6"
                 android:layout_marginTop="42dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Main Text"
+                android:textSize="36sp"
+                android:transitionName="albumName"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintLeft_toLeftOf="@+id/constraintLayout6"
+                app:layout_constraintTop_toTopOf="@+id/constraintLayout6"
                 tools:ignore="HardcodedText" />
 
             <TextView
-                android:text="Detail Text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:id="@+id/secondaryText"
-                android:transitionName="artistName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="12dp"
                 android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Detail Text"
                 android:textSize="22sp"
+                android:transitionName="artistName"
+                app:layout_constraintEnd_toStartOf="@+id/downloadButton"
                 app:layout_constraintLeft_toLeftOf="@+id/primaryText"
                 app:layout_constraintTop_toBottomOf="@+id/primaryText"
-                android:layout_marginTop="12dp"
                 tools:ignore="HardcodedText" />
 
-            </android.support.constraint.ConstraintLayout>
+            <TextView
+                android:id="@+id/descriptionText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="42dp"
+                android:layout_marginTop="16dp"
+                android:alpha="0.8"
+                android:text="Here lies a short_description of the man who once a time called himself the FORCE of nature."
+                android:textAlignment="viewStart"
+                android:visibility="invisible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/secondaryText"
+                app:layout_constraintTop_toBottomOf="@+id/secondaryText" />
+
+            <View
+                android:id="@+id/songgroup_grad"
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/upwards_fade_gradient"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <ImageButton
+                android:id="@+id/downloadButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="8dp"
+                android:background="?android:selectableItemBackgroundBorderless"
+                android:contentDescription="@string/download_button_desc"
+                app:layout_constraintEnd_toStartOf="@+id/overflowButton"
+                app:layout_constraintTop_toTopOf="@+id/secondaryText"
+                app:srcCompat="@drawable/ic_download" />
+
+            <ImageButton
+                android:contentDescription="@string/overflow_desc"
+                android:id="@+id/overflowButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="16dp"
+                android:background="?android:selectableItemBackgroundBorderless"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/downloadButton"
+                app:srcCompat="@drawable/ic_more" />
+
+        </android.support.constraint.ConstraintLayout>
 
         <android.support.v7.widget.RecyclerView
             android:background="#fff"

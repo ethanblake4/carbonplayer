@@ -72,7 +72,8 @@ class MusicPlayerService : Service(), MusicFocusable {
                 val bundle = intent.extras
                 val tracks = Parcels.unwrap<List<ParcelableMusicTrack>>(
                         bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
-                fromNewQueue(tracks)
+
+                fromNewQueue(tracks, bundle.getInt(Constants.KEY.POSITION))
             }
             Constants.ACTION.PREVIOUS -> {
                 Timber.i("Clicked Previous")
@@ -252,13 +253,14 @@ class MusicPlayerService : Service(), MusicFocusable {
         mediaSession = MediaSessionCompat(this, "CarbonMusic")
         mediaSession.setCallback(mediaSessionCallback)
 
-        fromNewQueue(tracks)
+        fromNewQueue(tracks, intent.extras.getInt(Constants.KEY.POSITION))
     }
 
-    private fun fromNewQueue(tracks: List<ParcelableMusicTrack>) {
+    private fun fromNewQueue(tracks: List<ParcelableMusicTrack>, pos: Int) {
         playback.newQueue(tracks)
         audioFocusHelper.requestFocus()
         wifiLock.acquire()
+        playback.skipToTrack(pos)
         playback.seekTo(0)
         playback.play()
     }

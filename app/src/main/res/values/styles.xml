@@ -20,6 +20,16 @@
             @transition/album_click</item>
     </style>
 
+    <style name="AppTheme.WithActionBar">
+
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+
+    </style>
+
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

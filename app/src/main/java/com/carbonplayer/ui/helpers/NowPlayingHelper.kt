@@ -115,10 +115,11 @@ class NowPlayingHelper(private val activity: Activity) {
         activity.nowplaying_frame.npui_volumebar_background
                 .layoutParams.width = (dispW / 2f).toInt()
 
-        activity.nowplaying_frame.npui_volumebar_background.translationY = dispW * 1.5f
+        activity.nowplaying_frame.npui_volumebar_background.translationY = dispW * 1.3f
 
-        activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.5f
-        activity.nowplaying_frame.npui_volumeHi.translationY = dispW * 1.5f
+        activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.3f
+        activity.nowplaying_frame.npui_volumeHi.translationY = dispW * 1.3f
+        activity.nowplaying_frame.volume_fab.translationY = dispW * 1.3f
         activity.nowplaying_frame.npui_volumeLow.x = dispW / 4f - buttonHalfWidth
         activity.nowplaying_frame.npui_volumeHi.x = dispW - (dispW / 4f) - buttonHalfWidth
         activity.nowplaying_frame.volume_fab.x = ((1f - volumePercent()) * dispW / 4f) +
@@ -177,20 +178,24 @@ class NowPlayingHelper(private val activity: Activity) {
     private var serviceStarted = false
     private var requestMgr = Glide.with(activity)
 
+    fun newQueue(tracks: List<MusicTrack>, pos: Int) {
+        trackQueue.replace(tracks, pos)
+    }
+
     fun newQueue(tracks: List<MusicTrack>) {
-        trackQueue.replace(tracks)
+        newQueue(tracks, 0)
     }
 
     fun insertNext(tracks: List<MusicTrack>) {
         if(trackQueue.size > 0) {
             trackQueue.insertNext(tracks)
-        } else trackQueue.replace(tracks)
+        } else trackQueue.replace(tracks, 0)
     }
 
     fun insertAtEnd(tracks: List<MusicTrack>) {
         if(trackQueue.size > 0) {
             trackQueue.insertAtEnd(tracks)
-        } else trackQueue.replace(tracks)
+        } else trackQueue.replace(tracks, 0)
     }
 
     private fun maybeBind(intent: Intent) {
@@ -239,13 +244,14 @@ class NowPlayingHelper(private val activity: Activity) {
     private fun newIntent(): Intent = Intent(activity, MusicPlayerService::class.java)
 
     private val trackQueueCallback = object : TrackQueue.TrackQueueCallback {
-        override fun replace(tracks: MutableList<ParcelableMusicTrack>) {
+        override fun replace(tracks: MutableList<ParcelableMusicTrack>, pos: Int) {
             val intent = newIntent().apply {
 
                 action = if (serviceStarted || isServiceRunning()) Constants.ACTION.NEW_QUEUE
                 else Constants.ACTION.START_SERVICE
 
                 putExtra(Constants.KEY.TRACKS, tracks.asParcel())
+                putExtra(Constants.KEY.POSITION, pos)
 
                 maybeBind(this)
             }

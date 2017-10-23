@@ -101,11 +101,7 @@ public final class IdentityUtils {
         float yInches= metrics.heightPixels/metrics.ydpi;
         float xInches= metrics.widthPixels/metrics.xdpi;
         double diagonalInches = Math.sqrt(xInches*xInches + yInches*yInches);
-        if (diagonalInches>=6.5){
-            return false;
-        }else{
-            return true;
-        }
+        return (diagonalInches <= 6.5);
     }
 
     public static String getLoggingID(Context context){

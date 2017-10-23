@@ -35,7 +35,12 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity android:name=".ui.settings.Settings"
+            android:theme="@style/AppTheme.WithActionBar"
             android:label="Settings" />
+
+        <activity android:name=".ui.settings.SettingsGeneral"
+            android:theme="@style/AppTheme.WithActionBar"
+            android:label="General" />
 
         <activity android:name=".ui.main.LinkActivity">
             <intent-filter >

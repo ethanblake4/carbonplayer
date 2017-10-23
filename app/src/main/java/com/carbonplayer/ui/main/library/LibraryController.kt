@@ -17,9 +17,6 @@ class LibraryController : Controller() {
 
     var adapter: RouterPagerAdapter? = null
     var curPage = 0
-    var currentPlFrag: PlaylistPageController? = null
-    var currentArFrag: ArtistsPageController? = null
-    var currentAlFrag: AlbumPageController? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
@@ -51,16 +48,17 @@ class LibraryController : Controller() {
                     if(!router.hasRootController()) {
                         when (position) {
                             0 -> {
-                                val control = PlaylistPageController()
-                                router.setRoot(RouterTransaction.with(control))
+                                val playlists = PlaylistPageController()
+                                //playlists.attachToHandle = view.fastscroll
+                                router.setRoot(RouterTransaction.with(playlists))
                             }
                             1 -> {
-                                val control = ArtistsPageController()
-                                router.setRoot(RouterTransaction.with(control))
+                                val artists = ArtistsPageController()
+                                router.setRoot(RouterTransaction.with(artists))
                             }
                             2 -> {
-                                val control = AlbumPageController()
-                                router.setRoot(RouterTransaction.with(control))
+                                val albums = AlbumPageController()
+                                router.setRoot(RouterTransaction.with(albums))
                             }
                         }
                     }
@@ -91,6 +89,32 @@ class LibraryController : Controller() {
         view.libraryPager.adapter = adapter
         view.tab_layout.setupWithViewPager(view.libraryPager)
 
+        /*view.libraryPager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
+            override fun onPageSelected(position: Int) {
+
+                Handler().postDelayed({
+
+                    val recycler  = when(position) {
+                        0 -> playlists.view?.main_recycler
+                        1 -> artists.view?.main_recycler
+                        2 -> albums.view?.main_recycler
+                        else -> null
+                    }
+
+                    recycler?.let {
+                        view.fastscroll.setRecyclerView(it)
+                        view.fastscroll.visibility = View.VISIBLE
+                        view.fastscroll.invalidate()
+                    }
+                }, 500)
+
+            }
+
+            override fun onPageScrollStateChanged(state: Int) { }
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, offsetPixels: Int) { }
+        })*/
+
         view.libraryPager.currentItem = curPage
         //adapter!!.clearCache()
 
@@ -106,17 +130,7 @@ class LibraryController : Controller() {
     override fun onDestroyView(view: View) {
         curPage = view.libraryPager.currentItem
         super.onDestroyView(view)
-        Timber.d("Library frag on destroy view")
-        try {
-            /*fragmentManager.beginTransaction().apply {
-                currentPlFrag?.let { remove(it) }
-                currentAlFrag?.let { remove(it) }
-                currentArFrag?.let { remove(it) }
-            }.commit()*/
-        } catch (e: IllegalStateException) {
-            Timber.w(e, "IllegalStateException committing fragment removal in LibraryController," +
-                    "likely the base activity is being destroyed")
-        }
+        Timber.d("Library ctrl on destroy view")
     }
 
     /*override fun onSaveInstanceState(outState: Bundle?) {

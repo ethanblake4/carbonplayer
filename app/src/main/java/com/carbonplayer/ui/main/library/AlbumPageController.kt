@@ -13,6 +13,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.AlbumAdapterJ
+//import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.single_recycler_layout.view.*
 import rx.Subscription
 import timber.log.Timber

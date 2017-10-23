@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 
             //initialFrag.exitTransition = Fade()
 
-            main_controller_container.animate().alpha(0.0f).setDuration(200).start()
+            main_controller_container.animate().alpha(0.0f).setDuration(100).start()
 
             Timber.d("Will add new fragment")
 
@@ -88,7 +88,7 @@ class MainActivity : AppCompatActivity() {
                 main_controller_container.translationY = 100.0f
                 main_controller_container.animate().translationY(0.0f)
                         .alpha(1.0f).setDuration(200).start()
-            }, 200)
+            }, 100)
 
             true
         }

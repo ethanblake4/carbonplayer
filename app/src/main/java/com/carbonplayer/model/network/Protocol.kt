@@ -12,7 +12,6 @@ import com.carbonplayer.model.entity.exception.ResponseCodeException
 import com.carbonplayer.model.entity.exception.ServerRejectionException
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeRequest
-import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto
 import com.carbonplayer.model.network.utils.ClientContextFactory
 import com.carbonplayer.model.network.utils.IOUtils
 import com.carbonplayer.utils.general.IdentityUtils
@@ -41,7 +40,7 @@ import java.util.*
 object Protocol {
 
     private val SJ_URL = "https://mclients.googleapis.com/sj/v2.5/"
-    val PA_URL = "https://music-pa.googleapis.com/v1/ij/"
+    private val PA_URL = "https://music-pa.googleapis.com/v1/ij/"
     private val STREAM_URL = "https://android.clients.google.com/music/mplay"
     private val TYPE_JSON = MediaType.parse("application/json; charset=utf-8")
     private val MAX_RESULTS = 250
@@ -130,24 +129,63 @@ object Protocol {
     fun getTopCharts(context: Context, offset: Int, pageSize: Int): Observable<TopChartsResponse> {
         return Observable.fromCallable {
             val client = CarbonPlayerApplication.instance.okHttpClient
+
             val getParams = Uri.Builder()
                     .appendQueryParameter("alt", "json")
+                    .appendQueryParameter("dv", CarbonPlayerApplication.instance.googleBuildNumber)
+                    .appendQueryParameter("hl", IdentityUtils.localeCode())
+                    .appendQueryParameter("tier", "aa")
                     .appendQueryParameter("tracksOffset", offset.toString())
                     .appendQueryParameter("albumsOffset", offset.toString())
                     .appendQueryParameter("maxTracks", pageSize.toString())
                     .appendQueryParameter("maxAlbums", pageSize.toString())
+
             val request = defaultBuilder(context)
-                    .url(SJ_URL + "browse/topcharts?" + getParams)
+                    .url(SJ_URL + "browse/topchart?" + getParams)
                     .header("Content-Type", "application/json")
                     .build()
 
             val response = client.newCall(request).execute()
             if(response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-                return@fromCallable TopChartsResponse(JSONObject(response.body().toString()))
+                return@fromCallable TopChartsResponse(JSONObject(response.body()!!.string()))
             }
-            throw ResponseCodeException()
+            if(response.code() in 400..499) {
+                throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
+            }
+            throw ResponseCodeException(response.body()!!.string())
         }
     }
+
+    fun getNautilusAlbum(context: Context, sourceAlbum: Album, nid: String): Observable<Album> {
+        return Observable.fromCallable {
+            val client = CarbonPlayerApplication.instance.okHttpClient
+
+            val getParams = Uri.Builder()
+                    .appendQueryParameter("alt", "json")
+                    .appendQueryParameter("dv", CarbonPlayerApplication.instance.googleBuildNumber)
+                    .appendQueryParameter("hl", IdentityUtils.localeCode())
+                    .appendQueryParameter("tier", "aa")
+                    .appendQueryParameter("nid", nid)
+                    .appendQueryParameter("include-tracks", "true")
+                    .appendQueryParameter("include-description", "true")
+
+            val request = defaultBuilder(context)
+                    .url(SJ_URL + "fetchalbum?" + getParams)
+                    .header("Content-Type", "application/json")
+                    .build()
+
+            val response = client.newCall(request).execute()
+            if(response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                return@fromCallable Album(sourceAlbum, JSONObject(response.body()!!.string()))
+            }
+            if(response.code() in 400..499) {
+                throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
+            }
+            throw ResponseCodeException(response.body()!!.string())
+        }
+    }
+
+
 
     private fun pagedJSONFeed(context: Context, urlPart: String): Observable<LinkedList<JSONObject>> {
 
@@ -300,48 +338,7 @@ object Protocol {
                 } else {
                     if (r.code() == 401 || r.code() == 402 || r.code() == 403) {
                         val rejectionReason = r.header("X-Rejected-Reason")
-                        if (rejectionReason != null) {
-                            try {
-                                val rejectionReasonEnum = ServerRejectionException.RejectionReason
-                                        .valueOf(rejectionReason.toUpperCase())
-                                Timber.e(ServerRejectionException(rejectionReasonEnum),
-                                        "getStreamURL: serverRejected")
-                                when (rejectionReasonEnum) {
-                                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED -> {
-                                        GoogleLogin.retryGoogleAuth(context)
-                                        subscriber.onError(ServerRejectionException(rejectionReasonEnum))
-                                    }
-                                    ServerRejectionException.RejectionReason.ANOTHER_STREAM_BEING_PLAYED,
-                                    ServerRejectionException.RejectionReason.STREAM_RATE_LIMIT_REACHED,
-                                    ServerRejectionException.RejectionReason.TRACK_NOT_IN_SUBSCRIPTION,
-                                    ServerRejectionException.RejectionReason.WOODSTOCK_SESSION_TOKEN_INVALID,
-                                    ServerRejectionException.RejectionReason.WOODSTOCK_ENTRY_ID_INVALID,
-                                    ServerRejectionException.RejectionReason.WOODSTOCK_ENTRY_ID_EXPIRED,
-                                    ServerRejectionException.RejectionReason.WOODSTOCK_ENTRY_ID_TOO_EARLY,
-                                    ServerRejectionException.RejectionReason.DEVICE_VERSION_BLACKLISTED -> {
-                                        subscriber.onError(ServerRejectionException(rejectionReasonEnum))
-                                    }
-                                }
-                            } catch (e: IllegalArgumentException) {
-                                try {
-                                    GoogleLogin.retryGoogleAuthSync(context)
-                                } catch (s: Exception) {
-                                    Timber.e(e, "Exception retrying Google Auth")
-                                }
-
-                                subscriber.onError(ServerRejectionException(ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED))
-                            }
-
-                        } else {
-                            try {
-                                GoogleLogin.retryGoogleAuthSync(context)
-                            } catch (e: Exception) {
-                                Timber.e(e, "Exception retrying Google Auth")
-                            }
-
-                            subscriber.onError(ServerRejectionException(
-                                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED))
-                        }
+                        subscriber.onError(handle400(context, r.code(), rejectionReason))
                     } else if (r.code() in 200..299) {
                         subscriber.onError(ResponseCodeException(String.format(Locale.getDefault(),
                                 "Unexpected response code %d", r.code())))
@@ -352,6 +349,51 @@ object Protocol {
             } catch (e: IOException) {
                 subscriber.onError(e)
             }
+        }
+    }
+
+    private fun handle400(context: Context, code: Int, rejectionReason: String?): Exception {
+        if (rejectionReason != null) {
+            try {
+                val rejectionReasonEnum = ServerRejectionException.RejectionReason
+                        .valueOf(rejectionReason.toUpperCase())
+                Timber.e(ServerRejectionException(rejectionReasonEnum),
+                        "getStreamURL: serverRejected")
+                when (rejectionReasonEnum) {
+                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED -> {
+                        GoogleLogin.retryGoogleAuth(context)
+                        return ServerRejectionException(rejectionReasonEnum)
+                    }
+                    ServerRejectionException.RejectionReason.ANOTHER_STREAM_BEING_PLAYED,
+                    ServerRejectionException.RejectionReason.STREAM_RATE_LIMIT_REACHED,
+                    ServerRejectionException.RejectionReason.TRACK_NOT_IN_SUBSCRIPTION,
+                    ServerRejectionException.RejectionReason.WOODSTOCK_SESSION_TOKEN_INVALID,
+                    ServerRejectionException.RejectionReason.WOODSTOCK_ENTRY_ID_INVALID,
+                    ServerRejectionException.RejectionReason.WOODSTOCK_ENTRY_ID_EXPIRED,
+                    ServerRejectionException.RejectionReason.WOODSTOCK_ENTRY_ID_TOO_EARLY,
+                    ServerRejectionException.RejectionReason.DEVICE_VERSION_BLACKLISTED -> {
+                        return ServerRejectionException(rejectionReasonEnum)
+                    }
+                }
+            } catch (e: IllegalArgumentException) {
+                try {
+                    GoogleLogin.retryGoogleAuthSync(context)
+                } catch (s: Exception) {
+                    Timber.e(e, "Exception retrying Google Auth")
+                }
+
+                return ServerRejectionException(ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED)
+            }
+
+        } else {
+            try {
+                GoogleLogin.retryGoogleAuthSync(context)
+            } catch (e: Exception) {
+                Timber.e(e, "Exception retrying Google Auth")
+            }
+
+            return ServerRejectionException(
+                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED)
         }
     }
 

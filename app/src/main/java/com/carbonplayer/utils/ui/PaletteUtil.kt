@@ -173,6 +173,11 @@ object PaletteUtil {
                             PaletteMode.VIBRANT_DARK
                         } else PaletteMode.MUTED_DARK
                     })
+
+            /*if (ColorUtils.perceptiveDifference(primary.rgb, newSecondary!!.rgb) >
+                    ColorUtils.perceptiveDifference(primary.rgb, secondary!!.rgb)) {
+                        secondary = newSecondary
+            }*/
         }
 
         return SwatchPair(primary, secondary!!)

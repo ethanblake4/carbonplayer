@@ -7,9 +7,10 @@ class MusicManager(
         val mainActivity: MainActivity
 ) {
 
-    fun fromAlbum(albumId: String) {
+    fun fromAlbum(albumId: String, pos: Int) {
         mainActivity.npHelper.newQueue(
-                MusicLibrary.getInstance().getAllAlbumTracks(albumId)
+                MusicLibrary.getInstance().getAllAlbumTracks(albumId),
+                pos
         )
     }
 }

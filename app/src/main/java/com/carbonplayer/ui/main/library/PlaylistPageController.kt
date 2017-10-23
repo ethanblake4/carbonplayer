@@ -34,6 +34,8 @@ class PlaylistPageController : Controller() {
         layoutManager = GridLayoutManager(activity, 2)
 
         view.main_recycler.layoutManager = layoutManager
+        //attachToHandle?.setRecyclerView(view.main_recycler)
+        //attachToHandle?.visibility = View.VISIBLE
 
         requestManager = Glide.with(activity)
 

@@ -11,23 +11,22 @@
     android:id="@+id/songLayoutRoot">
 
     <TextView
-        android:text="1"
+        android:id="@+id/trackNumber"
         android:layout_width="40dp"
         android:layout_height="wrap_content"
-        android:id="@+id/trackNumber"
-        android:textAppearance="@android:style/TextAppearance.Material.Large"
+        android:text="1"
+        android:textAppearance="@android:style/TextAppearance.Material.Title"
         android:textColor="#aaa"
         tools:ignore="HardcodedText" />
 
     <TextView
-        android:text="TextView"
+        android:id="@+id/trackName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="@android:style/TextAppearance.Material.Large"
-        android:id="@+id/trackName"
-        android:textColor="#444"
         android:layout_marginStart="20dp"
-        tools:ignore="HardcodedText"
-        android:fontFamily="sans-serif" />
+        android:text="TextView"
+        android:textAppearance="@android:style/TextAppearance.Material.Title"
+        android:textColor="#000"
+        tools:ignore="HardcodedText" />
 
 </LinearLayout>

@@ -6,7 +6,6 @@
     <string name="notification_channel_name">Default</string>
     <string name="notification_channel_desc">The default notification channel.</string>
 
-    <!--///// Intro /////-->
     <string name="title_activity_intro">IntroActivity</string>
 
     <string name="intro_welcome">Welcome to Carbon Player</string>
@@ -66,4 +65,24 @@
     <string name="action_add_to_playlist">Add to playlist</string>
     <string name="action_go_to_artist">Go to artist</string>
     <string name="action_share">Share</string>
+
+    <string name="topcharts_tab_songs">Songs</string>
+    <string name="topcharts_tab_albums">Albums</string>
+
+    <string name="download_button_desc">Download</string>
+    <string name="overflow_desc">More</string>
+
+    <string name="settings_general_opt_quality_wifi">Streaming quality on WiFi</string>
+    <string name="settings_general_opt_quality_mobile">Streaming quality on mobile network</string>
+
+    <string-array name="stream_qualities">
+        <item>Low</item>
+        <item>Medium</item>
+        <item>Hight</item>
+    </string-array>
+
+    <string name="opt_quality_high">High</string>
+    <string name="opt_quality_medium">Medium</string>
+    <string name="opt_quality_low">Low</string>
+    <string name="settings_appearance_opt_primary_color_mode">Primary color mode</string>
 </resources>

@@ -13,10 +13,11 @@ class TrackQueue(val callback: TrackQueueCallback) {
     private var queue = mutableListOf<MusicTrack>()
     var position: Int = 0
 
-    fun replace(tracks: List<MusicTrack>, noCallback: Boolean = false) {
+    fun replace(tracks: List<MusicTrack>, pos: Int, noCallback: Boolean = false) {
         queue.clear()
         queue.addAll(tracks)
-        if (!noCallback) callback.replace(parcelable)
+        position = pos
+        if (!noCallback) callback.replace(parcelable, pos)
     }
 
     val parcelable: MutableList<ParcelableMusicTrack>
@@ -55,7 +56,7 @@ class TrackQueue(val callback: TrackQueueCallback) {
     }
 
     interface TrackQueueCallback {
-        fun replace(tracks: MutableList<ParcelableMusicTrack>)
+        fun replace(tracks: MutableList<ParcelableMusicTrack>, pos: Int)
         fun insertAtEnd(tracks: MutableList<ParcelableMusicTrack>)
         fun insertNext(tracks: MutableList<ParcelableMusicTrack>)
         fun reorder(pos: Int, pnew: Int)

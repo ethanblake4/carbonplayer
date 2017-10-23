@@ -1,0 +1,79 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ui.settings.SettingsGeneral">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/settings_general_wifi_quality"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_marginTop="16dp"
+                android:text="@string/settings_general_opt_quality_wifi"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/settings_general_wifi_quality_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:textSize="12sp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/opt_quality_high"
+                />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="@color/colorAccent" />
+
+        <LinearLayout
+            android:id="@+id/settings_general_mobile_quality"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/settings_general_opt_quality_mobile"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_marginTop="16dp"
+                android:textStyle="bold"
+                android:layout_marginBottom="2dp"/>
+
+            <TextView
+                android:id="@+id/settings_general_mobile_quality_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:textSize="12sp"
+                android:layout_marginBottom="16dp"
+                android:text="@string/opt_quality_medium"
+                />
+        </LinearLayout>
+
+
+    </LinearLayout>
+</ScrollView>

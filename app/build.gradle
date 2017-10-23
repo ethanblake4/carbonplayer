@@ -157,6 +157,8 @@ dependencies {
         exclude group: 'com.github.bumptech.glide'
     }
 
+    implementation 'com.mikhaellopez:circularprogressbar:1.1.1'
+
     implementation 'com.github.ksoichiro:android-observablescrollview:1.6.0'
 
     implementation 'com.otaliastudios:nestedscrollcoordinatorlayout:1.0.1'

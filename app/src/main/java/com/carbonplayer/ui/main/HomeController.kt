@@ -37,12 +37,15 @@ class HomeController : Controller() {
         val view = inflater.inflate(R.layout.adaptivehome, container, false)
         view.main_recycler.hasFixedSize()
 
-        view.toolbar.setPadding(view.toolbar.paddingLeft, view.toolbar.paddingTop + IdentityUtils.getStatusBarHeight(resources),
+        view.toolbar.setPadding(view.toolbar.paddingLeft, view.toolbar.paddingTop +
+                IdentityUtils.getStatusBarHeight(resources),
                 view.toolbar.paddingRight, view.toolbar.paddingBottom)
 
         //view.toolbar.layoutParams.height += IdentityUtils.getStatusBarHeight(resources)
-        (view.toolbar.layoutParams as AppBarLayout.LayoutParams).topMargin += IdentityUtils.getStatusBarHeight(resources) / 2
-        (view.toolbar.layoutParams as AppBarLayout.LayoutParams).bottomMargin += IdentityUtils.getStatusBarHeight(resources) / 2
+        (view.toolbar.layoutParams as AppBarLayout.LayoutParams).topMargin +=
+                IdentityUtils.getStatusBarHeight(resources) / 2
+        (view.toolbar.layoutParams as AppBarLayout.LayoutParams).bottomMargin +=
+                IdentityUtils.getStatusBarHeight(resources) / 2
 
         layoutManager = LinearLayoutManager(activity)
 

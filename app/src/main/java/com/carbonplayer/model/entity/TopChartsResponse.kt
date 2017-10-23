@@ -10,10 +10,10 @@ data class TopChartsResponse (
     constructor(json: JSONObject) : this (
             Image(json.getJSONObject("header").getJSONObject("header_image")),
             json.getJSONObject("chart").getJSONArray("albums").let {
-                (0..it.length()).map {i -> Album(it.getJSONObject(i))}
+                (0..it.length()-1).map {i -> Album(it.getJSONObject(i))}
             },
             json.getJSONObject("chart").getJSONArray("albums").let {
-                (0..it.length()).map {i -> MusicTrack(it.getJSONObject(i))}
+                (0..it.length()-1).map {i -> MusicTrack(it.getJSONObject(i))}
             }
     )
 

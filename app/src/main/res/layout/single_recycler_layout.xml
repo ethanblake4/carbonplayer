@@ -14,9 +14,11 @@
         android:id="@+id/fastscroll"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        app:fastscroll__bubbleColor="#565656"
         android:layout_gravity="end"
-        android:orientation="vertical">
+        android:layout_marginBottom="112dp"
+        android:layout_marginTop="64dp"
+        android:orientation="vertical"
+        app:fastscroll__bubbleColor="#565656">
 
     </com.futuremind.recyclerviewfastscroll.FastScroller>
 

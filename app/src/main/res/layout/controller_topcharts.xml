@@ -1,32 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<!--ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"-->
+
+<com.otaliastudios.nestedscrollcoordinatorlayout.NestedScrollCoordinatorLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <com.carbonplayer.ui.widget.AspectParallaxScrimageView
+
+    <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp" />
+        android:layout_height="wrap_content"
+        app:layout_insetEdge="top"
+        android:theme="@style/AppTheme.AppBarOverlay">
 
-    <android.support.design.widget.TabLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <android.support.design.widget.TabItem
-            android:layout_width="wrap_content"
+        <android.support.design.widget.CollapsingToolbarLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Songs" />
+            android:fitsSystemWindows="false"
+            app:contentScrim="?attr/colorPrimary"
+            app:layout_scrollFlags="scroll|enterAlwaysCollapsed">
 
-        <android.support.design.widget.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Albums" />
+            <com.carbonplayer.ui.widget.AspectParallaxScrimageView
+                android:id="@+id/topcharts_header_image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_collapseMode="parallax"
+                app:layout_collapseParallaxMultiplier="0.5" />
 
-    </android.support.design.widget.TabLayout>
+            <android.support.design.widget.TabLayout
+                android:id="@+id/topcharts_tabs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                app:layout_collapseMode="pin">
+
+                <android.support.design.widget.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/topcharts_tab_songs" />
+
+                <android.support.design.widget.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/topcharts_tab_albums" />
+
+            </android.support.design.widget.TabLayout>
+
+        </android.support.design.widget.CollapsingToolbarLayout>
+
+    </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.view.ViewPager
+        android:id="@+id/topChartsPager"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-</LinearLayout>
+</com.otaliastudios.nestedscrollcoordinatorlayout.NestedScrollCoordinatorLayout>
+<!--/ScrollView-->

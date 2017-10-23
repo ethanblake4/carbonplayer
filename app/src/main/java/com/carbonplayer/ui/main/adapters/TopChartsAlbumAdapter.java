@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -18,11 +19,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.R;
-import com.carbonplayer.model.entity.Playlist;
+import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.utils.general.MathUtils;
 import com.carbonplayer.utils.ui.PaletteUtil;
-import com.futuremind.recyclerviewfastscroll.SectionTitleProvider;
 import com.github.florent37.glidepalette.GlidePalette;
 
 import java.util.List;
@@ -34,10 +34,9 @@ import butterknife.ButterKnife;
  * Displays albums in variable-size grid view
  */
 
-public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHolder>
-        implements SectionTitleProvider {
+public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAdapter.ViewHolder> {
 
-    private List<Playlist> dataset;
+    private List<Album> mDataset;
     private MainActivity context;
     private int screenWidthPx;
     private RequestManager requestManager;
@@ -48,7 +47,10 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         @BindView(R.id.imgthumb) ImageView thumb;
         @BindView(R.id.primaryText) TextView titleText;
         @BindView(R.id.detailText) TextView detailText;
-        Playlist playlist;
+        @BindView(R.id.imageButton) ImageButton menuButton;
+
+
+        Album album;
         PaletteUtil.SwatchPair swatchPair;
         int size;
 
@@ -59,13 +61,21 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
             layoutRoot.setOnClickListener(view -> {
 
-                thumb.setTransitionName(playlist.getId() + "i");
-                contentRoot.setTransitionName(playlist.getId() + "cr");
-                titleText.setTransitionName(playlist.getId() + "t");
-                detailText.setTransitionName(playlist.getId() + "d");
+                thumb.setTransitionName(album.getId() + "i");
+                contentRoot.setTransitionName(album.getId() + "cr");
+                titleText.setTransitionName(album.getId() + "t");
+                detailText.setTransitionName(album.getId() + "d");
 
-
+                context.gotoAlbum(album, thumb, contentRoot, swatchPair.getPrimary().getTitleTextColor(),
+                        swatchPair.getPrimary().getRgb(), titleText, detailText);
+                //context.gotoAlbum2(album, (FrameLayout)layoutRoot);
             });
+
+            menuButton.setOnClickListener(view -> {
+                context.showAlbumPopup(view, album);
+            });
+
+
 
             ViewTreeObserver vto = thumb.getViewTreeObserver();
             vto.addOnPreDrawListener(() -> {
@@ -82,9 +92,9 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public PlaylistAdapter(List<Playlist> dataset, MainActivity context,
-                           RequestManager requestManager) {
-        this.dataset = dataset;
+    public TopChartsAlbumAdapter(List<Album> myDataset, MainActivity context,
+                                 RequestManager requestManager) {
+        mDataset = myDataset;
         this.context = context;
         this.requestManager = requestManager;
         Display display = context.getWindowManager().getDefaultDisplay();
@@ -100,8 +110,8 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
     // Create new views (invoked by the layout manager)
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent,
-                                         int viewType) {
+    public TopChartsAlbumAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
+                                                       int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.grid_item_layout, parent, false);
@@ -124,29 +134,28 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         holder.titleText.setTextColor(defaultTextColor);
         holder.detailText.setTextColor(defaultTextColor);
 
-        Playlist playlist = dataset.get(position);
-        holder.titleText.setText(playlist.getName());
-        holder.playlist = playlist;
+        Album a = mDataset.get(position);
+        holder.titleText.setText(a.getTitle());
+        holder.detailText.setText(a.getArtist());
+        holder.album = a;
 
-        if (playlist.getAlbumArtURL() != null && !playlist.getAlbumArtURL().equals("")) {
-            requestManager.load(playlist.getAlbumArtURL())
+        if (!a.getAlbumArtURL().equals("")) {
+            requestManager.load(a.getAlbumArtURL())
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                     .transition(DrawableTransitionOptions.withCrossFade(200))
-                    .listener(
-                            GlidePalette.with(playlist.getAlbumArtURL())
-                                    .use(GlidePalette.Profile.VIBRANT)
-                                    .intoCallBack(palette -> {
-                                        if (palette != null) {
-                                            PaletteUtil.SwatchPair pair =
-                                                    PaletteUtil.getSwatches(context, palette);
-                                            holder.swatchPair = pair;
+                    .listener(GlidePalette.with(a.getAlbumArtURL())
+                            .use(GlidePalette.Profile.VIBRANT)
+                            .intoCallBack(palette -> {
+                                if (palette != null) {
+                                    PaletteUtil.SwatchPair pair =
+                                            PaletteUtil.getSwatches(context, palette);
+                                    holder.swatchPair = pair;
 
-                                            PaletteUtil.crossfadeBackground(holder.contentRoot, pair.getPrimary());
-                                            PaletteUtil.crossfadeTitle(holder.titleText, pair.getPrimary());
-                                            PaletteUtil.crossfadeSubtitle(holder.detailText, pair.getPrimary());
-                                        }
-                                    })
-                                    .crossfade(true, 500)
+                                    PaletteUtil.crossfadeBackground(holder.contentRoot, pair.getPrimary());
+                                    PaletteUtil.crossfadeTitle(holder.titleText, pair.getPrimary());
+                                    PaletteUtil.crossfadeSubtitle(holder.detailText, pair.getPrimary());
+                                }
+                            })
                     )
                     .into(holder.thumb);
 
@@ -160,11 +169,6 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        return dataset.size();
-    }
-
-    @Override
-    public String getSectionTitle(int position) {
-        return dataset.get(position).getName().substring(0, 1);
+        return mDataset.size();
     }
 }

@@ -75,14 +75,9 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
 
                 context.gotoAlbum(album, thumb, contentRoot, swatchPair.getPrimary().getTitleTextColor(),
                         swatchPair.getPrimary().getRgb(), titleText, detailText);
-                //context.gotoAlbum2(album, (FrameLayout)layoutRoot);
             });
 
-            menuButton.setOnClickListener(view -> {
-                context.showAlbumPopup(view, album);
-            });
-
-
+            menuButton.setOnClickListener(view -> context.showAlbumPopup(view, album));
 
             ViewTreeObserver vto = thumb.getViewTreeObserver();
             vto.addOnPreDrawListener(() -> {
@@ -160,6 +155,11 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
                                     PaletteUtil.crossfadeBackground(holder.contentRoot, pair.getPrimary());
                                     PaletteUtil.crossfadeTitle(holder.titleText, pair.getPrimary());
                                     PaletteUtil.crossfadeSubtitle(holder.detailText, pair.getPrimary());
+                                    /*holder.menuButton.setImageTintList(
+                                            ColorStateList.valueOf(pair.getPrimary().getTitleTextColor())
+                                    );
+                                    holder.menuButton.setAlpha(0.0f);
+                                    holder.menuButton.animate().alpha(1.0f).setDuration(500).start();*/
                                 }
                             })
                     )

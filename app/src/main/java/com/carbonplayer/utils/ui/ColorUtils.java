@@ -133,7 +133,13 @@ public class ColorUtils {
                 Math.abs(0.299 * Color.red(color1) - 0.299 * Color.red(color2)) +
                 Math.abs(0.587 * Color.green(color1) - 0.587 * Color.green(color2)) +
                 Math.abs(0.114 * Color.blue(color1) - 0.114 * Color.blue(color2));
-        return perceptiveDifference < 40;
+        return perceptiveDifference < 20;
+    }
+
+    public static double perceptiveDifference(@ColorInt int color1, @ColorInt int color2) {
+        return Math.abs(0.299 * Color.red(color1) - 0.299 * Color.red(color2)) +
+                Math.abs(0.587 * Color.green(color1) - 0.587 * Color.green(color2)) +
+                Math.abs(0.114 * Color.blue(color1) - 0.114 * Color.blue(color2));
     }
 
     @ColorInt public static int contrastColor(@ColorInt int color)
