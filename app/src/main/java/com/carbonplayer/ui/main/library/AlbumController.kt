@@ -53,7 +53,8 @@ import timber.log.Timber
 class AlbumController(
         val albumId: String,
         val textColor: Int,
-        val mainColor: Int
+        val mainColor: Int,
+        val bodyColor: Int
 ) : Controller() {
 
     internal lateinit var root: View
@@ -73,13 +74,15 @@ class AlbumController(
     @Suppress("unused") @Keep constructor(savedState: Bundle) : this (
             savedState.getString("albumId"),
             savedState.getInt("textColor"),
-            savedState.getInt("mainColor")
+            savedState.getInt("mainColor"),
+            savedState.getInt("bodyColor")
     )
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("albumId", albumId)
         outState.putInt("textColor", textColor)
         outState.putInt("mainColor", mainColor)
+        outState.putInt("bodyColor", bodyColor)
         super.onSaveInstanceState(outState)
     }
 
@@ -88,6 +91,11 @@ class AlbumController(
 
         album = Realm.getDefaultInstance().where(Album::class.java)
                 .equalTo("id", albumId).findFirst()
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
+
+        root = inflater.inflate(R.layout.activity_songgroup, container, false)
 
         if(album.description == null) {
             Protocol.getNautilusAlbum(activity!!, Realm.getDefaultInstance().copyFromRealm(album), album.id)
@@ -109,7 +117,7 @@ class AlbumController(
                             val const = ConstraintSet().apply {
                                 clone(view!!.constraintLayout6)
                                 setMargin(R.id.primaryText, ConstraintSet.TOP,
-                                        MathUtils.dpToPx2(context.resources, 32).toInt())
+                                        MathUtils.dpToPx2(resources, 32).toInt())
                             }
 
                             val t = AutoTransition().apply {
@@ -122,6 +130,7 @@ class AlbumController(
 
                             view!!.descriptionText.run {
                                 text = album.description
+                                setTextColor(bodyColor)
                                 visibility = View.VISIBLE
                                 alpha = 0.0f
                                 animate().alpha(1f).setDuration(250).start()
@@ -131,11 +140,6 @@ class AlbumController(
                         err -> Timber.e(err)
                     })
         }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
-
-        root = inflater.inflate(R.layout.activity_songgroup, container, false)
 
         manager = MusicManager(activity as MainActivity)
 
@@ -145,10 +149,12 @@ class AlbumController(
         root.secondaryText.setTextColor(textColor)
         root.constraintLayout6.background = ColorDrawable(mainColor)
         root.songgroup_grad.background = GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
-                intArrayOf(mainColor, ColorUtils.modifyAlpha(mainColor, 0)))
+                intArrayOf(mainColor, ColorUtils.modifyAlpha(mainColor, 200),
+                        ColorUtils.modifyAlpha(mainColor, 0)))
 
         root.downloadButton.imageTintList = ColorStateList.valueOf(textColor)
         root.overflowButton.imageTintList = ColorStateList.valueOf(textColor)
+        root.expandDescriptionChevron.imageTintList = ColorStateList.valueOf(bodyColor)
 
         root.downloadButton.setOnClickListener {
             activity?.let { Toast.makeText(it, "Downloading is not supported yet", Toast.LENGTH_LONG).show() }
@@ -229,7 +235,7 @@ class AlbumController(
 
             root.descriptionText.run {
                 text = album.description
-                setTextColor(textColor)
+                setTextColor(bodyColor)
                 visibility = View.VISIBLE
                 alpha = 1.0f
             }

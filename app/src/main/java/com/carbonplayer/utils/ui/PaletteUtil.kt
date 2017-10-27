@@ -159,7 +159,7 @@ object PaletteUtil {
         secondary = getSecondary(prefs.secondaryPaletteMode)
 
         if(ColorUtils.colorsAreSimilar(primary.rgb, secondary!!.rgb)) {
-            secondary = getSecondary(
+            val newSecondary = getSecondary(
                     if(primaryDark) {
                         val mode = prefs.secondaryPaletteMode
                         if(mode == PaletteMode.VIBRANT_LIGHT ||
@@ -174,10 +174,10 @@ object PaletteUtil {
                         } else PaletteMode.MUTED_DARK
                     })
 
-            /*if (ColorUtils.perceptiveDifference(primary.rgb, newSecondary!!.rgb) >
+            if (ColorUtils.perceptiveDifference(primary.rgb, newSecondary!!.rgb) >
                     ColorUtils.perceptiveDifference(primary.rgb, secondary!!.rgb)) {
                         secondary = newSecondary
-            }*/
+            }
         }
 
         return SwatchPair(primary, secondary!!)

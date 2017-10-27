@@ -101,7 +101,8 @@ public class Preferences {
     }
 
     public void save(){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(CarbonPlayerApplication.Companion.getInstance());
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(CarbonPlayerApplication.Companion.getInstance());
         SharedPreferences.Editor edit = prefs.edit();
         //Write all variables to database
         for (Field f : getClass().getDeclaredFields()) {

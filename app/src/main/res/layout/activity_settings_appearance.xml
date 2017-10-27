@@ -10,7 +10,7 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/settings_general_wifi_quality"
+            android:id="@+id/settings_appearance_primaryColor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
@@ -29,13 +29,13 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/settings_appearance_primaryColor_desc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/activity_horizontal_margin"
-                android:textSize="12sp"
                 android:layout_marginBottom="16dp"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:text="@string/opt_quality_high"
-                />
+                android:textSize="12sp" />
         </LinearLayout>
 
         <View
@@ -44,7 +44,7 @@
             android:background="@color/colorAccent" />
 
         <LinearLayout
-            android:id="@+id/settings_general_mobile_quality"
+            android:id="@+id/settings_appearance_accentColor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
@@ -55,21 +55,21 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/settings_general_opt_quality_mobile"
+                android:layout_marginBottom="2dp"
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:layout_marginTop="16dp"
-                android:textStyle="bold"
-                android:layout_marginBottom="2dp"/>
+                android:text="@string/settings_opt_appearance_accent_color_mode"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/settings_appearance_accentColor_desc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/activity_horizontal_margin"
-                android:textSize="12sp"
                 android:layout_marginBottom="16dp"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:text="@string/opt_quality_medium"
-                />
+                android:textSize="12sp" />
         </LinearLayout>
 
 

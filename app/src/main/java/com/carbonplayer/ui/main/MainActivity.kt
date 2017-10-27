@@ -4,8 +4,10 @@ import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
+import android.support.annotation.ColorInt
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.PopupMenu
+import android.view.ContextThemeWrapper
 import android.view.KeyEvent
 import android.view.View
 import android.widget.ImageView
@@ -22,8 +24,10 @@ import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
 import com.carbonplayer.ui.main.library.AlbumController
 import com.carbonplayer.ui.main.library.LibraryController
+import com.carbonplayer.ui.settings.Settings
 import com.carbonplayer.ui.transition.SimpleScaleTransition
 import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.newIntent
 import com.carbonplayer.utils.ui.VolumeObserver
 import icepick.Icepick
 import kotlinx.android.synthetic.main.controller_main.*
@@ -39,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
+
         applicationContext.contentResolver.registerContentObserver(
                 android.provider.Settings.System.CONTENT_URI, true,
                 volumeObserver)
@@ -53,6 +58,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.controller_main)
+
+        foregroundToolbar.inflateMenu(R.menu.menu_main)
+
+        foregroundToolbar.setPadding(foregroundToolbar.paddingLeft,
+                foregroundToolbar.paddingTop + IdentityUtils.getStatusBarHeight(resources),
+                    foregroundToolbar.paddingRight, foregroundToolbar.paddingBottom)
+
+        foregroundToolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.menu_item_settings -> {
+                    startActivity(newIntent<Settings>())
+                    true
+                }
+                else -> false
+            }
+
+        }
 
         router = Conductor.attachRouter(this, main_controller_container, savedInstanceState)
 
@@ -109,14 +131,15 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
-    fun gotoAlbum(album: Album, image: ImageView, content: View, textColor: Int,
-                  mainColor: Int, text: TextView, text2: TextView) {
+    fun gotoAlbum(album: Album, image: ImageView, content: View, @ColorInt textColor: Int,
+                  @ColorInt mainColor: Int, @ColorInt bodyColor: Int, text: TextView, text2: TextView) {
 
-        val frag = AlbumController(album.id, textColor, mainColor)
+        val frag = AlbumController(album.id, textColor, mainColor, bodyColor)
 
         router.pushController(RouterTransaction.with(frag)
                 .pushChangeHandler(SimpleScaleTransition(this))
                 .popChangeHandler(SimpleScaleTransition(this)))
+
 
         /*fragmentManager.beginTransaction()
                 .addSharedElement(image, image.transitionName)
@@ -137,7 +160,8 @@ class MainActivity : AppCompatActivity() {
     }*/
 
     fun showAlbumPopup(view: View, album: Album) {
-        val pop = PopupMenu(this, view)
+
+        val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
         pop.inflate(R.menu.album_popup)
 
         pop.setOnMenuItemClickListener { item ->

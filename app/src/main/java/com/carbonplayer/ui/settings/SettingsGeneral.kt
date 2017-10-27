@@ -23,14 +23,15 @@ class SettingsGeneral: AppCompatActivity() {
                     .setSingleChoiceItems(
                             R.array.stream_qualities,
                             app.preferences.preferredStreamQualityWifi.ordinal - 1,
-                            { dialog, i ->
+                            { d, i ->
                                 app.preferences.preferredStreamQualityWifi =
                                         StreamQuality.values()[i + 1]
                                 app.preferences.save()
 
                                 updateTexts()
+                                d.dismiss()
                             }
-                    )
+                    ).show()
         }
 
         settings_general_mobile_quality.setOnClickListener {
@@ -39,15 +40,19 @@ class SettingsGeneral: AppCompatActivity() {
                     .setSingleChoiceItems(
                             R.array.stream_qualities,
                             app.preferences.preferredStreamQualityMobile.ordinal - 1,
-                            { _, i ->
+                            { d, i ->
                                 app.preferences.preferredStreamQualityMobile =
                                         StreamQuality.values()[i + 1]
                                 app.preferences.save()
 
                                 updateTexts()
+                                d.dismiss()
                             }
                     )
+                    .show()
         }
+
+        updateTexts()
     }
 
     fun updateTexts() {

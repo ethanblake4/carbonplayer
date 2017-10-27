@@ -67,7 +67,8 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
                 detailText.setTransitionName(album.getId() + "d");
 
                 context.gotoAlbum(album, thumb, contentRoot, swatchPair.getPrimary().getTitleTextColor(),
-                        swatchPair.getPrimary().getRgb(), titleText, detailText);
+                        swatchPair.getPrimary().getRgb(), swatchPair.getSecondary().getBodyTextColor(),
+                        titleText, detailText);
                 //context.gotoAlbum2(album, (FrameLayout)layoutRoot);
             });
 

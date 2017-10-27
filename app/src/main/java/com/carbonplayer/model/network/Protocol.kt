@@ -45,12 +45,17 @@ object Protocol {
     private val TYPE_JSON = MediaType.parse("application/json; charset=utf-8")
     private val MAX_RESULTS = 250
 
+    fun Uri.Builder.appendDefaults() =
+        this.apply {
+            appendQueryParameter("hl", IdentityUtils.localeCode())
+            appendQueryParameter("tier", "aa")
+            appendQueryParameter("dv", CarbonPlayerApplication.instance.googleBuildNumber)
+            appendQueryParameter("client-build-type", "prod")
+        }
+
     fun getConfig(context: Activity): Single<LinkedList<ConfigEntry>> {
         val client = CarbonPlayerApplication.instance.okHttpClient
-        val getParams = Uri.Builder()
-                .appendQueryParameter("dv", CarbonPlayerApplication.instance.googleBuildNumber)
-                .appendQueryParameter("tier", "aa")
-                .appendQueryParameter("hl", IdentityUtils.localeCode())
+        val getParams = Uri.Builder().appendDefaults()
 
         return Single.create<LinkedList<ConfigEntry>> { subscriber ->
             val request = defaultBuilder(context.baseContext)
@@ -132,9 +137,7 @@ object Protocol {
 
             val getParams = Uri.Builder()
                     .appendQueryParameter("alt", "json")
-                    .appendQueryParameter("dv", CarbonPlayerApplication.instance.googleBuildNumber)
-                    .appendQueryParameter("hl", IdentityUtils.localeCode())
-                    .appendQueryParameter("tier", "aa")
+                    .appendDefaults()
                     .appendQueryParameter("tracksOffset", offset.toString())
                     .appendQueryParameter("albumsOffset", offset.toString())
                     .appendQueryParameter("maxTracks", pageSize.toString())
@@ -162,9 +165,7 @@ object Protocol {
 
             val getParams = Uri.Builder()
                     .appendQueryParameter("alt", "json")
-                    .appendQueryParameter("dv", CarbonPlayerApplication.instance.googleBuildNumber)
-                    .appendQueryParameter("hl", IdentityUtils.localeCode())
-                    .appendQueryParameter("tier", "aa")
+                    .appendDefaults()
                     .appendQueryParameter("nid", nid)
                     .appendQueryParameter("include-tracks", "true")
                     .appendQueryParameter("include-description", "true")
@@ -179,12 +180,48 @@ object Protocol {
                 return@fromCallable Album(sourceAlbum, JSONObject(response.body()!!.string()))
             }
             if(response.code() in 400..499) {
-                throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
+                throw handle400(context, response.code(),
+                        response.header("X-Rejection-Reason"))
             }
             throw ResponseCodeException(response.body()!!.string())
         }
     }
 
+    fun getSearch(context: Context, query: String, continuation: String) = Observable.fromCallable {
+        val client = CarbonPlayerApplication.instance.okHttpClient
+
+        val getParams = Uri.Builder()
+                .appendDefaults()
+                .appendQueryParameter("q", query)
+                .appendQueryParameter("query-type", "1")
+                .apply {
+                    if(CarbonPlayerApplication.instance.useSearchClustering)
+                        appendQueryParameter("ic", "true")
+                    if(continuation.isNotEmpty())
+                        appendQueryParameter("start-token", continuation)
+                }
+                .appendQueryParameter("max-results", "100")
+
+                /* 1: Song, 2: Artist, 3: Album, 4: Playlist, 6: Station, 7: Situation,
+                 * TODO 8: Video, 9: Podcast */
+                .appendQueryParameter("ct", "1,2,3,4,6,7")
+
+                .build()
+
+        val request = defaultBuilder(context)
+                .url(SJ_URL + "query?" + getParams)
+                .header("Content-Type", "application/json")
+                .build()
+
+        val response = client.newCall(request).execute()
+        if(response.isSuccessful && response.code() in 200..299) {
+            return@fromCallable SearchResponse(JSONObject(response.body()!!.string()))
+        }
+        if(response.code() in 400..499) {
+            throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
+        }
+        throw ResponseCodeException(response.body()!!.string())
+    }
 
 
     private fun pagedJSONFeed(context: Context, urlPart: String): Observable<LinkedList<JSONObject>> {
@@ -192,11 +229,8 @@ object Protocol {
         val client = CarbonPlayerApplication
                 .instance.okHttpClient
         val getParams = Uri.Builder()
-                .appendQueryParameter("dv", CarbonPlayerApplication
-                        .instance.googleBuildNumber)
                 .appendQueryParameter("alt", "json")
-                .appendQueryParameter("hl", IdentityUtils.localeCode())
-                .appendQueryParameter("tier", "aa")
+                .appendDefaults()
 
         return Observable.create<LinkedList<JSONObject>> { subscriber ->
             var startToken: String? = ""
@@ -311,9 +345,9 @@ object Protocol {
                 getParams.appendQueryParameter("songid", song_id)
 
             getParams
+                    .appendDefaults()
                     .appendQueryParameter("targetkbps", "180")
                     .appendQueryParameter("audio_formats", "mp3")
-                    .appendQueryParameter("dv", CarbonPlayerApplication.instance.googleBuildNumber)
                     .appendQueryParameter("p", if (IdentityUtils.getDeviceIsSmartphone(context)) "1" else "0")
                     .appendQueryParameter("opt", getStreamQualityHeader(context))
                     .appendQueryParameter("net", getNetHeader(context))
@@ -322,8 +356,6 @@ object Protocol {
                     //.appendQueryParameter("dt", "pc")
                     .appendQueryParameter("slt", salt)
                     .appendQueryParameter("sig", digest)
-                    .appendQueryParameter("hl", IdentityUtils.localeCode())
-                    .appendQueryParameter("tier", "aa")
 
             val encQuery = getParams.build().encodedQuery
             Timber.d(encQuery)

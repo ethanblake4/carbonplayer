@@ -78,11 +78,23 @@
     <string-array name="stream_qualities">
         <item>Low</item>
         <item>Medium</item>
-        <item>Hight</item>
+        <item>High</item>
+    </string-array>
+
+    <string-array name="colorModes">
+        <item>Most Prominent</item>
+        <item>Vibrant</item>
+        <item>Vibrant Light</item>
+        <item>Vibrant Dark</item>
+        <item>Muted</item>
+        <item>Muted Dark</item>
+        <item>Muted Light</item>
     </string-array>
 
     <string name="opt_quality_high">High</string>
     <string name="opt_quality_medium">Medium</string>
     <string name="opt_quality_low">Low</string>
+
     <string name="settings_appearance_opt_primary_color_mode">Primary color mode</string>
+    <string name="settings_opt_appearance_accent_color_mode">Accent color mode</string>
 </resources>

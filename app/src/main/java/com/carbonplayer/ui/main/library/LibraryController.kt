@@ -25,7 +25,7 @@ class LibraryController : Controller() {
 
         val view = inflater.inflate(R.layout.activity_main, container, false)
 
-        view.toolbar.inflateMenu(R.menu.menu_main)
+        //view.toolbar.inflateMenu(R.menu.menu_main)
 
         view.toolbar.setPadding(view.toolbar.paddingLeft, view.toolbar.paddingTop +
                 IdentityUtils.getStatusBarHeight(resources),

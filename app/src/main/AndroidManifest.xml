@@ -42,6 +42,10 @@
             android:theme="@style/AppTheme.WithActionBar"
             android:label="General" />
 
+        <activity android:name=".ui.settings.SettingsAppearance"
+            android:theme="@style/AppTheme.WithActionBar"
+            android:label="Appearance" />
+
         <activity android:name=".ui.main.LinkActivity">
             <intent-filter >
                 <action android:name="android.intent.action.SEND" />

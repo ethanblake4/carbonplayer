@@ -11,8 +11,29 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.model.entity.ParcelableMusicTrack
+import org.json.JSONArray
+import org.json.JSONObject
 import org.parceler.Parcels
 import timber.log.Timber
+
+fun JSONObject.maybeGetInt (key: String?): Int? = maybeGet (key, { getInt(key) })
+fun JSONObject.maybeGetString (key: String?): String? = maybeGet (key, { getString(key) })
+fun JSONObject.maybeGetBool (key: String?): Boolean? = maybeGet (key, { getBoolean(key) })
+fun JSONObject.maybeGetDouble (key: String?): Double? = maybeGet (key, { getDouble(key) })
+fun JSONObject.maybeGetObj (key: String?): JSONObject? = maybeGet (key, { getJSONObject(key) })
+fun JSONObject.maybeGetArray (key: String?): JSONArray? = maybeGet (key, { getJSONArray(key) })
+
+inline fun <T> JSONArray.mapArray(
+        sGet: JSONArray.(i: Int) -> T
+): List<T> = (0..length()).mapTo(mutableListOf(), { i-> sGet(i)})
+
+
+inline fun <T> JSONObject.maybeGet(
+        key: String?,
+        sGet: JSONObject.() -> T) =
+    if(key == null) null else {
+        if (has(key)) sGet(this) else null
+    }
 
 fun MutableList<ParcelableMusicTrack>.asParcel(): Parcelable =
         Parcels.wrap<MutableList<ParcelableMusicTrack>>(this)

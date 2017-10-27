@@ -1,5 +1,9 @@
 package com.carbonplayer.model.entity
 
+import com.carbonplayer.utils.maybeGetArray
+import com.carbonplayer.utils.maybeGetInt
+import com.carbonplayer.utils.maybeGetObj
+import com.carbonplayer.utils.maybeGetString
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.annotations.Ignore
@@ -63,21 +67,23 @@ open class Album(
     )
 
     constructor(source: Album, json: JSONObject) : this (
-            if(json.has("kind")) json.getString("kind") else source.kind,
-            if(json.has("albumId")) json.getString("albumId") else source.id,
-            "recentTimestamp".let { if (json.has(it)) Date(json.getString(it).toLong()) else source.recentTimestamp },
-            if(json.has("name")) json.getString("name") else source.title,
-            if(json.has("albumArtist")) json.getString("albumArtist") else source.albumArtist,
-            if(json.has("artist")) json.getString("artist") else source.artist,
-            "composer".let { if (json.has(it)) json.getString(it) else source.composer },
-            "year".let { if (json.has(it)) json.getInt(it) else source.year },
-            "genre".let { if (json.has(it)) json.getString(it) else source.genre },
-            "albumArtRef".let { if (json.has(it)) json.getString(it) else source.albumArtURL },
-            if(json.has("artistId")) json.getJSONArray("artistId").let {
+            json.maybeGetString("kind") ?: source.kind,
+            json.maybeGetString("albumId") ?: source.id,
+            json.maybeGetString("recentTimestamp")?.let {
+                Date(it.toLong())
+            } ?: source.recentTimestamp,
+            json.maybeGetString("name") ?: source.title,
+            json.maybeGetString("albumArtist") ?: source.albumArtist,
+            json.maybeGetString("artist") ?: source.artist,
+            json.maybeGetString("composer") ?: source.composer,
+            json.maybeGetInt("year") ?: source.year,
+            json.maybeGetString("genre") ?: source.genre,
+            json.getString("albumArtRef") ?: source.albumArtURL,
+            json.maybeGetArray("artistId")?.let {
                 val ret = RealmList<RealmString>()
                 (0..it.length()-1).mapTo(ret) { n -> RealmString(it.getString(n)) }
                 ret
-            } else source.artistId,
+            } ?: source.artistId,
             /*if (json.has("tracks")) json.getJSONArray("tracks").let {
                 val ret = RealmList<RealmString>()
                 (0..it.length()-1).mapTo(ret) { n ->
@@ -85,10 +91,10 @@ open class Album(
                 }
                 ret
             } else */source.songIds,
-            "description".let { if (json.has(it)) json.getString(it) else source.description },
-            "description_attribution".let {
-                if (json.has(it)) Attribution(json.getJSONObject(it)) else source.descAttribution
-            },
+            json.maybeGetString("description") ?: source.description,
+            json.maybeGetObj("description_attribution")?.let {
+                Attribution(it)
+            } ?: source.descAttribution,
             "explicitType".let { if (json.has(it)) json.getString(it) else source.explicitType },
             "contentType".let { if (json.has(it)) json.getString(it) else source.contentType }
     )

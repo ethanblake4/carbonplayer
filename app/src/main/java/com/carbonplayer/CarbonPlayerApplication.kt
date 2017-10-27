@@ -106,11 +106,13 @@ class CarbonPlayerApplication : Application() {
         return DefaultHttpDataSourceFactory(Util.getUserAgent(this, googleUserAgent))
     }
 
-    var googleBuildNumberLong = 49211L
-    var googleBuildNumber = "49211"
-    var googleUserAgent = "Android-Music/" + googleBuildNumber + " (" + Build.PRODUCT + " " + Build.ID + "); gzip"
-    var useWebAuthDialog = false
-    var useOkHttpForLogin = true
+    val googleBuildNumberLong = 49211L
+    val googleBuildNumber = "49211"
+    val googleUserAgent = "Android-Music/" + googleBuildNumber + " (" + Build.PRODUCT + " " + Build.ID + "); gzip"
+    val useWebAuthDialog = false
+    val useOkHttpForLogin = true
+    val useSearchClustering = false
+
     var homePdContextToken: String? = null
 
     lateinit var okHttpClient: OkHttpClient

@@ -74,7 +74,8 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
                 detailText.setTransitionName(album.getId() + "d");
 
                 context.gotoAlbum(album, thumb, contentRoot, swatchPair.getPrimary().getTitleTextColor(),
-                        swatchPair.getPrimary().getRgb(), titleText, detailText);
+                        swatchPair.getPrimary().getRgb(), swatchPair.getPrimary().getBodyTextColor(),
+                        titleText, detailText);
             });
 
             menuButton.setOnClickListener(view -> context.showAlbumPopup(view, album));

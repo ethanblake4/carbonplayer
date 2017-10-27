@@ -5,10 +5,34 @@
     android:fitsSystemWindows="false"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="0dp"
+        android:background="#0000">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/foregroundToolbar"
+            android:elevation="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            app:layout_scrollFlags=""
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+
+        </android.support.v7.widget.Toolbar>
+    </android.support.design.widget.AppBarLayout>
+
     <FrameLayout
         android:id="@+id/main_controller_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent" >
+
+
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/bottomNavContainer"
