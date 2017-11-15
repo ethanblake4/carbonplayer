@@ -6,11 +6,13 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.TransitionDrawable
+import android.os.Parcelable
 import android.support.v7.graphics.Palette
 import android.view.View
 import android.widget.TextView
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.model.entity.enums.PaletteMode
+import kotlinx.android.parcel.Parcelize
 
 
 object PaletteUtil {

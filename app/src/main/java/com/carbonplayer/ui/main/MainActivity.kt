@@ -4,14 +4,11 @@ import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
-import android.support.annotation.ColorInt
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.PopupMenu
 import android.view.ContextThemeWrapper
 import android.view.KeyEvent
 import android.view.View
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import com.bluelinelabs.conductor.Conductor
 import com.bluelinelabs.conductor.Router
@@ -28,6 +25,7 @@ import com.carbonplayer.ui.settings.Settings
 import com.carbonplayer.ui.transition.SimpleScaleTransition
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.newIntent
+import com.carbonplayer.utils.ui.PaletteUtil
 import com.carbonplayer.utils.ui.VolumeObserver
 import icepick.Icepick
 import kotlinx.android.synthetic.main.controller_main.*
@@ -36,8 +34,8 @@ import timber.log.Timber
 class MainActivity : AppCompatActivity() {
 
     lateinit var npHelper: NowPlayingHelper
-    val volumeObserver = VolumeObserver({ npHelper.maybeHandleVolumeEvent() })
-    lateinit var router: Router
+    private val volumeObserver = VolumeObserver({ npHelper.maybeHandleVolumeEvent() })
+    private lateinit var router: Router
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -58,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.controller_main)
+
+        functionalAppbar.outlineProvider = null
 
         foregroundToolbar.inflateMenu(R.menu.menu_main)
 
@@ -131,10 +131,9 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
-    fun gotoAlbum(album: Album, image: ImageView, content: View, @ColorInt textColor: Int,
-                  @ColorInt mainColor: Int, @ColorInt bodyColor: Int, text: TextView, text2: TextView) {
+    fun gotoAlbum(album: Album, swatchPair: PaletteUtil.SwatchPair) {
 
-        val frag = AlbumController(album.id, textColor, mainColor, bodyColor)
+        val frag = AlbumController(album, swatchPair)
 
         router.pushController(RouterTransaction.with(frag)
                 .pushChangeHandler(SimpleScaleTransition(this))
@@ -192,11 +191,6 @@ class MainActivity : AppCompatActivity() {
             return true
         }
         return npHelper.handleVolumeEvent(keyCode)
-    }
-
-    override fun onResume() {
-
-        super.onResume()
     }
 
     override fun onDestroy() {

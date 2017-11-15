@@ -45,7 +45,7 @@ object Protocol {
     private val TYPE_JSON = MediaType.parse("application/json; charset=utf-8")
     private val MAX_RESULTS = 250
 
-    fun Uri.Builder.appendDefaults() =
+    private fun Uri.Builder.appendDefaults() =
         this.apply {
             appendQueryParameter("hl", IdentityUtils.localeCode())
             appendQueryParameter("tier", "aa")
@@ -70,10 +70,8 @@ object Protocol {
                 val j = JSONObject(sR)
 
                 val itemArray = j.getJSONObject("data").getJSONArray("entries")
-                val itemList = (0..itemArray.length() - 1)
-                        .mapTo(LinkedList<ConfigEntry>()) {
-                            ConfigEntry(itemArray.getJSONObject(it))
-                        }
+                val itemList = (0 until itemArray.length())
+                        .mapTo(LinkedList()) { ConfigEntry(itemArray.getJSONObject(it)) }
 
                 subscriber.onSuccess(itemList)
             } catch (e: IOException) {
@@ -261,7 +259,7 @@ object Protocol {
                     if (j.has("nextPageToken")) startToken = j.getString("nextPageToken")
 
                     val itemArray = j.getJSONObject("data").getJSONArray("items")
-                    val list = (0..itemArray.length() - 1)
+                    val list = (0 until itemArray.length())
                             .mapTo(LinkedList<JSONObject>()) {
                                 itemArray.getJSONObject(it)
                             }
@@ -440,21 +438,21 @@ object Protocol {
 
     private fun getStreamQualityHeader(context: Context): String {
         var streamQuality: StreamQuality?
-        when (IdentityUtils.networkType(context)) {
+        streamQuality = when (IdentityUtils.networkType(context)) {
             NetworkType.WIFI, NetworkType.ETHER -> {
-                streamQuality = CarbonPlayerApplication.instance.preferences
+                CarbonPlayerApplication.instance.preferences
                         .preferredStreamQualityWifi
             }
-            else -> streamQuality = CarbonPlayerApplication.instance.preferences
+            else -> CarbonPlayerApplication.instance.preferences
                     .preferredStreamQualityMobile
         }
         if (streamQuality == null)
             streamQuality = StreamQuality.MEDIUM
-        when (streamQuality) {
-            StreamQuality.HIGH -> return "hi"
-            StreamQuality.MEDIUM -> return "med"
-            StreamQuality.LOW -> return "low"
-            else -> return ""
+        return when (streamQuality) {
+            StreamQuality.HIGH -> "hi"
+            StreamQuality.MEDIUM -> "med"
+            StreamQuality.LOW -> "low"
+            else -> ""
         }
     }
 

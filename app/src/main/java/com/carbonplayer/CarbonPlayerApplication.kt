@@ -4,10 +4,11 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.net.http.AndroidHttpClient
 import android.os.Build
 import com.carbonplayer.model.entity.Album
-import com.carbonplayer.model.entity.enums.PaletteMode
 import com.carbonplayer.utils.CrashReportingTree
 import com.carbonplayer.utils.Preferences
 import com.carbonplayer.utils.jobs.CacheEvictionJob
@@ -51,8 +52,6 @@ class CarbonPlayerApplication : Application() {
 
         preferences = Preferences()
         preferences.load()
-        preferences.primaryPaletteMode = PaletteMode.POPULOUS
-        preferences.save()
 
         okHttpClient = OkHttpClient.Builder()
                 .addNetworkInterceptor(StethoInterceptor()).build()
@@ -86,7 +85,7 @@ class CarbonPlayerApplication : Application() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = getString(R.string.notification_channel_name)
             val description = getString(R.string.notification_channel_desc)
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val importance = NotificationManager.IMPORTANCE_LOW
 
             val mChannel = NotificationChannel("default", name, importance)
             mChannel.description = description
@@ -112,6 +111,8 @@ class CarbonPlayerApplication : Application() {
     val useWebAuthDialog = false
     val useOkHttpForLogin = true
     val useSearchClustering = false
+
+    val darkCSL = ColorStateList.valueOf(Color.DKGRAY)
 
     var homePdContextToken: String? = null
 

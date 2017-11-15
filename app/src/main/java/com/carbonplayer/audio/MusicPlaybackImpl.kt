@@ -101,14 +101,14 @@ class MusicPlaybackImpl(
         if (!exoPlayer.playWhenReady) exoPlayer.playWhenReady = true
     }
 
-    fun newQueue(queue: List<ParcelableMusicTrack>) {
+    fun newQueue(queue: List<ParcelableMusicTrack>, initFirst: Boolean = true) {
         trackNum = 0
         val i = 0; while (i < dynamicSource.size) {
             dynamicSource.removeMediaSource(i)
         }
         mirroredQueue.clear()
         mirroredContentQueue.clear()
-        add(queue, true)
+        add(queue, initFirst)
         ontrackchanged(trackNum, mirroredQueue[trackNum])
         playerIsPrepared = false
     }
@@ -185,9 +185,9 @@ class MusicPlaybackImpl(
         subscription = mirroredContentQueue[trackNum].progressMonitor()
                 .subscribe({ b -> onbuffer(b) })
 
-        if (!loop.isAlive) loop.start()
-
         dynamicSource.addMediaSources(sources)
+
+        if (!loop.isAlive) loop.start()
     }
 
     fun addNext(tracks: List<ParcelableMusicTrack>) {

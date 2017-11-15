@@ -313,7 +313,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         builder.setStyle(
                 android.support.v4.media.app.NotificationCompat.MediaStyle()
                         .setShowCancelButton(true)
-                        .setShowActionsInCompactView(*intArrayOf(0, 1, 2))
+                        .setShowActionsInCompactView(0, 1, 2)
                         .setMediaSession(mediaSession.sessionToken))
                 .setChannelId("default")
                 .setContentIntent(contentIntent)

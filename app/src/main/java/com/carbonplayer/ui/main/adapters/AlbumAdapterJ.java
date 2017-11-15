@@ -18,10 +18,12 @@ import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
+import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.utils.general.MathUtils;
+import com.carbonplayer.utils.ui.ColorUtils;
 import com.carbonplayer.utils.ui.PaletteUtil;
 import com.futuremind.recyclerviewfastscroll.SectionTitleProvider;
 import com.github.florent37.glidepalette.GlidePalette;
@@ -73,9 +75,7 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
                 titleText.setTransitionName(album.getId() + "t");
                 detailText.setTransitionName(album.getId() + "d");
 
-                context.gotoAlbum(album, thumb, contentRoot, swatchPair.getPrimary().getTitleTextColor(),
-                        swatchPair.getPrimary().getRgb(), swatchPair.getPrimary().getBodyTextColor(),
-                        titleText, detailText);
+                context.gotoAlbum(album, swatchPair);
             });
 
             menuButton.setOnClickListener(view -> context.showAlbumPopup(view, album));
@@ -156,6 +156,12 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
                                     PaletteUtil.crossfadeBackground(holder.contentRoot, pair.getPrimary());
                                     PaletteUtil.crossfadeTitle(holder.titleText, pair.getPrimary());
                                     PaletteUtil.crossfadeSubtitle(holder.detailText, pair.getPrimary());
+
+                                    if(ColorUtils.isDark(holder.swatchPair.getPrimary().getBodyTextColor())) {
+                                        holder.menuButton.setImageTintList(
+                                                CarbonPlayerApplication.instance.getDarkCSL());
+                                    }
+
                                     /*holder.menuButton.setImageTintList(
                                             ColorStateList.valueOf(pair.getPrimary().getTitleTextColor())
                                     );

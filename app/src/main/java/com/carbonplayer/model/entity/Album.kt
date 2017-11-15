@@ -17,6 +17,7 @@ import java.util.*
 
 open class Album(
         var kind: String = "",
+        var inLibrary: Boolean = false,
         @PrimaryKey var id: String = "",
         var recentTimestamp: Date? = null,
         @Ignore private var _title: String = "",
@@ -35,8 +36,9 @@ open class Album(
 
 ) : RealmObject() {
 
-    constructor(json: JSONObject) : this(
+    constructor(json: JSONObject, inLibrary: Boolean = false) : this(
             json.getString("kind"),
+            inLibrary,
             json.getString("albumId"),
             "recentTimestamp".let { if (json.has(it)) Date(json.getString(it).toLong()) else null },
             json.getString("name"),
@@ -68,6 +70,7 @@ open class Album(
 
     constructor(source: Album, json: JSONObject) : this (
             json.maybeGetString("kind") ?: source.kind,
+            source.inLibrary,
             json.maybeGetString("albumId") ?: source.id,
             json.maybeGetString("recentTimestamp")?.let {
                 Date(it.toLong())
@@ -99,11 +102,13 @@ open class Album(
             "contentType".let { if (json.has(it)) json.getString(it) else source.contentType }
     )
 
-    constructor(track: MusicTrack) : this("", track.albumId ?: "unknownID", track.recentTimestamp,
+    @JvmOverloads constructor(track: MusicTrack, inLibrary: Boolean = true) : this("", inLibrary,
+            track.albumId ?: "unknownID", track.recentTimestamp,
             if (track.album != "") (track.album ?: "") else "Unknown album",
             "", track.artist ?: "",
             track.composer ?: "", track.year ?: 0, track.genre ?: "", track.albumArtURL ?: "",
             track.artistId ?: RealmList(), RealmList(RealmString(track.trackId)))
+
 
 
     var title = _title

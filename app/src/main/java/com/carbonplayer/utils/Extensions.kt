@@ -28,6 +28,8 @@ inline fun <T> JSONArray.mapArray(
 ): List<T> = (0..length()).mapTo(mutableListOf(), { i-> sGet(i)})
 
 
+
+
 inline fun <T> JSONObject.maybeGet(
         key: String?,
         sGet: JSONObject.() -> T) =

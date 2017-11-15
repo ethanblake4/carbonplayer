@@ -11,8 +11,10 @@ import android.media.AudioManager
 import android.os.*
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.animation.FastOutSlowInInterpolator
+import android.support.v7.widget.LinearLayoutManager
 import android.view.KeyEvent
 import android.view.View
+import android.widget.Scroller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.carbonplayer.R
@@ -20,6 +22,7 @@ import com.carbonplayer.audio.MusicPlayerService
 import com.carbonplayer.audio.TrackQueue
 import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.model.entity.ParcelableMusicTrack
+import com.carbonplayer.ui.main.adapters.NowPlayingQueueAdapter
 import com.carbonplayer.utils.Constants
 import com.carbonplayer.utils.asParcel
 import com.carbonplayer.utils.general.IdentityUtils
@@ -39,16 +42,29 @@ class NowPlayingHelper(private val activity: Activity) {
     var bottomNavHeight: Int = 0
     lateinit var replyMessenger: Messenger
 
-    val dispW = IdentityUtils.displayWidth2(activity)
-    val dp56 = MathUtils.dpToPx2(activity.resources, 56).toInt()
-    val buttonHalfWidth = MathUtils.dpToPx2(activity.resources, 16)
-    val prevInitialX = dispW - MathUtils.dpToPx2(activity.resources, 132)
-    val playPauseInitialX = dispW - MathUtils.dpToPx2(activity.resources, 90)
-    val nextInitialX = dispW - MathUtils.dpToPx2(activity.resources, 48)
-    val audioManager = activity.applicationContext
+    private val dispW = IdentityUtils.displayWidth2(activity)
+    private val dispH = IdentityUtils.displayHeight2(activity)
+    private val controlsScalar = (dispH.toFloat() / dispW.toFloat()) * 2.4f
+    private val dp56 = MathUtils.dpToPx2(activity.resources, 56).toInt()
+    private val buttonHalfWidth = MathUtils.dpToPx2(activity.resources, 16)
+    private val prevInitialX = dispW - MathUtils.dpToPx2(activity.resources, 132)
+    private val playPauseInitialX = dispW - MathUtils.dpToPx2(activity.resources, 90)
+    private val nextInitialX = dispW - MathUtils.dpToPx2(activity.resources, 48)
+    private val audioManager = activity.applicationContext
             .getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    var lastVolumePercent = 0f
+    private var lastVolumePercent = 0f
     var playing = false
+
+    private var recyclerIsUp = false
+    private val recyclerScroller = Scroller(activity, FastOutSlowInInterpolator())
+
+    private val queueSwipeRunnable = Runnable {
+        if(!recyclerIsUp && !recyclerScroller.isFinished) {
+            recyclerScroller.computeScrollOffset()
+            activity.npui_recycler.translationY = -recyclerScroller.currY.toFloat()
+        }
+        repostQueueSwipe()
+    }
 
     private var connection: ServiceConnection? = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -113,13 +129,18 @@ class NowPlayingHelper(private val activity: Activity) {
         }
 
         activity.nowplaying_frame.npui_volumebar_background
-                .layoutParams.width = (dispW / 2f).toInt()
+                .layoutParams.width = (dispW / 2f).toInt() - dp56
 
-        activity.nowplaying_frame.npui_volumebar_background.translationY = dispW * 1.3f
+        activity.npui_recycler.translationY = dispW * 1.5f
+        activity.npui_recycler.isNestedScrollingEnabled = false
+
+        activity.nowplaying_frame.npui_volumebar_background.translationY =
+                (dispW * 1.3f) + (dp56 /4)
+
 
         activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.3f
         activity.nowplaying_frame.npui_volumeHi.translationY = dispW * 1.3f
-        activity.nowplaying_frame.volume_fab.translationY = dispW * 1.3f
+        activity.nowplaying_frame.volume_fab.translationY = (dispW * 1.3f ) + (dp56 / 6f)
         activity.nowplaying_frame.npui_volumeLow.x = dispW / 4f - buttonHalfWidth
         activity.nowplaying_frame.npui_volumeHi.x = dispW - (dispW / 4f) - buttonHalfWidth
         activity.nowplaying_frame.volume_fab.x = ((1f - volumePercent()) * dispW / 4f) +
@@ -147,28 +168,32 @@ class NowPlayingHelper(private val activity: Activity) {
                 }
             }
 
-            activity.bottom_nav.run {
-                postOnAnimation {
-                    layoutParams.height = (dp56 * (1f - up)).toInt()
+            try {
+                activity.bottom_nav.run {
+                    postOnAnimation {
+                        layoutParams.height = (dp56 * (1f - up)).toInt()
+                    }
                 }
-            }
-            activity.nowplaying_frame.npui_fastrewind.run {
-                postOnAnimation {
-                    translationY = (up * dispW / 3)
-                    x = ((dispW / 4f - buttonHalfWidth) * up) + (prevInitialX * (1f - up))
+                activity.nowplaying_frame.npui_fastrewind.run {
+                    postOnAnimation {
+                        translationY = (up * dispW / controlsScalar)
+                        x = ((dispW / 4f - buttonHalfWidth) * up) + (prevInitialX * (1f - up))
+                    }
                 }
-            }
-            activity.nowplaying_frame.npui_playpause.run {
-                postOnAnimation {
-                    translationY = (up * dispW / 3)
-                    x = (((dispW / 2f) - buttonHalfWidth) * up) + (playPauseInitialX * (1f - up))
+                activity.nowplaying_frame.npui_playpause.run {
+                    postOnAnimation {
+                        translationY = (up * dispW / controlsScalar)
+                        x = (((dispW / 2f) - buttonHalfWidth) * up) + (playPauseInitialX * (1f - up))
+                    }
                 }
-            }
-            activity.nowplaying_frame.npui_fastforward.run {
-                postOnAnimation {
-                    translationY = (up * dispW / 3)
-                    x = ((dispW - (dispW / 4f) - buttonHalfWidth)) * up + (nextInitialX * (1f - up))
+                activity.nowplaying_frame.npui_fastforward.run {
+                    postOnAnimation {
+                        translationY = (up * dispW / controlsScalar)
+                        x = ((dispW - (dispW / 4f) - buttonHalfWidth)) * up + (nextInitialX * (1f - up))
+                    }
                 }
+            } catch (e: NullPointerException) {
+                Timber.e("NPE in nowplayinghelper -> why does this happen? ", e)
             }
 
         }
@@ -177,6 +202,10 @@ class NowPlayingHelper(private val activity: Activity) {
     private var messenger: Messenger? = null
     private var serviceStarted = false
     private var requestMgr = Glide.with(activity)
+
+    fun repostQueueSwipe() {
+        activity.npui_recycler.postOnAnimation(queueSwipeRunnable)
+    }
 
     fun newQueue(tracks: List<MusicTrack>, pos: Int) {
         trackQueue.replace(tracks, pos)
@@ -202,7 +231,7 @@ class NowPlayingHelper(private val activity: Activity) {
         Timber.d("Should bind to service?")
         if (!serviceStarted) {
             Timber.d("Binding to service")
-            activity.bindService(intent, connection, Context.BIND_DEBUG_UNBIND)
+            activity.bindService(intent, connection, Context.BIND_AUTO_CREATE)
             serviceStarted = true
         } else Timber.d("Not binding to service, already started")
     }
@@ -255,6 +284,12 @@ class NowPlayingHelper(private val activity: Activity) {
 
                 maybeBind(this)
             }
+
+            activity.npui_recycler.layoutManager = LinearLayoutManager(activity)
+
+            activity.npui_recycler.adapter = NowPlayingQueueAdapter(tracks, { i ->
+
+            })
 
             ContextCompat.startForegroundService(activity, intent)
         }

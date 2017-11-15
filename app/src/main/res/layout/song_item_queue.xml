@@ -4,27 +4,29 @@
     android:id="@+id/songLayoutRoot"
     style="@style/DarkRippleTheme"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="59dp"
     android:orientation="horizontal"
-    android:paddingBottom="16dp"
-    android:paddingEnd="12dp"
-    android:paddingStart="35dp"
-    android:paddingTop="16dp">
+    android:paddingEnd="12dp">
 
-    <TextView
-        android:id="@+id/trackNumber"
-        android:layout_width="40dp"
-        android:layout_height="wrap_content"
-        android:text="1"
-        android:textAppearance="@android:style/TextAppearance.Material.Title"
-        android:textColor="#aaa"
-        tools:ignore="HardcodedText" />
+    <ImageView
+        android:id="@+id/queueItemHandle"
+        android:layout_width="35dp"
+        android:layout_height="match_parent"
+        android:src="@drawable/ic_drag_handle" />
+
+
+    <com.carbonplayer.ui.widget.SquareHeightImageView
+        android:id="@+id/queueItemAlbumArt"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal|center" />
 
     <TextView
         android:id="@+id/trackName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
         android:ellipsize="end"
         android:lines="1"
         android:text="TextView"

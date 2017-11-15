@@ -14,6 +14,8 @@ import kotlinx.android.synthetic.main.nowplaying.view.*
 @Keep
 class BottomNavigationBehavior : CoordinatorLayout.Behavior<View> {
 
+    var shown: Boolean = true
+
     constructor() : super()
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)

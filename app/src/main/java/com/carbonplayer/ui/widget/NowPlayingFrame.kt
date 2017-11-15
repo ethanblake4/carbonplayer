@@ -25,9 +25,10 @@ class NowPlayingFrame : FrameLayout {
     var eventInitialY = 0f
     var eventHasMotion = false
     var isUp = false
+    var runThread = true
 
     var thread: Thread = Thread(Runnable {
-        while(true) {
+        while(runThread) {
             scroller.computeScrollOffset()
             if(scrollHasControl && scroller.currY != layoutParams.height) {
                 layoutParams.height = scroller.currY
@@ -59,6 +60,11 @@ class NowPlayingFrame : FrameLayout {
                     MathUtils.dpToPx2(context.resources, 134)) return false
         }
         return true
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        runThread = false
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {

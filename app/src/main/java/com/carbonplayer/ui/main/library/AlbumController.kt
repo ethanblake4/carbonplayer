@@ -1,9 +1,7 @@
 package com.carbonplayer.ui.main.library
 
 import android.app.Activity
-import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -37,11 +35,12 @@ import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.ColorUtils
-import com.github.florent37.glidepalette.GlidePalette
+import com.carbonplayer.utils.ui.PaletteUtil
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import com.github.ksoichiro.android.observablescrollview.ScrollState
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_songgroup.view.*
+import kotlinx.android.synthetic.main.nowplaying.*
 import kotlinx.android.synthetic.main.songgroup_details.view.*
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
@@ -51,10 +50,12 @@ import timber.log.Timber
  * Displays an album
  */
 class AlbumController(
-        val albumId: String,
+        var album: Album,
         val textColor: Int,
         val mainColor: Int,
-        val bodyColor: Int
+        val bodyColor: Int,
+        val secondaryColor: Int,
+        val secondaryTextColor: Int
 ) : Controller() {
 
     internal lateinit var root: View
@@ -65,40 +66,49 @@ class AlbumController(
     private var mAdapter: RecyclerView.Adapter<*>? = null
     private var mLayoutManager: RecyclerView.LayoutManager? = null
 
-    private lateinit var album: Album
     private lateinit var tracks: List<MusicTrack>
 
     private lateinit var manager: MusicManager
     private lateinit var requestMgr: RequestManager
 
     @Suppress("unused") @Keep constructor(savedState: Bundle) : this (
-            savedState.getString("albumId"),
+            Realm.getDefaultInstance().where(Album::class.java)
+                    .equalTo(Album.ID, savedState.getString("albumId")).findFirst(),
             savedState.getInt("textColor"),
             savedState.getInt("mainColor"),
-            savedState.getInt("bodyColor")
+            savedState.getInt("bodyColor"),
+            savedState.getInt("secondaryColor"),
+            savedState.getInt("secondaryTextColor")
+    )
+
+    @Keep constructor(album: Album, swatchPair: PaletteUtil.SwatchPair) : this (
+            album,
+            swatchPair.primary.titleTextColor,
+            swatchPair.primary.rgb,
+            swatchPair.primary.bodyTextColor,
+            swatchPair.secondary.rgb,
+            swatchPair.secondary.bodyTextColor
     )
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString("albumId", albumId)
+        outState.putString("albumId", album.id)
         outState.putInt("textColor", textColor)
         outState.putInt("mainColor", mainColor)
         outState.putInt("bodyColor", bodyColor)
+        outState.putInt("secondaryColor", secondaryColor)
+        outState.putInt("secondaryTextColor", secondaryTextColor)
         super.onSaveInstanceState(outState)
     }
 
-    override fun onContextAvailable(context: Context) {
-        super.onContextAvailable(context)
 
-        album = Realm.getDefaultInstance().where(Album::class.java)
-                .equalTo("id", albumId).findFirst()
-    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
         root = inflater.inflate(R.layout.activity_songgroup, container, false)
 
         if(album.description == null) {
-            Protocol.getNautilusAlbum(activity!!, Realm.getDefaultInstance().copyFromRealm(album), album.id)
+            Protocol.getNautilusAlbum(activity!!,
+                    if(album.isManaged) Realm.getDefaultInstance().copyFromRealm(album) else album, album.id)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ a ->
@@ -156,6 +166,9 @@ class AlbumController(
         root.overflowButton.imageTintList = ColorStateList.valueOf(textColor)
         root.expandDescriptionChevron.imageTintList = ColorStateList.valueOf(bodyColor)
 
+        root.play_fab.backgroundTintList = ColorStateList.valueOf(secondaryColor)
+        root.play_fab.imageTintList = ColorStateList.valueOf(secondaryTextColor)
+
         root.downloadButton.setOnClickListener {
             activity?.let { Toast.makeText(it, "Downloading is not supported yet", Toast.LENGTH_LONG).show() }
         }
@@ -197,31 +210,6 @@ class AlbumController(
                 .apply(
                         RequestOptions.overrideOf(preImageWidth, preImageWidth)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
-                .listener(
-                        GlidePalette.with(album.albumArtURL)
-                                .use(0)
-                                .intoCallBack { palette ->
-                                    palette?.let {
-                                        if (Color.red(ColorUtils.contrastColor(
-                                                it.getVibrantColor(Color.DKGRAY))) > 200) {
-                                            Timber.d("red>200")
-                                            root.play_fab.backgroundTintList =
-                                                    ColorStateList.valueOf(
-                                                            it.getLightVibrantColor(Color.WHITE))
-                                        } else {
-                                            Timber.d("not")
-                                            val s = ColorStateList.valueOf(
-                                                    it.getDarkVibrantColor(Color.DKGRAY))
-                                            val t = ColorStateList.valueOf(
-                                                    it.getVibrantColor(Color.WHITE))
-                                            Timber.d(s.toString())
-                                            Timber.d(t.toString())
-                                            root.play_fab.backgroundTintList = s
-                                            root.play_fab.imageTintList = t
-                                        }
-                                    }
-                                }
-                )
                 .into(root.main_backdrop)
 
         if(album.description != null && album.description!!.isNotBlank()) {
@@ -266,7 +254,11 @@ class AlbumController(
         tracks = MusicLibrary.getInstance().getAllAlbumTracks(album.id)
 
         val params = root.songgroup_recycler.layoutParams
-        params.height = tracks.size * MathUtils.dpToPx(activity, 67)
+        params.height = (tracks.size * MathUtils.dpToPx2(resources, 59).toInt()) +
+                IdentityUtils.getNavbarHeight(resources) +
+                MathUtils.dpToPx2(resources,
+                        if((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
+                            56 else 0).toInt()
 
         mAdapter = SongListAdapter(tracks) { (id, pos) ->
             manager.fromAlbum(album.id, pos)

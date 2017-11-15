@@ -4,6 +4,7 @@ apply plugin: 'com.google.protobuf'
 
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 apply plugin: 'realm-android'
 
@@ -187,4 +188,8 @@ apply plugin: 'com.google.gms.google-services'
 
 android {
     buildToolsVersion '26.0.2'
+}
+
+androidExtensions {
+    experimental = true
 }

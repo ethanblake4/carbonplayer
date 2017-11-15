@@ -160,6 +160,7 @@ public final class MusicLibrary {
     @UiThread
     public Observable<RealmResults<Album>> loadAlbums() {
         return realm.where(Album.class)
+                .equalTo("inLibrary", true)
                 .findAllSortedAsync("title", Sort.ASCENDING)
                 .asObservable();
     }
