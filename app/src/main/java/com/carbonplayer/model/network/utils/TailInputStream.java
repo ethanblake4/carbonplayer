@@ -2,7 +2,7 @@ package com.carbonplayer.model.network.utils;
 
 import android.content.Context;
 
-import com.carbonplayer.model.network.entity.StreamingContent;
+import com.carbonplayer.model.network.entity.Stream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,18 +16,18 @@ public class TailInputStream extends InputStream {
     private final Context context;
     private RandomAccessFile input;
     private volatile long startReadPoint;
-    private final StreamingContent streamingContent;
+    private final Stream stream;
     private long totalRead = 0;
 
-    public TailInputStream(Context context, StreamingContent streamingContent, long startRangeByte) {
-        Timber.i("New TailInputStream for: %s", streamingContent);
+    public TailInputStream(Context context, Stream stream, long startRangeByte) {
+        Timber.i("New TailInputStream for: %s", stream);
         this.context = context;
-        this.streamingContent = streamingContent;
+        this.stream = stream;
         this.startReadPoint = startRangeByte;
     }
 
     public String toString() {
-        return streamingContent.toString();
+        return stream.toString();
     }
 
     public int read() {
@@ -36,14 +36,14 @@ public class TailInputStream extends InputStream {
 
     public int read(byte[] b, int offset, int length) throws IOException {
         if (this.isClosed.get()) {
-            Timber.i("read(%s) ret=-1 since we were closed", streamingContent);
+            Timber.i("read(%s) ret=-1 since we were closed", stream);
 
             return -1;
         }
         try {
-            streamingContent.waitForData((this.startReadPoint + this.totalRead) + 1);
+            stream.waitForData((this.startReadPoint + this.totalRead) + 1);
             if (this.isClosed.get()) {
-                Timber.i("read(%s) ret=-1 since we were closed", streamingContent);
+                Timber.i("read(%s) ret=-1 since we were closed", stream);
                 return -1;
             }
             int read = readFromFile(b, offset, length);
@@ -51,14 +51,14 @@ public class TailInputStream extends InputStream {
                 return read;
             }
             read = readFromFile(b, offset, length);
-            if (read >= 0 || !streamingContent.isFinished()) {
+            if (read >= 0 || !stream.isFinished()) {
                 return read;
             }
-            Timber.i("read(%s): %s; ret=-1", streamingContent, totalRead);
+            Timber.i("read(%s): %s; ret=-1", stream, totalRead);
 
             return -1;
         } catch (InterruptedException e) {
-            Timber.w("TailInputStream for: %s interrupted", streamingContent);
+            Timber.w("TailInputStream for: %s interrupted", stream);
 
             return -1;
         }
@@ -66,9 +66,9 @@ public class TailInputStream extends InputStream {
 
     private int readFromFile(byte[] b, int offset, int length) throws IOException {
         if (this.input == null) {
-            this.input = this.streamingContent.getStreamFile(startReadPoint + totalRead);
+            this.input = this.stream.getStreamFile(startReadPoint + totalRead);
             if (this.input == null) {
-                Timber.i("read(%s) ret=-1 since the file location doesn't exist", streamingContent);
+                Timber.i("read(%s) ret=-1 since the file location doesn't exist", stream);
                 return -1;
             }
         }

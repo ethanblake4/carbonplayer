@@ -8,7 +8,7 @@ import com.carbonplayer.model.entity.SongID
 import com.carbonplayer.model.entity.exception.PlaybackException
 import com.carbonplayer.model.network.StreamManager
 import com.carbonplayer.model.network.entity.ExoPlayerDataSource
-import com.carbonplayer.model.network.entity.StreamingContent
+import com.carbonplayer.model.network.entity.Stream
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.DynamicConcatenatingMediaSource
@@ -35,7 +35,6 @@ class MusicPlaybackImpl(
 ) : Player.EventListener {
 
     private val mainHandler: Handler = Handler(service.mainLooper)
-    private val streamManager: StreamManager = StreamManager.getInstance()
 
     private var subscription: Disposable? = null
 
@@ -49,7 +48,7 @@ class MusicPlaybackImpl(
     private val dynamicSource = DynamicConcatenatingMediaSource()
 
     val mirroredQueue = mutableListOf<ParcelableTrack>()
-    private val mirroredContentQueue = mutableListOf<StreamingContent>()
+    private val mirroredContentQueue = mutableListOf<Stream>()
     private var trackNum = 0
     private var lastKnownWindowIndex = 0
 
@@ -250,8 +249,8 @@ class MusicPlaybackImpl(
         }
     }
 
-    private fun sourceFromTrack(track: ParcelableTrack): Pair<StreamingContent, MediaSource> {
-        val stream = streamManager.getStream(service, SongID(track), track.title, false)
+    private fun sourceFromTrack(track: ParcelableTrack): Pair<Stream, MediaSource> {
+        val stream = StreamManager.getStream(service, SongID(track), track.title, false)
         return Pair(stream, sourceFromStream(stream))
     }
 
@@ -261,7 +260,7 @@ class MusicPlaybackImpl(
         if(!playerIsPrepared) exoPlayer.prepare(dynamicSource, true, false)
     }*/
 
-    private fun sourceFromStream(stream: StreamingContent): MediaSource {
+    private fun sourceFromStream(stream: Stream): MediaSource {
         return ExtractorMediaSource(Uri.parse("DefaultUri"),
                 DataSource.Factory { ExoPlayerDataSource(stream) },
                 DefaultExtractorsFactory(), mainHandler, ExtractorMediaSource.EventListener { e ->

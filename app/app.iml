@@ -199,7 +199,6 @@
     <orderEntry type="library" name="Gradle: commons-cli:commons-cli:1.2@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.jakewharton:butterknife-8.7.0" level="project" />
     <orderEntry type="library" name="Gradle: com.squareup.haha:haha:2.0.3@jar" level="project" />
-    <orderEntry type="library" name="Gradle: com.futuremind.recyclerfastscroll:fastscroll-0.2.5" level="project" />
     <orderEntry type="library" name="Gradle: org.codehaus.mojo:animal-sniffer-annotations:1.14@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.squareup.leakcanary:leakcanary-android-1.5.1" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-vector-drawable-27.0.2" level="project" />

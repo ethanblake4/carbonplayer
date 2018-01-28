@@ -256,8 +256,10 @@ object MusicLibrary {
 
     fun getAllAlbumTracks(album: IAlbum): List<ITrack> {
         return if(album is Album)
-            album.tracks
-        else (album as SkyjamAlbum).tracks
+            album.tracks.sort(Track.TRACK_NUMBER)
+        else (album as SkyjamAlbum).tracks.sortedBy {
+            it.trackNumber
+        }
 
     }
 

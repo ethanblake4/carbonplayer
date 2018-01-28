@@ -40,7 +40,7 @@ internal class SongListAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val t = mDataset[position]
         holder.trackName.text = t.title
-        if (t.trackNumber != null) holder.trackNumber.text = t.trackNumber!!.toString()
+        holder.trackNumber.text = t.trackNumber.toString()
         holder.track = t
         holder.pos = position
 

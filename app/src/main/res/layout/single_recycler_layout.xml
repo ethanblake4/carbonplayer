@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         android:id="@+id/main_recycler" />
 
-    <com.futuremind.recyclerviewfastscroll.FastScroller
+    <com.carbonplayer.ui.widget.fastscroll.FastScroller
         android:id="@+id/fastscroll"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
@@ -20,6 +20,6 @@
         android:orientation="vertical"
         app:fastscroll__bubbleColor="#565656">
 
-    </com.futuremind.recyclerviewfastscroll.FastScroller>
+    </com.carbonplayer.ui.widget.fastscroll.FastScroller>
 
 </FrameLayout>

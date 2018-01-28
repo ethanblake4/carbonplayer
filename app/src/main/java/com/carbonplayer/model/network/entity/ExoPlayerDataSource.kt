@@ -8,7 +8,7 @@ import com.google.common.base.Preconditions
 import java.io.IOException
 import java.io.InputStream
 
-class ExoPlayerDataSource(val streamingContent: StreamingContent) : DataSource {
+class ExoPlayerDataSource(val stream: Stream) : DataSource {
 
     private var bytesRead: Long = 0
     private var inputStream: InputStream? = null
@@ -19,7 +19,7 @@ class ExoPlayerDataSource(val streamingContent: StreamingContent) : DataSource {
 
     override fun open(dataSpec: DataSpec): Long {
         bytesRead = 0
-        inputStream = TailInputStream(streamingContent.context, streamingContent, dataSpec.position)
+        inputStream = TailInputStream(stream.context, stream, dataSpec.position)
         return dataSpec.length
     }
 

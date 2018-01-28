@@ -18,6 +18,7 @@ public class ParcelableTrack {
     String id;
     String clientId;
     String nid;
+    String storeId;
     String title;
     String artist;
     String album;
@@ -56,6 +57,7 @@ public class ParcelableTrack {
         this.id = source.getId();
         this.clientId = source.getClientId();
         this.nid = source.getNid();
+        this.storeId = source.getStoreId();
         this.title = source.getTitle();
         this.artist = source.getArtist();
         this.album = Objects.requireNonNull(Objects.requireNonNull(source.getAlbums()).first()).getTitle();
@@ -99,6 +101,14 @@ public class ParcelableTrack {
 
     public void setNid(String nid) {
         this.nid = nid;
+    }
+
+    public String getStoreId() {
+        return storeId;
+    }
+
+    public void setStoreId(String storeId) {
+        this.storeId = storeId;
     }
 
     public String getTitle() {

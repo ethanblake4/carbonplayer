@@ -136,7 +136,7 @@ public class TrackCache {
             File[] cacheFiles = context.getCacheDir().listFiles();
             for (File f : cacheFiles) {
                 String id = f.getName().substring(0, f.getName().length() - 2);
-                removeLowerQualities(context, new SongID(Long.parseLong(id), null, null, null));
+                removeLowerQualities(context, new SongID(Long.parseLong(id), null, null, null, null));
             }
             subscriber.onComplete();
         });
@@ -192,7 +192,7 @@ public class TrackCache {
                     .getPreferences().getPreferredStreamQuality(context);
         }
 
-        return new File(context.getCacheDir(), id.getId() + "--" +
+        return new File(context.getCacheDir(), id.getLocalId() + "--" +
                 String.valueOf(newQuality.ordinal()));
     }
 

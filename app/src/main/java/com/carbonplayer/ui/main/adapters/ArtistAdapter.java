@@ -21,8 +21,8 @@ import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.Artist;
 import com.carbonplayer.ui.main.MainActivity;
+import com.carbonplayer.ui.widget.fastscroll.SectionTitleProvider;
 import com.carbonplayer.utils.general.MathUtils;
-import com.futuremind.recyclerviewfastscroll.SectionTitleProvider;
 import com.github.florent37.glidepalette.BitmapPalette;
 import com.github.florent37.glidepalette.GlidePalette;
 

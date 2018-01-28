@@ -22,10 +22,10 @@ import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.Album;
 import com.carbonplayer.ui.main.MainActivity;
+import com.carbonplayer.ui.widget.fastscroll.SectionTitleProvider;
 import com.carbonplayer.utils.general.MathUtils;
 import com.carbonplayer.utils.ui.ColorUtils;
 import com.carbonplayer.utils.ui.PaletteUtil;
-import com.futuremind.recyclerviewfastscroll.SectionTitleProvider;
 import com.github.florent37.glidepalette.GlidePalette;
 
 import java.util.List;

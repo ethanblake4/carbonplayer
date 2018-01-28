@@ -176,6 +176,7 @@ open class Track(
         const val HAS_CACHED_FILE = "hasCachedFile"
         const val CACHED_FILE_QUALITY = "cachedFileQuality"
         const val STORAGE_TYPE = "storageType"
+        const val TRACK_NUMBER = "trackNumber"
 
     }
 
