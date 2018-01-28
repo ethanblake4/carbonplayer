@@ -9,8 +9,10 @@ import android.os.Parcelable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
-import com.carbonplayer.model.entity.MusicTrack
-import com.carbonplayer.model.entity.ParcelableMusicTrack
+import com.carbonplayer.CarbonPlayerApplication
+import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.base.ITrack
+import io.reactivex.disposables.Disposable
 import org.json.JSONArray
 import org.json.JSONObject
 import org.parceler.Parcels
@@ -20,15 +22,17 @@ fun JSONObject.maybeGetInt (key: String?): Int? = maybeGet (key, { getInt(key) }
 fun JSONObject.maybeGetString (key: String?): String? = maybeGet (key, { getString(key) })
 fun JSONObject.maybeGetBool (key: String?): Boolean? = maybeGet (key, { getBoolean(key) })
 fun JSONObject.maybeGetDouble (key: String?): Double? = maybeGet (key, { getDouble(key) })
+fun JSONObject.maybeGetLong (key: String?): Long? = maybeGet (key, { getLong(key) })
 fun JSONObject.maybeGetObj (key: String?): JSONObject? = maybeGet (key, { getJSONObject(key) })
 fun JSONObject.maybeGetArray (key: String?): JSONArray? = maybeGet (key, { getJSONArray(key) })
 
 inline fun <T> JSONArray.mapArray(
         sGet: JSONArray.(i: Int) -> T
-): List<T> = (0..length()).mapTo(mutableListOf(), { i-> sGet(i)})
+): MutableList<T> = (0..length()).mapTo(mutableListOf(), { i-> sGet(i)})
 
-
-
+inline fun <T, R : MutableList<T>> JSONArray.mapArrayTo(
+        to: R, sGet: JSONArray.(i: Int) -> T
+): R = (0..length()).mapTo(to, { i-> sGet(i)})
 
 inline fun <T> JSONObject.maybeGet(
         key: String?,
@@ -37,10 +41,18 @@ inline fun <T> JSONObject.maybeGet(
         if (has(key)) sGet(this) else null
     }
 
-fun MutableList<ParcelableMusicTrack>.asParcel(): Parcelable =
-        Parcels.wrap<MutableList<ParcelableMusicTrack>>(this)
+fun Disposable.addToAutoDispose() = apply {
+    CarbonPlayerApplication.compositeDisposable.add(this)
+}
 
-fun List<MusicTrack>.parcelable(): MutableList<ParcelableMusicTrack> =
+fun JSONObject.toByteArray() : ByteArray {
+    return toString().toByteArray(Charsets.UTF_8)
+}
+
+fun MutableList<ParcelableTrack>.asParcel(): Parcelable =
+        Parcels.wrap<MutableList<ParcelableTrack>>(this)
+
+fun List<ITrack>.parcelable(): MutableList<ParcelableTrack> =
         MutableList(size, { i -> get(i).parcelable() })
 
 inline fun <reified T : Context> Context.newIntent(

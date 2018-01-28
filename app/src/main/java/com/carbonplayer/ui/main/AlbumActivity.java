@@ -25,15 +25,15 @@ import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.model.entity.Album;
-import com.carbonplayer.model.entity.MusicTrack;
+import com.carbonplayer.model.entity.base.ITrack;
 import com.carbonplayer.ui.helpers.NowPlayingHelper;
 import com.carbonplayer.ui.main.adapters.SongListAdapter;
 import com.carbonplayer.ui.transition.DetailSharedElementEnterCallback;
 import com.carbonplayer.ui.widget.ParallaxScrimageView;
 import com.carbonplayer.ui.widget.SquareView;
-import com.carbonplayer.utils.ui.ColorUtils;
 import com.carbonplayer.utils.general.IdentityUtils;
 import com.carbonplayer.utils.general.MathUtils;
+import com.carbonplayer.utils.ui.ColorUtils;
 import com.github.florent37.glidepalette.BitmapPalette;
 import com.github.florent37.glidepalette.GlidePalette;
 
@@ -67,7 +67,7 @@ public class AlbumActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
 
     private Album mAlbum;
-    private List<MusicTrack> tracks;
+    private List<ITrack> tracks;
 
     private NowPlayingHelper nowPlayingHelper;
 
@@ -76,13 +76,14 @@ public class AlbumActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_songgroup);
+
         ButterKnife.bind(this);
 
         nowPlayingHelper = new NowPlayingHelper(this);
 
         mAlbum = CarbonPlayerApplication.Companion.getInstance().getCurrentAlbum();
 
-        Timber.d("album %s", mAlbum.getId());
+        Timber.d("album %s", mAlbum.getAlbumId());
 
         scrollView.getViewTreeObserver().addOnScrollChangedListener(scrollListener);
         layoutRoot.getViewTreeObserver().addOnGlobalLayoutListener(layoutListener);
@@ -99,10 +100,10 @@ public class AlbumActivity extends AppCompatActivity {
                 R.dimen.small_text_2, R.dimen.large_text_2);
 
         //noinspection SuspiciousNameCombination
-        Glide.with(this).load(mAlbum.getAlbumArtURL())
+        Glide.with(this).load(mAlbum.getAlbumArtRef())
                 .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth).diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
                 .listener(
-                        GlidePalette.with(mAlbum.getAlbumArtURL())
+                        GlidePalette.with(mAlbum.getAlbumArtRef())
                                 .use(GlidePalette.Profile.VIBRANT)
                                 .intoBackground(constraintLayoutRoot)
                                 .intoTextColor(primaryText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
@@ -138,12 +139,12 @@ public class AlbumActivity extends AppCompatActivity {
 
 
         /*new Handler().postDelayed(() ->
-                Glide.with(AlbumActivity.this).load(mAlbum.getAlbumArtURL())
+                Glide.with(AlbumActivity.this).load(mAlbum.getAlbumArtRef())
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .dontAnimate()
                 .into(albumart), 1000);*/
 
-        secondaryText.setText(mAlbum.getArtist());
+        secondaryText.setText(mAlbum.getArtists().first().getName());
         primaryText.setText(mAlbum.getTitle());
 
         songList.setNestedScrollingEnabled(false);
@@ -155,7 +156,7 @@ public class AlbumActivity extends AppCompatActivity {
         };
         songList.setLayoutManager(mLayoutManager);
 
-        tracks = MusicLibrary.getInstance().getAllAlbumTracks(mAlbum.getId());
+        tracks = MusicLibrary.INSTANCE.getAllAlbumTracks(mAlbum);
 
         ViewGroup.LayoutParams params = songList.getLayoutParams();
         params.height = tracks.size() * MathUtils.dpToPx(this, 67);
@@ -205,7 +206,7 @@ public class AlbumActivity extends AppCompatActivity {
     /*@Override
     public void onResume(){
         super.onResume();
-        Glide.with(AlbumActivity.this).load(mAlbum.getAlbumArtURL())
+        Glide.with(AlbumActivity.this).load(mAlbum.getAlbumArtRef())
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(albumart);
     }

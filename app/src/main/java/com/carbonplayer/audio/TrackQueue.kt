@@ -1,8 +1,8 @@
 package com.carbonplayer.audio
 
 
-import com.carbonplayer.model.entity.MusicTrack
-import com.carbonplayer.model.entity.ParcelableMusicTrack
+import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.utils.parcelable
 
 /**
@@ -10,27 +10,27 @@ import com.carbonplayer.utils.parcelable
  */
 class TrackQueue(val callback: TrackQueueCallback) {
 
-    private var queue = mutableListOf<MusicTrack>()
+    private var queue = mutableListOf<ITrack>()
     var position: Int = 0
 
-    fun replace(tracks: List<MusicTrack>, pos: Int, noCallback: Boolean = false) {
+    fun replace(tracks: List<ITrack>, pos: Int, noCallback: Boolean = false) {
         queue.clear()
         queue.addAll(tracks)
         position = pos
         if (!noCallback) callback.replace(parcelable, pos)
     }
 
-    val parcelable: MutableList<ParcelableMusicTrack>
+    val parcelable: MutableList<ParcelableTrack>
         get() = MutableList(queue.size, { i -> queue[i].parcelable() })
 
     val size: Int get() = queue.size
 
-    fun insertAtEnd(tracks: List<MusicTrack>, noCallback: Boolean = false) {
+    fun insertAtEnd(tracks: List<ITrack>, noCallback: Boolean = false) {
         queue.addAll(tracks)
         if (!noCallback) callback.insertAtEnd(tracks.parcelable())
     }
 
-    fun insertNext(tracks: List<MusicTrack>, noCallback: Boolean = false) {
+    fun insertNext(tracks: List<ITrack>, noCallback: Boolean = false) {
         queue.addAll(position, tracks)
         if (!noCallback) callback.insertNext(tracks.parcelable())
     }
@@ -51,14 +51,14 @@ class TrackQueue(val callback: TrackQueueCallback) {
         position++
     }
 
-    fun currentTrack(): MusicTrack {
+    fun currentTrack(): ITrack {
         return queue[position]
     }
 
     interface TrackQueueCallback {
-        fun replace(tracks: MutableList<ParcelableMusicTrack>, pos: Int)
-        fun insertAtEnd(tracks: MutableList<ParcelableMusicTrack>)
-        fun insertNext(tracks: MutableList<ParcelableMusicTrack>)
+        fun replace(tracks: MutableList<ParcelableTrack>, pos: Int)
+        fun insertAtEnd(tracks: MutableList<ParcelableTrack>)
+        fun insertNext(tracks: MutableList<ParcelableTrack>)
         fun reorder(pos: Int, pnew: Int)
     }
 }

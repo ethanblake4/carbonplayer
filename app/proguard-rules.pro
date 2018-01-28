@@ -19,6 +19,19 @@
    public *;
 }
 
+# okio
+-dontwarn okio.**
+-keepclassmembers class kotlin.Metadata {
+    public <methods>;
+}
+
+# moshi
+-dontwarn javax.annotation.**
+-keepclasseswithmembers class * {
+    @com.squareup.moshi.* <methods>;
+}
+-keep @com.squareup.moshi.JsonQualifier interface *
+
 # icepick
 -dontwarn __gen.annotation.**
 -dontwarn icepick.**
@@ -31,7 +44,6 @@
 
 # okhttp
 -dontwarn com.squareup.okhttp3.**
--dontwarn okio.**
 
 # stetho
 -keep class com.facebook.stetho.** { *; }

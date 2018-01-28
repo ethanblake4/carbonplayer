@@ -9,6 +9,8 @@ import android.graphics.Color
 import android.net.http.AndroidHttpClient
 import android.os.Build
 import com.carbonplayer.model.entity.Album
+import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
+import com.carbonplayer.model.network.utils.RealmListJsonAdapterFactory
 import com.carbonplayer.utils.CrashReportingTree
 import com.carbonplayer.utils.Preferences
 import com.carbonplayer.utils.jobs.CacheEvictionJob
@@ -19,11 +21,14 @@ import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.Util
 import com.squareup.leakcanary.LeakCanary
+import com.squareup.moshi.KotlinJsonAdapterFactory
+import com.squareup.moshi.Moshi
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.plugins.RxJavaPlugins
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import okhttp3.OkHttpClient
-import rx.plugins.RxJavaHooks
 import timber.log.Timber
 
 
@@ -75,7 +80,7 @@ class CarbonPlayerApplication : Application() {
         JobManager.create(this).addJobCreator(CarbonJobCreator())
         CacheEvictionJob.schedule()
 
-        RxJavaHooks.setOnError { e -> Timber.e(e, e.toString()) }
+        RxJavaPlugins.setErrorHandler { e -> Timber.e(e, e.toString()) }
 
         Realm.init(this)
         // Configure default configuration for Realm
@@ -114,6 +119,7 @@ class CarbonPlayerApplication : Application() {
 
     val darkCSL = ColorStateList.valueOf(Color.DKGRAY)
 
+    var homeLastResponse: InnerJamApiV1Proto.GetHomeResponse? = null
     var homePdContextToken: String? = null
 
     lateinit var okHttpClient: OkHttpClient
@@ -128,5 +134,20 @@ class CarbonPlayerApplication : Application() {
 
     companion object {
         lateinit var instance: CarbonPlayerApplication
+        private var _compositeDisposable: CompositeDisposable? = null
+
+        val compositeDisposable: CompositeDisposable
+        get() {
+            if (_compositeDisposable == null) _compositeDisposable = CompositeDisposable()
+            _compositeDisposable?.isDisposed?.let { if (it) _compositeDisposable = CompositeDisposable() }
+            return _compositeDisposable!!
+        }
+
+        val moshi = Moshi.Builder()
+                .add(RealmListJsonAdapterFactory())
+                .add(KotlinJsonAdapterFactory())
+                .build()
+
+
     }
 }

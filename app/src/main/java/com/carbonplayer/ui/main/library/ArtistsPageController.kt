@@ -1,5 +1,6 @@
 package com.carbonplayer.ui.main.library
 
+import android.content.Context
 import android.os.Parcelable
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -13,16 +14,18 @@ import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.ArtistAdapter
+import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.single_recycler_layout.view.*
-import rx.Subscription
 
 class ArtistsPageController : Controller() {
 
-    private var artistSubscription: Subscription? = null
+    private var artistSubscription: Disposable? = null
     private var adapter: RecyclerView.Adapter<*>? = null
     lateinit var layoutManager: RecyclerView.LayoutManager
     lateinit var requestManager: RequestManager
     var recyclerState: Parcelable? = null
+
+    var subscribed = false;
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
@@ -40,8 +43,29 @@ class ArtistsPageController : Controller() {
 
         //recyclerState = savedInstanceState?.getParcelable("recycler")
 
-        artistSubscription?.unsubscribe()
-        artistSubscription = MusicLibrary.getInstance().loadArtists()
+        view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
+
+            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                //(activity as MainActivity).scrollCb(dy)
+            }
+        })
+
+        if(activity != null && !subscribed) resubscribe(view)
+
+        return view
+    }
+
+    override fun onContextAvailable(context: Context) {
+        super.onContextAvailable(context)
+
+        if(view != null && !subscribed) resubscribe(view!!)
+    }
+
+    fun resubscribe(view: View) {
+        artistSubscription?.dispose()
+        artistSubscription = MusicLibrary.loadArtists()
                 .subscribe { artists ->
                     adapter = ArtistAdapter(artists, activity as MainActivity, requestManager)
                     view.main_recycler.adapter = adapter
@@ -50,8 +74,6 @@ class ArtistsPageController : Controller() {
                         view.main_recycler.layoutManager.onRestoreInstanceState(it)
                     }
                 }
-
-        return view
     }
 
     /*override fun onResume() {

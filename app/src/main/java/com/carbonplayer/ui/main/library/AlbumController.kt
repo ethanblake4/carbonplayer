@@ -1,5 +1,6 @@
 package com.carbonplayer.ui.main.library
 
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
@@ -27,30 +28,34 @@ import com.bumptech.glide.request.RequestOptions
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
-import com.carbonplayer.model.entity.MusicTrack
+import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.SongListAdapter
+import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.ColorUtils
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import com.github.ksoichiro.android.observablescrollview.ScrollState
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_songgroup.view.*
 import kotlinx.android.synthetic.main.nowplaying.*
 import kotlinx.android.synthetic.main.songgroup_details.view.*
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 /**
  * Displays an album
  */
 class AlbumController(
-        var album: Album,
+        var album: IAlbum,
         val textColor: Int,
         val mainColor: Int,
         val bodyColor: Int,
@@ -63,17 +68,21 @@ class AlbumController(
     private var fabOffset: Int = 0
     private var squareHeight: Int = 0
 
+    private var expanded = false
+    private var ogHeight = 0
+
     private var mAdapter: RecyclerView.Adapter<*>? = null
     private var mLayoutManager: RecyclerView.LayoutManager? = null
 
-    private lateinit var tracks: List<MusicTrack>
+    private lateinit var tracks: List<ITrack>
+    private lateinit var sjTracks: List<SkyjamTrack>
 
     private lateinit var manager: MusicManager
     private lateinit var requestMgr: RequestManager
 
     @Suppress("unused") @Keep constructor(savedState: Bundle) : this (
             Realm.getDefaultInstance().where(Album::class.java)
-                    .equalTo(Album.ID, savedState.getString("albumId")).findFirst(),
+                    .equalTo(Album.ID, savedState.getString("albumId")).findFirst()!!,
             savedState.getInt("textColor"),
             savedState.getInt("mainColor"),
             savedState.getInt("bodyColor"),
@@ -81,7 +90,7 @@ class AlbumController(
             savedState.getInt("secondaryTextColor")
     )
 
-    @Keep constructor(album: Album, swatchPair: PaletteUtil.SwatchPair) : this (
+    @Keep constructor(album: IAlbum, swatchPair: PaletteUtil.SwatchPair) : this (
             album,
             swatchPair.primary.titleTextColor,
             swatchPair.primary.rgb,
@@ -91,7 +100,7 @@ class AlbumController(
     )
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString("albumId", album.id)
+        outState.putString("albumId", album.albumId)
         outState.putInt("textColor", textColor)
         outState.putInt("mainColor", mainColor)
         outState.putInt("bodyColor", bodyColor)
@@ -100,34 +109,24 @@ class AlbumController(
         super.onSaveInstanceState(outState)
     }
 
-
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
         root = inflater.inflate(R.layout.activity_songgroup, container, false)
 
-        if(album.description == null) {
-            Protocol.getNautilusAlbum(activity!!,
-                    if(album.isManaged) Realm.getDefaultInstance().copyFromRealm(album) else album, album.id)
+        if(album.description == null && album is Album ) {
+            Protocol.getNautilusAlbum(activity!!, album.albumId)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .delay(300, TimeUnit.MILLISECONDS) /* Prevent animation interrupt */
                     .subscribe({ a ->
 
-                        try {
-                            Realm.getDefaultInstance().executeTransaction { rlm ->
-                                rlm.insertOrUpdate(a)
-                            }
-                        } catch (e: Exception) {
-                            Timber.e(e)
-                        }
-
-                        album = a
+                        (album as Album).updateFrom(a)
 
                         if(view != null && album.description != null && album.description!!.isNotBlank()) {
                             val const = ConstraintSet().apply {
                                 clone(view!!.constraintLayout6)
                                 setMargin(R.id.primaryText, ConstraintSet.TOP,
-                                        MathUtils.dpToPx2(resources, 32).toInt())
+                                        MathUtils.dpToPx2(resources, 32))
                             }
 
                             val t = AutoTransition().apply {
@@ -136,24 +135,28 @@ class AlbumController(
                             }
 
                             TransitionManager.beginDelayedTransition(view!!.constraintLayout6, t)
-                            const.applyTo(view!!.constraintLayout6)
 
-                            view!!.descriptionText.run {
-                                text = album.description
-                                setTextColor(bodyColor)
-                                visibility = View.VISIBLE
-                                alpha = 0.0f
-                                animate().alpha(1f).setDuration(250).start()
+                            view!!.post {
+                                const.applyTo(view!!.constraintLayout6)
+
+                                view!!.descriptionText.run {
+                                    text = album.description
+                                    setTextColor(bodyColor)
+                                    visibility = View.VISIBLE
+                                    alpha = 0.0f
+                                    animate().alpha(1f).setDuration(250).start()
+                                }
                             }
+
                         }
                     }, {
                         err -> Timber.e(err)
-                    })
+                    }).addToAutoDispose()
         }
 
         manager = MusicManager(activity as MainActivity)
 
-        Timber.d("album %s", album.id)
+        Timber.d("album %s", album.albumId)
 
         root.primaryText.setTextColor(textColor)
         root.secondaryText.setTextColor(textColor)
@@ -176,10 +179,10 @@ class AlbumController(
             (activity as? MainActivity)?.showAlbumPopup(v, album)
         }
 
-        root.main_backdrop.transitionName = album.id + "i"
-        root.constraintLayout6.transitionName = album.id + "cr"
-        root.primaryText.transitionName = album.id + "t"
-        root.secondaryText.transitionName = album.id + "d"
+        root.main_backdrop.transitionName = album.albumId + "i"
+        root.constraintLayout6.transitionName = album.albumId + "cr"
+        root.primaryText.transitionName = album.albumId + "t"
+        root.secondaryText.transitionName = album.albumId + "d"
 
         root.songgroup_scrollview.setScrollViewCallbacks(object : ObservableScrollViewCallbacks {
             override fun onUpOrCancelMotionEvent(scrollState: ScrollState?) {}
@@ -206,7 +209,7 @@ class AlbumController(
 
         requestMgr = Glide.with(activity as Activity)
 
-        requestMgr.load(album.albumArtURL)
+        requestMgr.load(album.albumArtRef)
                 .apply(
                         RequestOptions.overrideOf(preImageWidth, preImageWidth)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
@@ -216,7 +219,7 @@ class AlbumController(
 
             val const = ConstraintSet().apply {
                 clone(root.constraintLayout6)
-                setMargin(R.id.primaryText, ConstraintSet.TOP, MathUtils.dpToPx2(resources, 32).toInt())
+                setMargin(R.id.primaryText, ConstraintSet.TOP, MathUtils.dpToPx2(resources, 32))
             }
 
             const.applyTo(root.constraintLayout6)
@@ -241,7 +244,7 @@ class AlbumController(
         }, 600)
 
 
-        root.secondaryText.text = album.artist
+        root.secondaryText.text = album.albumArtist
         root.primaryText.text = album.title
 
         root.songgroup_recycler.isNestedScrollingEnabled = false
@@ -251,23 +254,45 @@ class AlbumController(
 
         root.songgroup_recycler.layoutManager = mLayoutManager
 
-        tracks = MusicLibrary.getInstance().getAllAlbumTracks(album.id)
+        tracks = MusicLibrary.getAllAlbumTracks(album)
 
         val params = root.songgroup_recycler.layoutParams
-        params.height = (tracks.size * MathUtils.dpToPx2(resources, 59).toInt()) +
+        params.height = (tracks.size * MathUtils.dpToPx2(resources, 59)) +
                 IdentityUtils.getNavbarHeight(resources) +
                 MathUtils.dpToPx2(resources,
                         if((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
-                            56 else 0).toInt()
+                            56 else 0)
 
         mAdapter = SongListAdapter(tracks) { (id, pos) ->
-            manager.fromAlbum(album.id, pos)
+            manager.fromAlbum(album, pos)
         }
 
         root.play_fab.setOnClickListener {
-            manager.fromAlbum(album.id, 0)
+            manager.fromAlbum(album, 0)
         }
         root.songgroup_recycler.adapter = mAdapter
+
+        root.expandDescriptionChevron.setOnClickListener {
+
+            ogHeight = root.constraintLayout6.measuredHeight
+
+            val anim = ValueAnimator.ofInt(
+                    root.constraintLayout6.measuredHeight,
+                    if(!expanded) root.constraintLayout6.measuredHeight + root.descriptionText.height
+                        else ogHeight
+            )
+            anim.addUpdateListener({
+                    val int = it.animatedValue as Int
+                    val layoutParams = root.constraintLayout6.layoutParams
+                    layoutParams.height = int
+                    root.constraintLayout6.layoutParams = layoutParams
+            })
+            anim.duration = 300
+            anim.interpolator = FastOutSlowInInterpolator()
+            anim.start()
+
+            expanded = !expanded
+        }
 
         return root
     }

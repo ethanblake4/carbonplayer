@@ -8,6 +8,7 @@ import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
 import com.carbonplayer.model.entity.exception.NoNautilusException;
 import com.carbonplayer.model.network.GoogleLogin;
+import com.carbonplayer.utils.ExtensionsKt;
 import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -15,8 +16,8 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
 
 import static android.app.Activity.RESULT_OK;
@@ -65,6 +66,8 @@ class IntroPresenter {
         Timber.d("retrieved username=|%s| and password=|%s|", username, password);
         if (!username.contains("@")) username = username + "@gmail.com";
 
+        this.username = username;
+
         try {
             authDialog.dismiss();
         } catch (NullPointerException e) {
@@ -75,26 +78,27 @@ class IntroPresenter {
         mActivity.web = null;
         authDialog = null;
 
-        GoogleLogin.login(mActivity, username, password)
+        ExtensionsKt.addToAutoDispose(GoogleLogin.login(mActivity, username, password)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         this::doConfig,
                         this::handleLoginException
-                );
+                ));
     }
 
     void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR) {
             if (resultCode == RESULT_OK) {
-                GoogleLogin.retryGoogleAuth(mActivity, username)
+                ExtensionsKt.addToAutoDispose(GoogleLogin.retryGoogleAuth(mActivity, username)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
                                 this::doConfig,
                                 this::handleLoginException
-                        );
+                        ));
             } else {
+                Timber.e("Play Services Recover failure");
                 mActivity.makeLibraryError(R.string.intro_slide3_issue);
             }
         }
@@ -120,6 +124,7 @@ class IntroPresenter {
                         REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
             });
         } else {
+            Timber.e("Login Exception unandled");
             t.printStackTrace();
             mActivity.makeLibraryError(R.string.intro_slide3_issue);
         }
@@ -128,7 +133,7 @@ class IntroPresenter {
     private void doConfig() {
         if (!jsonCallbackCompleted) {
             jsonCallbackCompleted = true;
-            MusicLibrary.getInstance().config(mActivity,
+            MusicLibrary.INSTANCE.config(mActivity,
                     t -> {
                         if (t instanceof NoNautilusException)
                             mActivity.makeLibraryError(R.string.intro_slide3_no_nautilus);
@@ -139,10 +144,14 @@ class IntroPresenter {
 
     private void getLibrary() {
         mActivity.slide3Progress(false, 0);
-        MusicLibrary.getInstance().updateMusicLibrary(mActivity,
-                t -> mActivity.makeLibraryError(R.string.intro_slide3_issue),
-                i -> mActivity.slide3Progress(i.first, i.second),
-                mActivity::endSuccessfully);
+        MusicLibrary.INSTANCE.getMusicLibrary(mActivity,
+            t -> {
+                t.printStackTrace();
+                mActivity.makeLibraryError(R.string.intro_slide3_issue);
+            },
+            false,
+            i -> mActivity.slide3Progress(i.first, i.second),
+            mActivity::endSuccessfully);
     }
 
 }

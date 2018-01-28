@@ -17,18 +17,18 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Completable;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.exceptions.Exceptions;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
 import okio.Source;
-import rx.Completable;
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.exceptions.Exceptions;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
 import timber.log.Timber;
 
 public class StreamingContent {
@@ -55,6 +55,7 @@ public class StreamingContent {
         this.context = context;
         this.songID = songId;
         this.quality = quality;
+        
 
         if (!TrackCache.has(context, songId, quality)) {
             Timber.i("Creating new DownloadRequest");

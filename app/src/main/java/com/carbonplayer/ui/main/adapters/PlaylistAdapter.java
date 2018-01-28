@@ -128,12 +128,14 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         holder.titleText.setText(playlist.getName());
         holder.playlist = playlist;
 
-        if (playlist.getAlbumArtURL() != null && !playlist.getAlbumArtURL().equals("")) {
-            requestManager.load(playlist.getAlbumArtURL())
+        if (playlist.getAlbumArtRef() != null && playlist.getAlbumArtRef().size() > 0
+                && playlist.getAlbumArtRef().first() != null
+                && !playlist.getAlbumArtRef().first().getUrl().equals("")) {
+            requestManager.load(playlist.getAlbumArtRef().first().getUrl())
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                     .transition(DrawableTransitionOptions.withCrossFade(200))
                     .listener(
-                            GlidePalette.with(playlist.getAlbumArtURL())
+                            GlidePalette.with(playlist.getAlbumArtRef().first().getUrl())
                                     .use(GlidePalette.Profile.VIBRANT)
                                     .intoCallBack(palette -> {
                                         if (palette != null) {

@@ -18,10 +18,11 @@ import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1P
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.FullBleedSection
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adaptivehome.FullBleedListAdapter
+import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.adaptivehome.view.*
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
 import timber.log.Timber
 
 class HomeController : Controller() {
@@ -30,9 +31,7 @@ class HomeController : Controller() {
     lateinit var layoutManager: RecyclerView.LayoutManager
     lateinit var requestManager: RequestManager
 
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
-
 
         val view = inflater.inflate(R.layout.adaptivehome, container, false)
         view.main_recycler.hasFixedSize()
@@ -54,10 +53,23 @@ class HomeController : Controller() {
         view.main_recycler.recycledViewPool.setMaxRecycledViews(0, 2)
 
         /*view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
+
+            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                (activity as MainActivity).scrollCb(dy)
+            }
+        })*/
+
+        /*view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
             }
         })*/
+
+        CarbonPlayerApplication.instance.homeLastResponse?.let {
+            processHomeRequest(it)
+        }
 
         requestManager = Glide.with(activity)
         refresh()
@@ -77,10 +89,11 @@ class HomeController : Controller() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ home ->
+                    CarbonPlayerApplication.instance.homeLastResponse = home
                     processHomeRequest(home)
                 }, { err ->
                     Timber.e("Error in listennow", err)
-                })
+                }).addToAutoDispose()
 
     }
 

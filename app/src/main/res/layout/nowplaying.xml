@@ -85,13 +85,14 @@
         android:focusable="true"
         app:fabSize="mini" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/npui_recycler"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#fff">
 
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/npui_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#fff">
 
-    </android.support.v7.widget.RecyclerView>
+        </android.support.v7.widget.RecyclerView>
+
 
 </com.carbonplayer.ui.widget.NowPlayingFrame>

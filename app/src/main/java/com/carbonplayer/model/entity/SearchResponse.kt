@@ -1,20 +1,21 @@
 package com.carbonplayer.model.entity
 
-import com.carbonplayer.utils.*
+import com.carbonplayer.utils.maybeGetInt
+import com.carbonplayer.utils.maybeGetString
 import org.json.JSONObject
 
 
 data class SearchResponse (
-    val kind: String,
-    val numResults: Int?,
-    val clusterOrder: List<Int>?,
-    val continuation: String?,
-    val suggestedQuery: String?,
-    val entries: List<SearchResult>?,
-    val clusterDetail: List<ClusterDetail>?
+        val kind: String,
+        val numResults: Int?,
+        val clusterOrder: List<Int>?,
+        val continuation: String?,
+        val suggestedQuery: String?,
+        val entries: List<SearchResult>?,
+        val clusterDetail: List<ClusterDetail>?
 ) {
 
-    constructor(json: JSONObject): this (
+    /*constructor(json: JSONObject): this (
             json.getString("kind"),
             json.maybeGetInt("num_results"),
             json.maybeGetArray("cluster_order")?.let { it.mapArray { i -> getInt(i) } },
@@ -26,7 +27,7 @@ data class SearchResponse (
             json.maybeGetArray("clusterDetail")?.let {
                 it.mapArray { i -> ClusterDetail(getJSONObject(i)) }
             }
-    )
+    )*/
 
     data class SearchResult (
             val type: Int,
@@ -44,13 +45,13 @@ data class SearchResponse (
     /*var podcastSeries: PodcastSeries? = null*/
             val searchEntryContext: String?,
             /*var situation: SituationJson? = null*/
-            /*val station: SyncableRadioStation? = null*/
+            /*val station: SkyjamStation? = null*/
 
-            val track: MusicTrack?
+            val track: Track?
 
             /*var video: YoutubeVideoJson? = null*/
     ) {
-        constructor(json: JSONObject): this (
+        /*constructor(json: JSONObject): this (
                 json.getInt("type"),
                 json.maybeGetInt("score"),
                 json.maybeGetDouble("navigational_confidence")?.toFloat(),
@@ -61,8 +62,8 @@ data class SearchResponse (
                 json.maybeGetObj("artist")?.let { Artist(it) },
                 json.maybeGetObj("playlist")?.let { Playlist(it) },
                 json.maybeGetString("search_entry_context"),
-                json.maybeGetObj("track")?.let { MusicTrack(it) }
-        )
+                json.maybeGetObj("track")?.let { Track(it) }
+        )*/
     }
 
     data class Cluster (
@@ -83,13 +84,13 @@ data class SearchResponse (
             val entries: List<SearchResult>?,
             val resultToken: String?
     ) {
-        constructor(json: JSONObject): this (
+        /*constructor(json: JSONObject): this (
                 json.maybeGetObj("cluster")?.let { Cluster(it) },
                 json.maybeGetString("displayName"),
                 json.maybeGetArray("entries")?.let {
                     it.mapArray { i -> SearchResult(getJSONObject(i)) }
                 },
                 json.maybeGetString("resultToken")
-        )
+        )*/
     }
 }

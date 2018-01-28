@@ -1,13 +1,13 @@
 package com.carbonplayer.audio
 
 import android.app.Service
-import com.carbonplayer.model.entity.ParcelableMusicTrack
+import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.exception.PlaybackException
 
 class MusicPlayback(
         service: Service,
         callback: (PlayState) -> Unit,
-        trackCb: (Int, ParcelableMusicTrack) -> Unit,
+        trackCb: (Int, ParcelableTrack) -> Unit,
         bufferCb: (Float) -> Unit,
         error: (PlaybackException) -> Unit
 ) {
@@ -26,13 +26,13 @@ class MusicPlayback(
 
     fun setup() = playbackImpl.setup()
 
-    fun newQueue(queue: List<ParcelableMusicTrack>) = playbackImpl.newQueue(queue)
+    fun newQueue(queue: List<ParcelableTrack>) = playbackImpl.newQueue(queue)
 
     fun getQueue() = playbackImpl.mirroredQueue
 
-    fun addTracks(tracks: List<ParcelableMusicTrack>) = playbackImpl.add(tracks)
+    fun addTracks(tracks: List<ParcelableTrack>) = playbackImpl.add(tracks)
 
-    fun addNext(tracks: List<ParcelableMusicTrack>) = playbackImpl.addNext(tracks)
+    fun addNext(tracks: List<ParcelableTrack>) = playbackImpl.addNext(tracks)
 
     fun skipToTrack(index: Int) = playbackImpl.skipToTrack(index)
 

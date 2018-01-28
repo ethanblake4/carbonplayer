@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.ParcelableMusicTrack
+import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.SongID
 
 /**
@@ -18,7 +18,7 @@ import com.carbonplayer.model.entity.SongID
  * Album / playlist adapter
  */
 internal class NowPlayingQueueAdapter(
-        private val mDataset: List<ParcelableMusicTrack>,
+        private val mDataset: List<ParcelableTrack>,
         private val clicked: (Pair<SongID, Int>) -> Unit)
     : RecyclerView.Adapter<NowPlayingQueueAdapter.ViewHolder>() {
 

@@ -21,9 +21,9 @@ public class MathUtils {
         return px;
     }
 
-    public static float dpToPx2(Resources res, int dp) {
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
-                res.getDisplayMetrics());
+    public static int dpToPx2(Resources res, int dp) {
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
+                res.getDisplayMetrics()));
     }
 
     public static int pxToDp(Context context, int px) {

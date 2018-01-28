@@ -16,7 +16,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.ParcelableMusicTrack
+import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.utils.*
 import com.google.common.collect.Queues
@@ -53,7 +53,7 @@ class MusicPlayerService : Service(), MusicFocusable {
     private lateinit var playback: MusicPlayback
 
     private var lastBitmap: Bitmap? = null
-    private var lastNotifiedTrack: ParcelableMusicTrack? = null
+    private var lastNotifiedTrack: ParcelableTrack? = null
 
     var clients = ArrayList<Messenger>()
     private var messageQueue = Queues.newLinkedBlockingQueue<Pair<Int, Any?>>()
@@ -70,7 +70,7 @@ class MusicPlayerService : Service(), MusicFocusable {
             Constants.ACTION.START_SERVICE -> initService(intent)
             Constants.ACTION.NEW_QUEUE -> {
                 val bundle = intent.extras
-                val tracks = Parcels.unwrap<List<ParcelableMusicTrack>>(
+                val tracks = Parcels.unwrap<List<ParcelableTrack>>(
                         bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
 
                 fromNewQueue(tracks, bundle.getInt(Constants.KEY.POSITION))
@@ -108,14 +108,14 @@ class MusicPlayerService : Service(), MusicFocusable {
             Constants.ACTION.INSERT_NEXT -> {
                 Timber.i("Insert next")
                 val bundle = intent.extras
-                val tracks = Parcels.unwrap<List<ParcelableMusicTrack>>(
+                val tracks = Parcels.unwrap<List<ParcelableTrack>>(
                         bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
                 playback.addNext(tracks)
             }
             Constants.ACTION.INSERT_AT_END -> {
                 Timber.i("Insert at end")
                 val bundle = intent.extras
-                val tracks = Parcels.unwrap<List<ParcelableMusicTrack>>(
+                val tracks = Parcels.unwrap<List<ParcelableTrack>>(
                         bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
                 playback.addTracks(tracks)
             }
@@ -166,7 +166,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         nextIntent = newIntent<MusicPlayerService>(Constants.ACTION.NEXT)
 
         val bundle = intent.extras
-        val tracks = Parcels.unwrap<List<ParcelableMusicTrack>>(
+        val tracks = Parcels.unwrap<List<ParcelableTrack>>(
                 bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
 
         val stateBuilder = PlaybackStateCompat.Builder()
@@ -256,7 +256,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         fromNewQueue(tracks, intent.extras.getInt(Constants.KEY.POSITION))
     }
 
-    private fun fromNewQueue(tracks: List<ParcelableMusicTrack>, pos: Int) {
+    private fun fromNewQueue(tracks: List<ParcelableTrack>, pos: Int) {
         playback.newQueue(tracks)
         audioFocusHelper.requestFocus()
         wifiLock.acquire()
@@ -265,7 +265,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         playback.play()
     }
 
-    private fun loadImageAndDoUpdates(track: ParcelableMusicTrack) {
+    private fun loadImageAndDoUpdates(track: ParcelableTrack) {
 
         val metadata = track.mediaMetadata
 
@@ -287,7 +287,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         mediaSession.isActive = true
     }
 
-    private fun updateNotification(track: ParcelableMusicTrack, bitmap: Bitmap? = null) {
+    private fun updateNotification(track: ParcelableTrack, bitmap: Bitmap? = null) {
 
         lastNotifiedTrack = track
         lastBitmap = bitmap

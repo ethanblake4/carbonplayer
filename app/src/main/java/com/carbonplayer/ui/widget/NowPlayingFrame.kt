@@ -10,24 +10,31 @@ import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import timber.log.Timber
 
-
+/**
+ * A FrameLayout that can be expanded via swipe to increase its height and
+ * reduce its vertical screen position, creating the appearance of swiping up
+ *
+ * It also sends its current position via a callback to allow for animations
+ *
+ * @TODO switch from a 16ms thread to View.postOnAnimation()
+ */
 class NowPlayingFrame : FrameLayout {
 
-    var activePointerId = MotionEvent.INVALID_POINTER_ID
-    var lastY = 0f
-    var last2Y = 0f
+    private var activePointerId = MotionEvent.INVALID_POINTER_ID
+    private var lastY = 0f
+    private var last2Y = 0f
     var initialHeight = -2
-    val scroller = Scroller(context, FastOutSlowInInterpolator())
-    var scrollHasControl = false
-    val maxHeight = IdentityUtils.displayHeight2(context) -
+    private val scroller = Scroller(context, FastOutSlowInInterpolator())
+    private var scrollHasControl = false
+    private val maxHeight = IdentityUtils.displayHeight2(context) -
             initialHeight
-    var eventStartTime = 0L
-    var eventInitialY = 0f
-    var eventHasMotion = false
+    private var eventStartTime = 0L
+    private var eventInitialY = 0f
+    private var eventHasMotion = false
     var isUp = false
-    var runThread = true
+    private var runThread = true
 
-    var thread: Thread = Thread(Runnable {
+    private var thread: Thread = Thread(Runnable {
         while(runThread) {
             scroller.computeScrollOffset()
             if(scrollHasControl && scroller.currY != layoutParams.height) {
@@ -72,6 +79,8 @@ class NowPlayingFrame : FrameLayout {
         //Timber.d("On touch event: %d", event?.actionMasked)
         when(event?.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                /* On a touch, set the current active pointer and remove control from
+                 * the scroller */
                 scrollHasControl = false
                 val ac = event.actionIndex
                 last2Y = lastY
@@ -81,7 +90,9 @@ class NowPlayingFrame : FrameLayout {
                 eventStartTime = System.currentTimeMillis()
             }
             MotionEvent.ACTION_MOVE -> {
-
+                /*
+                 * When movement occurs, change our height and callback the new position
+                 */
                 val dy = event.rawY - lastY
                 if(!eventHasMotion && (event.rawY > eventInitialY + 1
                         || event.rawY < eventInitialY - 1)) eventHasMotion = true
@@ -95,6 +106,11 @@ class NowPlayingFrame : FrameLayout {
                 lastY = event.rawY
             }
             MotionEvent.ACTION_UP -> {
+
+                /* On an up event:
+                *   - If there was motion, start a fling with the current velocity
+                *   - If there was no motion, start a scroll to the nearest position OR
+                 *  - If the motion was a tap and isUp is FALSE, scroll to the top */
 
                 val location = intArrayOf(0, 0)
 

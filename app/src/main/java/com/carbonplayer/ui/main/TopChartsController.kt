@@ -14,9 +14,10 @@ import com.carbonplayer.model.entity.TopChartsResponse
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.topcharts.TopChartsAlbumPage
 import com.carbonplayer.ui.main.topcharts.TopChartsSongPage
+import com.carbonplayer.utils.addToAutoDispose
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.controller_topcharts.view.*
-import rx.android.schedulers.AndroidSchedulers
-import rx.schedulers.Schedulers
 import timber.log.Timber
 
 class TopChartsController : Controller() {
@@ -38,7 +39,7 @@ class TopChartsController : Controller() {
                     currentAlbumPage?.let { it.albumList = response.albums }
                 }, { err ->
                     Timber.e(err)
-                })
+                }).addToAutoDispose()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
@@ -63,7 +64,7 @@ class TopChartsController : Controller() {
                 }
             }
 
-            override fun getPageTitle(position: Int): CharSequence {
+            override fun getPageTitle(position: Int): CharSequence? {
                 return when (position + if (resources == null) 123 else 0) {
                     0 -> resources!!.getString(R.string.topcharts_tab_songs)
                     1 -> resources!!.getString(R.string.topcharts_tab_albums)

@@ -1,5 +1,6 @@
 package com.carbonplayer.ui.main.library
 
+import android.support.design.widget.AppBarLayout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +9,7 @@ import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
 import com.bluelinelabs.conductor.support.RouterPagerAdapter
 import com.carbonplayer.R
+import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.utils.general.IdentityUtils
 import kotlinx.android.synthetic.main.activity_main.view.*
 import timber.log.Timber
@@ -34,17 +36,22 @@ class LibraryController : Controller() {
 
         //view.toolbar.inflateMenu(R.menu.menu_main)
 
-        view.toolbar.setPadding(view.toolbar.paddingLeft, view.toolbar.paddingTop +
-                IdentityUtils.getStatusBarHeight(resources),
-                view.toolbar.paddingRight, view.toolbar.paddingBottom)
+        /*view.toolbar.setPadding(view.toolbar.paddingLeft, view.toolbar.paddingTop +
+                IdentityUtils.getStatusBarHeight(resources) * 2,
+                view.toolbar.paddingRight, view.toolbar.paddingBottom)*/
 
         //view.toolbar.layoutParams.height += IdentityUtils.getStatusBarHeight(resources)
         //(view.app_bar.layoutParams as CoordinatorLayout.LayoutParams).topMargin +=
         //        IdentityUtils.getStatusBarHeight(resources) / 2
         /*(view.toolbar.layoutParams as AppBarLayout.LayoutParams).bottomMargin +=
                 IdentityUtils.getStatusBarHeight(resources) / 2*/
-        /*(view.tab_layout.layoutParams as AppBarLayout.LayoutParams).topMargin +=
-                IdentityUtils.getStatusBarHeight(resources) / 2*/
+        (view.tab_layout.layoutParams as AppBarLayout.LayoutParams).topMargin +=
+                IdentityUtils.getStatusBarHeight(resources) / 2
+
+        view.app_bar.addOnOffsetChangedListener({ a, i ->
+            (activity as MainActivity).scrollCb(i)
+
+        })
 
         //view.statusBarCover.layoutParams.height = IdentityUtils.getStatusBarHeight(resources)
 

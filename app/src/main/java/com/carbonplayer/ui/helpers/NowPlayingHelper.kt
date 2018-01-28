@@ -20,8 +20,9 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.carbonplayer.R
 import com.carbonplayer.audio.MusicPlayerService
 import com.carbonplayer.audio.TrackQueue
-import com.carbonplayer.model.entity.MusicTrack
-import com.carbonplayer.model.entity.ParcelableMusicTrack
+import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.ui.main.adapters.NowPlayingQueueAdapter
 import com.carbonplayer.utils.Constants
 import com.carbonplayer.utils.asParcel
@@ -207,26 +208,33 @@ class NowPlayingHelper(private val activity: Activity) {
         activity.npui_recycler.postOnAnimation(queueSwipeRunnable)
     }
 
-    fun newQueue(tracks: List<MusicTrack>, pos: Int) {
+    fun newRadioFeed(radioFeedReason: RadioFeedReason, seed: String?) {
+
+    }
+
+    fun newQueue(tracks: List<ITrack>, pos: Int) {
         trackQueue.replace(tracks, pos)
     }
 
-    fun newQueue(tracks: List<MusicTrack>) {
+    fun newQueue(tracks: List<ITrack>) {
         newQueue(tracks, 0)
     }
 
-    fun insertNext(tracks: List<MusicTrack>) {
+    fun insertNext(tracks: List<ITrack>) {
         if(trackQueue.size > 0) {
             trackQueue.insertNext(tracks)
         } else trackQueue.replace(tracks, 0)
     }
 
-    fun insertAtEnd(tracks: List<MusicTrack>) {
+    fun insertAtEnd(tracks: List<ITrack>) {
         if(trackQueue.size > 0) {
             trackQueue.insertAtEnd(tracks)
         } else trackQueue.replace(tracks, 0)
     }
 
+    /**
+     * Bind to a service if the service is not started
+     */
     private fun maybeBind(intent: Intent) {
         Timber.d("Should bind to service?")
         if (!serviceStarted) {
@@ -266,14 +274,14 @@ class NowPlayingHelper(private val activity: Activity) {
 
     private fun revealPlayerUI() {
         AnimUtils.expand(activity.bottomNavContainer.nowplaying_frame)
-        activity.nowplaying_frame.initialHeight = MathUtils.dpToPx2(activity.resources, 56)
+        activity.nowplaying_frame.initialHeight= MathUtils.dpToPx2(activity.resources, 56)
                 .toInt()
     }
 
     private fun newIntent(): Intent = Intent(activity, MusicPlayerService::class.java)
 
     private val trackQueueCallback = object : TrackQueue.TrackQueueCallback {
-        override fun replace(tracks: MutableList<ParcelableMusicTrack>, pos: Int) {
+        override fun replace(tracks: MutableList<ParcelableTrack>, pos: Int) {
             val intent = newIntent().apply {
 
                 action = if (serviceStarted || isServiceRunning()) Constants.ACTION.NEW_QUEUE
@@ -294,7 +302,7 @@ class NowPlayingHelper(private val activity: Activity) {
             ContextCompat.startForegroundService(activity, intent)
         }
 
-        override fun insertAtEnd(tracks: MutableList<ParcelableMusicTrack>) {
+        override fun insertAtEnd(tracks: MutableList<ParcelableTrack>) {
             val intent = newIntent().apply {
                 action = Constants.ACTION.INSERT_AT_END
 
@@ -306,7 +314,7 @@ class NowPlayingHelper(private val activity: Activity) {
             ContextCompat.startForegroundService(activity, intent)
         }
 
-        override fun insertNext(tracks: MutableList<ParcelableMusicTrack>) {
+        override fun insertNext(tracks: MutableList<ParcelableTrack>) {
             val intent = newIntent().apply {
                 action = Constants.ACTION.INSERT_NEXT
 
@@ -346,7 +354,7 @@ class NowPlayingHelper(private val activity: Activity) {
                     if (activity.nowplaying_frame.visibility != View.VISIBLE) {
                         revealPlayerUI()
                     }
-                    val track = msg.obj as ParcelableMusicTrack
+                    val track = msg.obj as ParcelableTrack
                     requestMgr.load(track.albumArtURL)
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(activity.npui_thumb)

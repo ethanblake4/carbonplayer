@@ -5,12 +5,15 @@ import android.support.v4.media.MediaMetadataCompat;
 
 import org.parceler.Parcel;
 
+import java.util.Objects;
+
 /**
- * Simplified MusicTrack object for passing to/from background service
+ * Simplified Track object for passing to/from background service
  */
 @SuppressWarnings("unused")
 @Parcel
-public class ParcelableMusicTrack {
+public class ParcelableTrack {
+    long localId;
     int position;
     String id;
     String clientId;
@@ -26,14 +29,14 @@ public class ParcelableMusicTrack {
     String rating;
     int estimatedSize;
 
-    ParcelableMusicTrack() {
+    ParcelableTrack() {
     }
 
-    public ParcelableMusicTrack(int position, String id, String title,
-                                String artist, String album, int year,
-                                int trackNumber, String genre,
-                                int durationMillis, String albumArtURL,
-                                String rating, int estimatedSize) {
+    public ParcelableTrack(int position, String id, String title,
+                           String artist, String album, int year,
+                           int trackNumber, String genre,
+                           int durationMillis, String albumArtURL,
+                           String rating, int estimatedSize) {
         this.position = position;
         this.id = id;
         this.title = title;
@@ -48,20 +51,30 @@ public class ParcelableMusicTrack {
         this.estimatedSize = estimatedSize;
     }
 
-    public ParcelableMusicTrack(MusicTrack source) {
-        this.id = source.getTrackId();
+    public ParcelableTrack(Track source) {
+        this.localId = source.getLocalId();
+        this.id = source.getId();
         this.clientId = source.getClientId();
         this.nid = source.getNid();
         this.title = source.getTitle();
         this.artist = source.getArtist();
-        this.album = source.getAlbum();
+        this.album = Objects.requireNonNull(Objects.requireNonNull(source.getAlbums()).first()).getTitle();
         this.year = orZero(source.getYear());
         this.trackNumber = orZero(source.getTrackNumber());
         this.genre = source.getGenre();
         this.durationMillis = source.getDurationMillis();
-        this.albumArtURL = source.getAlbumArtURL();
+        this.albumArtURL = Objects.requireNonNull(source.getAlbums().first()).getAlbumArtRef();
         this.rating = source.getRating();
-        this.estimatedSize = source.getEstimatedSize();
+        Integer estSize = source.getEstimatedSize();
+        this.estimatedSize = estSize == null ? 0 : estSize;
+    }
+
+    public long getLocalId() {
+        return localId;
+    }
+
+    public void setLocalId(long localId) {
+        this.localId = localId;
     }
 
     public String getId() {

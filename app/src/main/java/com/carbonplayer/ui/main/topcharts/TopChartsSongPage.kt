@@ -6,14 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import com.bluelinelabs.conductor.Controller
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.MusicTrack
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.ui.main.adapters.TopChartsSongAdapter
 import kotlinx.android.synthetic.main.topcharts_recycler_layout.view.*
 import timber.log.Timber
 
 class TopChartsSongPage : Controller() {
 
-    var songList: List<MusicTrack>? = null
+    var songList: List<SkyjamTrack>? = null
         set(value) {
             field = value
             if( view != null && value != null) {

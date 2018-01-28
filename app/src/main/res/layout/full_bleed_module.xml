@@ -7,7 +7,7 @@
     <com.carbonplayer.ui.widget.ParallaxScrimageViewSz
         android:id="@+id/full_bleed_card_img"
         android:layout_width="match_parent"
-        android:layout_height="360dp"
+        android:layout_height="400dp"
         android:layout_marginTop="-60dp"
         android:background="#548"
         android:baselineAlignBottom="false"

@@ -1,18 +1,13 @@
 package com.carbonplayer.ui.main
 
 import android.app.Activity
-import android.app.ProgressDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.Toast
 import java.io.IOException
 import java.io.InputStream
-import java.lang.Exception
 import java.net.URISyntaxException
 import java.net.URL
-
-import kotlin.jvm.javaClass;
 
 
 class LinkActivity : Activity() {
@@ -43,7 +38,7 @@ class LinkActivity : Activity() {
             conn.connect()
             val inputS = conn.getInputStream()
             val page = inputS.convertToString()
-            val id = page.substring(page.indexOf("play.google.com/music/m/"), page.indexOf("?signup_if_needed=1"));
+            val id = page.substring(page.indexOf("play.google.com/music/m/"), page.indexOf("?signup_if_needed=1"))
             inputS.close()
             completion(id)
         }).start()

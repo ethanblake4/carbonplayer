@@ -3,8 +3,7 @@ package com.carbonplayer.audio
 import android.app.Service
 import android.net.Uri
 import android.os.Handler
-import com.carbonplayer.CarbonPlayerApplication
-import com.carbonplayer.model.entity.ParcelableMusicTrack
+import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.SongID
 import com.carbonplayer.model.entity.exception.PlaybackException
 import com.carbonplayer.model.network.StreamManager
@@ -22,7 +21,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultAllocator
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import rx.Subscription
+import io.reactivex.disposables.Disposable
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -30,39 +29,40 @@ class MusicPlaybackImpl(
         val service: Service,
         val playback: MusicPlayback,
         val callback: (MusicPlayback.PlayState) -> Unit,
-        val ontrackchanged: (Int, ParcelableMusicTrack) -> Unit,
+        val ontrackchanged: (Int, ParcelableTrack) -> Unit,
         val onbuffer: (Float) -> Unit,
         val onerror: (PlaybackException) -> Unit
 ) : Player.EventListener {
 
-    val mainHandler: Handler = Handler(service.mainLooper)
-    val streamManager: StreamManager = StreamManager.getInstance()
+    private val mainHandler: Handler = Handler(service.mainLooper)
+    private val streamManager: StreamManager = StreamManager.getInstance()
 
-    var subscription: Subscription? = null
+    private var subscription: Disposable? = null
 
-    var renderersFactory = DefaultRenderersFactory(service)
-    val allocator = DefaultAllocator(true, 64 * 1024)
-    val loadControl = DefaultLoadControl(allocator, 6000, 10000, 2000, 5000)
+    private var renderersFactory = DefaultRenderersFactory(service)
+    private val allocator = DefaultAllocator(true, 64 * 1024)
+    private val loadControl = DefaultLoadControl(allocator, 6000, 10000,
+            2000, 5000)
 
-    val trackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
-    val trackSelector = DefaultTrackSelector(trackSelectionFactory)
-    val dynamicSource = DynamicConcatenatingMediaSource()
+    private val trackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
+    private val trackSelector = DefaultTrackSelector(trackSelectionFactory)
+    private val dynamicSource = DynamicConcatenatingMediaSource()
 
-    val mirroredQueue = mutableListOf<ParcelableMusicTrack>()
-    val mirroredContentQueue = mutableListOf<StreamingContent>()
-    var trackNum = 0
-    var lastKnownWindowIndex = 0
+    val mirroredQueue = mutableListOf<ParcelableTrack>()
+    private val mirroredContentQueue = mutableListOf<StreamingContent>()
+    private var trackNum = 0
+    private var lastKnownWindowIndex = 0
 
-    var disallowNextAutoInc = false
+    private var disallowNextAutoInc = false
 
     var inc = 0
 
-    var playerIsPrepared = false
-    var mirroredPlayState = MusicPlayback.PlayState.NOT_PLAYING
+    private var playerIsPrepared = false
+    private var mirroredPlayState = MusicPlayback.PlayState.NOT_PLAYING
 
-    lateinit var exoPlayer: SimpleExoPlayer
+    private lateinit var exoPlayer: SimpleExoPlayer
 
-    lateinit var loop: Thread
+    private lateinit var loop: Thread
 
     fun setup() {
         exoPlayer = ExoPlayerFactory
@@ -101,7 +101,7 @@ class MusicPlaybackImpl(
         if (!exoPlayer.playWhenReady) exoPlayer.playWhenReady = true
     }
 
-    fun newQueue(queue: List<ParcelableMusicTrack>, initFirst: Boolean = true) {
+    fun newQueue(queue: List<ParcelableTrack>, initFirst: Boolean = true) {
         trackNum = 0
         val i = 0; while (i < dynamicSource.size) {
             dynamicSource.removeMediaSource(i)
@@ -120,7 +120,7 @@ class MusicPlaybackImpl(
             if (!mirroredContentQueue[index].downloadInitialized) {
                 mirroredContentQueue[index].initDownload()
                 todo = {
-                    subscription?.unsubscribe()
+                    subscription?.dispose()
                     subscription = mirroredContentQueue[index].progressMonitor()
                             .subscribe({ b -> onbuffer(b) })
                 }
@@ -171,7 +171,7 @@ class MusicPlaybackImpl(
     }
 
 
-    fun add(tracks: List<ParcelableMusicTrack>, downloadFirst: Boolean = false) {
+    fun add(tracks: List<ParcelableTrack>, downloadFirst: Boolean = false) {
         mirroredQueue.addAll(tracks)
         val sources = MutableList(tracks.size, { z ->
             val sourcePair = sourceFromTrack(tracks[z])
@@ -181,7 +181,7 @@ class MusicPlaybackImpl(
             mirroredContentQueue.add(sourcePair.first)
             sourcePair.second
         })
-        subscription?.unsubscribe()
+        subscription?.dispose()
         subscription = mirroredContentQueue[trackNum].progressMonitor()
                 .subscribe({ b -> onbuffer(b) })
 
@@ -190,7 +190,7 @@ class MusicPlaybackImpl(
         if (!loop.isAlive) loop.start()
     }
 
-    fun addNext(tracks: List<ParcelableMusicTrack>) {
+    fun addNext(tracks: List<ParcelableTrack>) {
         mirroredQueue.addAll(trackNum + 1, tracks)
         val sources = MutableList(tracks.size, { z ->
             sourceFromTrack(tracks[z])
@@ -229,11 +229,6 @@ class MusicPlaybackImpl(
 
     fun getCurrentPosition() = exoPlayer.currentPosition
 
-    private fun buildDataSourceFactory(useBandwidthMeter: Boolean): DataSource.Factory {
-        return (service.application as CarbonPlayerApplication)
-                .buildDataSourceFactory(if (useBandwidthMeter) bandwidthMeter else null)
-    }
-
     private fun execLoop() {
         if (exoPlayer.playWhenReady) {
             // Playing
@@ -255,12 +250,12 @@ class MusicPlaybackImpl(
         }
     }
 
-    private fun sourceFromTrack(track: ParcelableMusicTrack): Pair<StreamingContent, MediaSource> {
+    private fun sourceFromTrack(track: ParcelableTrack): Pair<StreamingContent, MediaSource> {
         val stream = streamManager.getStream(service, SongID(track), track.title, false)
         return Pair(stream, sourceFromStream(stream))
     }
 
-    /*private fun prepareTrack(track: ParcelableMusicTrack) {
+    /*private fun prepareTrack(track: ParcelableTrack) {
         preparingTrack = false
         dynamicSource.addMediaSource(sourceFromTrack(track))
         if(!playerIsPrepared) exoPlayer.prepare(dynamicSource, true, false)
@@ -321,7 +316,7 @@ class MusicPlaybackImpl(
             if (mirroredContentQueue[trackNum].isDownloaded) {
                 onbuffer(1.0f)
             } else {
-                subscription?.unsubscribe()
+                subscription?.dispose()
                 subscription = mirroredContentQueue[trackNum].progressMonitor()
                         .subscribe({ b -> onbuffer(b) })
             }

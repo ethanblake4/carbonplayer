@@ -1,33 +1,36 @@
 package com.carbonplayer.model.entity
 
+import com.carbonplayer.model.entity.skyjam.SkyjamPlentry
 import io.realm.RealmObject
-import org.json.JSONObject
-import java.util.*
+import io.realm.RealmResults
+import io.realm.annotations.LinkingObjects
+import io.realm.annotations.PrimaryKey
 
 open class PlaylistEntry(
         var kind: String = "",
         var id: String = "",
-        var clientId: String = "",
-        var playlistId: String = "",
+        @PrimaryKey var clientId: String = "",
+        @LinkingObjects("entries") val playlist: RealmResults<Playlist>? = null,
         var absolutePosition: String = "",
         var trackId: String = "",
-        var creationTimestamp: Date = Date(),
-        var lastModifiedTimestamp: Date = Date(),
+        var creationTimestamp: Long = 0,
+        var lastModifiedTimestamp: Long = 0,
         var deleted: Boolean = false,
         var source: String = "",
-        var track: MusicTrack? = null
+        var track: Track? = null
 ) : RealmObject() {
-    constructor(json: JSONObject, track: MusicTrack? = null) : this(
-            json.getString("kind"),
-            json.getString("id"),
-            json.getString("clientId"),
-            json.getString("playlistId"),
-            json.getString("absolutePosition"),
-            json.getString("trackId"),
-            Date(json.getString("creationTimestamp").toLong()),
-            Date(json.getString("lastModifiedTimestamp").toLong()),
-            json.getBoolean("deleted"),
-            json.getString("source"),
-            track ?: if (json.has("track")) MusicTrack(json.getJSONObject("track")) else null
+
+    constructor(source: SkyjamPlentry, track: Track?) : this (
+            source.kind,
+            source.id,
+            source.clientId,
+            null,
+            source.absolutePosition,
+            source.trackId,
+            source.creationTimestamp,
+            source.lastModifiedTimestamp,
+            source.deleted,
+            source.source,
+            track
     )
 }

@@ -76,6 +76,7 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
         mPager = findViewById(R.id.introPager);
         nextButton = findViewById(R.id.next);
+
         // Instantiate a ViewPager and a PagerAdapter.
         PagerAdapter mPagerAdapter = new IntroAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);

@@ -40,6 +40,13 @@ public class Preferences {
 
     public int maxAudioCacheSizeMB = 1024;
 
+    public boolean filterExplicit = false;
+
+    public int getContentFilterAsInt() {
+        if(filterExplicit) return 2;
+        return 1;
+    }
+
     public StreamQuality getPreferredStreamQuality(Context context){
         StreamQuality preferred;
         switch(IdentityUtils.networkType(context)) {

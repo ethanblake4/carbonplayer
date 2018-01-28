@@ -5,9 +5,9 @@ import org.json.JSONException
 import org.json.JSONObject
 
 open class ColorStyles(
-        var primary: RGBStyleColor = RGBStyleColor(),
-        var scrim: RGBStyleColor = RGBStyleColor(),
-        var accent: RGBStyleColor = RGBStyleColor()
+        var primary: RGBStyleColor? = RGBStyleColor(),
+        var scrim: RGBStyleColor? = RGBStyleColor(),
+        var accent: RGBStyleColor? = RGBStyleColor()
 ) : RealmObject() {
 
     @Throws(JSONException::class)

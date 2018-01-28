@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.Album
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
 import kotlinx.android.synthetic.main.topcharts_recycler_layout.view.*
@@ -15,7 +15,7 @@ import timber.log.Timber
 
 class TopChartsAlbumPage : Controller() {
 
-    var albumList: List<Album>? = null
+    var albumList: List<SkyjamAlbum>? = null
         set(value) {
             field = value
             if( view != null && value != null) {

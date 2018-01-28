@@ -1,126 +1,90 @@
 package com.carbonplayer.model.entity
 
-import com.carbonplayer.utils.maybeGetArray
-import com.carbonplayer.utils.maybeGetInt
-import com.carbonplayer.utils.maybeGetObj
-import com.carbonplayer.utils.maybeGetString
+import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import io.realm.RealmList
 import io.realm.RealmObject
-import io.realm.annotations.Ignore
+import io.realm.RealmResults
+import io.realm.annotations.LinkingObjects
 import io.realm.annotations.PrimaryKey
-import org.json.JSONObject
-import java.util.*
 
 /**
  * Album data class
  */
 
-open class Album(
-        var kind: String = "",
-        var inLibrary: Boolean = false,
-        @PrimaryKey var id: String = "",
-        var recentTimestamp: Date? = null,
-        @Ignore private var _title: String = "",
-        var albumArtist: String = "",
-        var artist: String = "",
-        var composer: String = "",
-        var year: Int = 0,
-        var genre: String = "",
-        var albumArtURL: String = "",
-        var artistId: RealmList<RealmString> = RealmList(),
-        var songIds: RealmList<RealmString> = RealmList(),
-        var description: String? = null,
-        var descAttribution: Attribution? = null,
-        var explicitType: String? = null,
-        var contentType: String? = null
+open class Album (
 
-) : RealmObject() {
+        override var kind: String = "",
+        override var inLibrary: Boolean = false,
+        @PrimaryKey override var albumId: String = "",
+        override var recentTimestamp: Long? = null,
+        override var title: String = "",
+        override var albumArtist: String = "",
+        override var composer: String = "",
+        override var year: Int = 0,
+        override var genre: String = "",
+        override var albumArtRef: String = "",
+        @LinkingObjects("albums") val artists: RealmResults<Artist>? = null,
+        var tracks: RealmList<Track> = RealmList(),
+        override var description: String? = null,
+        override var description_attribution: Attribution? = null,
+        override var explicitType: String? = null,
+        override var contentType: String? = null
 
-    constructor(json: JSONObject, inLibrary: Boolean = false) : this(
-            json.getString("kind"),
-            inLibrary,
-            json.getString("albumId"),
-            "recentTimestamp".let { if (json.has(it)) Date(json.getString(it).toLong()) else null },
-            json.getString("name"),
-            json.getString("albumArtist"),
-            json.getString("artist"),
-            "composer".let { if (json.has(it)) json.getString(it) else "" },
-            "year".let { if (json.has(it)) json.getInt(it) else 0 },
-            "genre".let { if (json.has(it)) json.getString(it) else "" },
-            "albumArtRef".let { if (json.has(it)) json.getString(it) else "" },
-            json.getJSONArray("artistId").let {
-                val ret = RealmList<RealmString>()
-                (0..it.length()-1).mapTo(ret) { n -> RealmString(it.getString(n)) }
-                ret
-            },
-            if (json.has("tracks")) json.getJSONArray("tracks").let {
-                val ret = RealmList<RealmString>()
-                (0..it.length()-1).mapTo(ret) { n ->
-                    RealmString(it.getJSONObject(n).getString(MusicTrack.ID))
-                }
-                ret
-            } else RealmList(),
-            "description".let { if (json.has(it)) json.getString(it) else null },
-            "description_attribution".let {
-                if (json.has(it)) Attribution(json.getJSONObject(it)) else null
-            },
-            "explicitType".let { if (json.has(it)) json.getString(it) else null },
-            "contentType".let { if (json.has(it)) json.getString(it) else null }
-    )
+) : RealmObject(), IAlbum {
 
-    constructor(source: Album, json: JSONObject) : this (
-            json.maybeGetString("kind") ?: source.kind,
+    override val artistId: List<String>
+        get() = artists?.map { it.artistId } ?: listOf()
+
+    constructor(source: SkyjamTrack, track: Track, inLibrary: Boolean = true) : this(
+            "sj#album", inLibrary,
+            source.albumId, source.recentTimestamp,
+            if(source.album.isBlank()) "Unknown Album" else source.album,
+            source.albumArtist, source.composer ?: "", source.year, source.genre ?: "",
+            source.albumArtRef?.first()?.url ?: "",
+            null, RealmList(track))
+
+    constructor(source: SkyjamAlbum) : this (
+            source.kind,
             source.inLibrary,
-            json.maybeGetString("albumId") ?: source.id,
-            json.maybeGetString("recentTimestamp")?.let {
-                Date(it.toLong())
-            } ?: source.recentTimestamp,
-            json.maybeGetString("name") ?: source.title,
-            json.maybeGetString("albumArtist") ?: source.albumArtist,
-            json.maybeGetString("artist") ?: source.artist,
-            json.maybeGetString("composer") ?: source.composer,
-            json.maybeGetInt("year") ?: source.year,
-            json.maybeGetString("genre") ?: source.genre,
-            json.getString("albumArtRef") ?: source.albumArtURL,
-            json.maybeGetArray("artistId")?.let {
-                val ret = RealmList<RealmString>()
-                (0..it.length()-1).mapTo(ret) { n -> RealmString(it.getString(n)) }
-                ret
-            } ?: source.artistId,
-            /*if (json.has("tracks")) json.getJSONArray("tracks").let {
-                val ret = RealmList<RealmString>()
-                (0..it.length()-1).mapTo(ret) { n ->
-                    RealmString(it.getJSONObject(n).getString(MusicTrack.ID))
-                }
-                ret
-            } else */source.songIds,
-            json.maybeGetString("description") ?: source.description,
-            json.maybeGetObj("description_attribution")?.let {
-                Attribution(it)
-            } ?: source.descAttribution,
-            "explicitType".let { if (json.has(it)) json.getString(it) else source.explicitType },
-            "contentType".let { if (json.has(it)) json.getString(it) else source.contentType }
+            source.albumId,
+            source.recentTimestamp,
+            source.title,
+            source.albumArtist,
+            source.composer?: "",
+            source.year,
+            source.genre,
+            source.albumArtRef,
+            null,
+            RealmList<Track>(),
+            source.description,
+            source.description_attribution,
+            source.explicitType,
+            source.contentType
+
     )
 
-    @JvmOverloads constructor(track: MusicTrack, inLibrary: Boolean = true) : this("", inLibrary,
-            track.albumId ?: "unknownID", track.recentTimestamp,
-            if (track.album != "") (track.album ?: "") else "Unknown album",
-            "", track.artist ?: "",
-            track.composer ?: "", track.year ?: 0, track.genre ?: "", track.albumArtURL ?: "",
-            track.artistId ?: RealmList(), RealmList(RealmString(track.trackId)))
-
-
-
-    var title = _title
-        set(title) {
-            field = if (title != "") title else "Unknown album"
-        }
-
-    infix fun addSong(songId: String) {
-        this.songIds.add(RealmString(songId))
+    fun updateFrom(source: SkyjamAlbum) : Album {
+        kind = source.kind
+        inLibrary = source.inLibrary
+        recentTimestamp = source.recentTimestamp
+        title = source.title
+        albumArtist = source.albumArtist
+        albumArtRef = source.albumArtRef
+        composer = source.composer ?: composer
+        year = source.year
+        genre = source.genre
+        description = source.description
+        description_attribution = source.description_attribution
+        explicitType = source.explicitType
+        contentType = source.contentType
+        return this
     }
 
+
+
     companion object {
-        val ID = "id"
+        const val ID = "albumId"
     }
 }

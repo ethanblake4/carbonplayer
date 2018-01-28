@@ -16,7 +16,6 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:title="@string/app_name"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             app:layout_scrollFlags="scroll|enterAlways"/>
     </android.support.design.widget.AppBarLayout>

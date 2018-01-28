@@ -14,8 +14,8 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.carbonplayer.CarbonPlayerApplication;
-import com.carbonplayer.utils.general.IdentityUtils;
 import com.carbonplayer.utils.Preferences;
+import com.carbonplayer.utils.general.IdentityUtils;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 
@@ -42,12 +42,12 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.HttpsURLConnection;
 
+import io.reactivex.Completable;
+import io.reactivex.exceptions.Exceptions;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import rx.Completable;
-import rx.exceptions.Exceptions;
 import timber.log.Timber;
 
 /**
@@ -56,13 +56,14 @@ import timber.log.Timber;
  * <p>
  * There are several steps used when authenticating:
  * 1) Obtain an Android master token. Normally, this is only called by Google Play services
- * when setting up a device for the first time. It is needed for steps #2 and #4.
- * 2) Obtain a ClientLogin token using the master token. This token is used for retrieving
- * a user's music library.
+ *    when setting up a device for the first time. It is needed for steps #2 and #4.
+ * 2) Obtain a ClientLogin token using the master token. This token is used for most API calls,
+ *    including retrieving a user's music library.
  * 3) Obtain a carbonplayer OAuth token. This is used for retrieving streaming URLs.
  * 4) Obtain a Google Play Music oAuth token by simulating Google Play Services API calls.
- * Most of the code this step is taken from the microG project. This token is required
- * for newer features such as the adaptive homepage.
+ *    Most of the code from this step is taken from the microG project. This token is required
+ *    for newer features such as the adaptive homepage.
+ * </p>
  */
 public final class GoogleLogin {
 
@@ -158,7 +159,7 @@ public final class GoogleLogin {
     }
 
     /**
-     * Performs a Google login call
+     * Performs a HTTP request using {@link HttpsURLConnection}
      *
      * @param url     URL
      * @param builder URI builder containing login params
@@ -209,6 +210,13 @@ public final class GoogleLogin {
         return response;
     }
 
+    /**
+     * Performs a HTTP request using {@link OkHttpClient}
+     *
+     * @param url     URL
+     * @param body a form body containing login params
+     * @return ArrayMap of response values
+     */
     private static ArrayMap<String, String> okLoginCall(String url, FormBody body) {
         OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient();
         ArrayMap<String, String> response = new ArrayMap<>();
@@ -236,6 +244,7 @@ public final class GoogleLogin {
         }
         return response;
     }
+
 
     private static String performMasterLogin(String email, String password, String androidId) {
 
@@ -277,6 +286,15 @@ public final class GoogleLogin {
 
     }
 
+    /**
+     * Step 1: retrieve an Android master token
+     * This endpoint is usually called by Google Play services to register a device
+     * on initial activation. The token it gets is used by steps 2 and 4.
+     * @param email user's email
+     * @param password user's password, will be encrypted
+     * @param androidId the actual Android device ID (not GPS id)
+     * @return the master token
+     */
     private static String okPerformMasterLogin(String email, String password, String androidId) {
 
         FormBody body;
@@ -313,6 +331,15 @@ public final class GoogleLogin {
         return response.get("Token");
     }
 
+    /**
+     * Step 2: Get a ClientLogin token for the "sj" (skyjam) scope
+     * IMPORTANT: This is *NOT* actually an OAuth token, that was a mistake
+     * This token can be used on most Play Music endpoints but not all
+     * @param email The user's email
+     * @param masterToken The master token retrieved in step 1
+     * @param androidId the actual device android ID, same as step 1
+     * @return an OAuth master token
+     */
     private static String okPerformOAuth(String email, String masterToken, String androidId) {
         FormBody body = new FormBody.Builder()
                 .add("accountType", "HOSTED_OR_GOOGLE")
@@ -394,32 +421,34 @@ public final class GoogleLogin {
             String androidId = Settings.Secure.getString(context.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
 
-            String gAndroidId = IdentityUtils.getGservicesId(context, true);
-
+            // Step 1: Get a master token
             String masterToken = CarbonPlayerApplication.Companion.getInstance().getUseOkHttpForLogin() ?
                     okPerformMasterLogin(email, password, androidId) :
                     performMasterLogin(email, password, androidId);
 
             if (masterToken == null) {
                 subscriber.onError(Exceptions.propagate(new Exception()));
-                subscriber.onCompleted();
+                subscriber.onComplete();
             }
 
             prefs().masterToken = masterToken;
 
+            //Step 2: Get a ClientLogin token
             String oAuthToken = CarbonPlayerApplication.Companion.getInstance().getUseOkHttpForLogin() ?
                     okPerformOAuth(email, masterToken, androidId) :
                     performOAuth(email, masterToken, androidId);
 
             if (oAuthToken == null) {
                 subscriber.onError(new Exception());
-                subscriber.onCompleted();
+                subscriber.onComplete();
             }
 
             prefs().OAuthToken = oAuthToken;
             prefs().userEmail = email;
 
             String mAuthToken = null;
+
+            // Step 3: Get a carbonplayer oAuth master token
             try {
                 Account[] accounts = AccountManager.get(context).getAccounts();
                 for (Account a : accounts) {
@@ -439,22 +468,35 @@ public final class GoogleLogin {
             } catch (IOException | GoogleAuthException ex) {
                 prefs().save();
                 subscriber.onError(ex);
-                subscriber.onCompleted();
+                subscriber.onComplete();
             }
 
+            // Step 4: Get a Google Play Music oAuth master token
             String playOAuth = getMusicOAuth(context, masterToken);
             Timber.d("playOAuth: %s", playOAuth == null ? "null" : playOAuth);
 
-            if (playOAuth != null) CarbonPlayerApplication.Companion.getInstance().preferences.PlayMusicOAuth = playOAuth;
+            if (playOAuth != null) CarbonPlayerApplication.Companion.getInstance()
+                    .preferences.PlayMusicOAuth = playOAuth;
 
             prefs().BearerAuth = mAuthToken;
             prefs().save();
 
-            subscriber.onCompleted();
+            subscriber.onComplete();
         });
 
     }
 
+    /**
+     * Step 4: Get a Google Play Music oAuth token for the "skyjam" scope (not "sj")
+     * This is not a master token, it can be directly used and expires (every hour?)
+     * It is required for newer Play Music endpoints like AdaptiveHome
+     * Its use should be avoided whenever possible because this function directly
+     * impersonates Google Play Services in order to retrieve the token
+     *
+     * @param context a Context instance
+     * @param authToken The master token retrieved in Step 1
+     * @return a Play Music oAuth token
+     */
     public static String getMusicOAuth(Context context, String authToken) {
 
         Timber.i("<< MusicOAuth >>");
@@ -522,7 +564,7 @@ public final class GoogleLogin {
             prefs().BearerAuth = mAuthToken;
             prefs().save();
 
-            subscriber.onCompleted();
+            subscriber.onComplete();
         });
     }
 

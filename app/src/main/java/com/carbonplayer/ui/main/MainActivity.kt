@@ -16,7 +16,8 @@ import com.bluelinelabs.conductor.RouterTransaction
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
-import com.carbonplayer.model.entity.Album
+import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
 import com.carbonplayer.ui.main.library.AlbumController
@@ -34,13 +35,27 @@ import timber.log.Timber
 class MainActivity : AppCompatActivity() {
 
     lateinit var npHelper: NowPlayingHelper
-    private val volumeObserver = VolumeObserver({ npHelper.maybeHandleVolumeEvent() })
+    private lateinit var volumeObserver: VolumeObserver
     private lateinit var router: Router
+
+    private var curAppbarOffset = 0
+    private var lastAppbarText = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
 
+        if (CarbonPlayerApplication.instance.preferences.firstStart) {
+            val i = Intent(this@MainActivity, IntroActivity::class.java)
+            startActivity(i)
+            Timber.d("Started activity")
+        }
+
+        setContentView(R.layout.controller_main)
+
+        npHelper = NowPlayingHelper(this)
+
+        volumeObserver = VolumeObserver({ npHelper.maybeHandleVolumeEvent() })
 
         applicationContext.contentResolver.registerContentObserver(
                 android.provider.Settings.System.CONTENT_URI, true,
@@ -48,38 +63,14 @@ class MainActivity : AppCompatActivity() {
 
         volumeControlStream = AudioManager.STREAM_MUSIC
 
-        if (CarbonPlayerApplication.instance.preferences.firstStart) {
-            val i = Intent(this@MainActivity, IntroActivity::class.java)
-            startActivity(i)
-            Timber.d("Started activity")
-            return
-        }
-
-        setContentView(R.layout.controller_main)
-
         functionalAppbar.outlineProvider = null
-
-        foregroundToolbar.inflateMenu(R.menu.menu_main)
 
         foregroundToolbar.setPadding(foregroundToolbar.paddingLeft,
                 foregroundToolbar.paddingTop + IdentityUtils.getStatusBarHeight(resources),
                     foregroundToolbar.paddingRight, foregroundToolbar.paddingBottom)
 
-        foregroundToolbar.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.menu_item_settings -> {
-                    startActivity(newIntent<Settings>())
-                    true
-                }
-                else -> false
-            }
-
-        }
 
         router = Conductor.attachRouter(this, main_controller_container, savedInstanceState)
-
-
-        npHelper = NowPlayingHelper(this)
 
         bottomNavContainer.setPadding(0, 0, 0,
                 IdentityUtils.getNavbarHeight(resources))
@@ -93,6 +84,15 @@ class MainActivity : AppCompatActivity() {
                 R.id.action_library -> LibraryController()
                 else -> LibraryController()
             }
+
+            main_actionbar_text.text = when (item.itemId) {
+                R.id.action_topcharts -> "Top Charts"
+                R.id.action_home -> "Home"
+                R.id.action_library -> "My Library"
+                else -> "Carbon Player"
+            }
+
+            lastAppbarText = main_actionbar_text.text.toString()
 
             //initialFrag.exitTransition = Fade()
 
@@ -115,14 +115,21 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
+        main_actionbar_more.setOnClickListener {
+            PopupMenu(this, main_actionbar_more).apply{
+                inflate(R.menu.menu_main)
+                show()
+                setOnMenuItemClickListener {
+                    if(it.itemId == R.id.menu_item_settings)
+                        startActivity(newIntent<Settings>())
+
+                    true
+                }
+            }
+        }
+
         Timber.d("Adding HomeController")
         router.setRoot(RouterTransaction.with(HomeController()))
-        //val initialFrag = HomeController()
-        //initialFrag.exitTransition = Fade()
-
-        /*fragmentManager.beginTransaction()
-                .replace(R.id.main_controller_container, initialFrag)
-                .commit()*/
 
     }
 
@@ -131,7 +138,7 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
-    fun gotoAlbum(album: Album, swatchPair: PaletteUtil.SwatchPair) {
+    fun gotoAlbum(album: IAlbum, swatchPair: PaletteUtil.SwatchPair) {
 
         val frag = AlbumController(album, swatchPair)
 
@@ -139,33 +146,32 @@ class MainActivity : AppCompatActivity() {
                 .pushChangeHandler(SimpleScaleTransition(this))
                 .popChangeHandler(SimpleScaleTransition(this)))
 
+        lastAppbarText = main_actionbar_text.text.toString()
+        main_actionbar_text.text = ""
 
-        /*fragmentManager.beginTransaction()
-                .addSharedElement(image, image.transitionName)
-                .addSharedElement(content, content.transitionName)
-                .addSharedElement(text, text.transitionName)
-                .addSharedElement(text2, text2.transitionName)
-                .replace(R.id.main_controller_container, frag)
-                .addToBackStack("base")
-                .commit()*/
     }
 
-    /*fun gotoAlbum2(album: Album, layoutRoot: FrameLayout) {
-        //albumController = AlbumController(album.id)
-        //albumController!!.makeAlbum(this, main_controller_container, layoutRoot)
+    fun gotoAlbum(album: SkyjamAlbum, swatchPair: PaletteUtil.SwatchPair) {
 
-        router.pushController(RouterTransaction.with(frag))
+    }
 
-    }*/
+    fun scrollCb(dy: Int) {
+        Timber.d("scrollOffset: %d", dy)
+        curAppbarOffset = dy
+        functionalAppbar.postOnAnimation {
+            functionalAppbar.translationY = curAppbarOffset.toFloat()
+            functionalAppbar.invalidate()
+        }
+    }
 
-    fun showAlbumPopup(view: View, album: Album) {
+    fun showAlbumPopup(view: View, album: IAlbum) {
 
         val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
         pop.inflate(R.menu.album_popup)
 
         pop.setOnMenuItemClickListener { item ->
 
-            val trackList = MusicLibrary.getInstance().getAllAlbumTracks(album.id)
+            val trackList = MusicLibrary.getAllAlbumTracks(album)
 
             when (item.itemId) {
                 R.id.menu_play_next -> {
@@ -205,5 +211,11 @@ class MainActivity : AppCompatActivity() {
         if(router.backstackSize > 0){
             router.popCurrentController()
         } else this.finish()
+
+        if(router.backstackSize == 1) {
+            //foregroundToolbar.navigationIcon = null
+            main_actionbar_text.text = lastAppbarText
+        }
+
     }
 }

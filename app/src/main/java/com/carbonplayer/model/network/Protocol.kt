@@ -5,18 +5,34 @@ import android.content.Context
 import android.net.Uri
 import android.net.http.AndroidHttpClient
 import com.carbonplayer.CarbonPlayerApplication
-import com.carbonplayer.model.entity.*
+import com.carbonplayer.model.entity.Artist
+import com.carbonplayer.model.entity.ConfigEntry
+import com.carbonplayer.model.entity.SearchResponse
+import com.carbonplayer.model.entity.TopChartsResponse
 import com.carbonplayer.model.entity.enums.NetworkType
+import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.entity.enums.StreamQuality
 import com.carbonplayer.model.entity.exception.ResponseCodeException
 import com.carbonplayer.model.entity.exception.ServerRejectionException
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeRequest
+import com.carbonplayer.model.entity.radio.RadioSeed
+import com.carbonplayer.model.entity.radio.request.RadioFeedRequest
+import com.carbonplayer.model.entity.radio.response.RadioFeedResponse
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamPlaylist
+import com.carbonplayer.model.entity.skyjam.SkyjamPlentry
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
+import com.carbonplayer.model.network.entity.*
 import com.carbonplayer.model.network.utils.ClientContextFactory
 import com.carbonplayer.model.network.utils.IOUtils
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.protocol.URLSigning
-import io.realm.Realm
+import com.carbonplayer.utils.toByteArray
+import com.squareup.moshi.JsonAdapter
+import io.reactivex.Observable
+import io.reactivex.Single
+import io.reactivex.exceptions.Exceptions
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -24,9 +40,6 @@ import okhttp3.RequestBody
 import org.apache.http.client.methods.HttpPost
 import org.json.JSONException
 import org.json.JSONObject
-import rx.Observable
-import rx.Single
-import rx.exceptions.Exceptions
 import timber.log.Timber
 import java.io.IOException
 import java.io.UnsupportedEncodingException
@@ -34,24 +47,25 @@ import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
 import java.util.*
 
+
 /**
  * Contains methods for interacting with Google Play Music APIs.
  */
 object Protocol {
 
-    private val SJ_URL = "https://mclients.googleapis.com/sj/v2.5/"
-    private val PA_URL = "https://music-pa.googleapis.com/v1/ij/"
-    private val STREAM_URL = "https://android.clients.google.com/music/mplay"
-    private val TYPE_JSON = MediaType.parse("application/json; charset=utf-8")
-    private val MAX_RESULTS = 250
+    private const val SJ_URL = "https://mclients.googleapis.com/sj/v2.5/"
+    private const val PA_URL = "https://music-pa.googleapis.com/v1/ij/"
+    private const val STREAM_URL = "https://android.clients.google.com/music/mplay"
+    private val TYPE_JSON = MediaType.parse("application/json; charset=utf-8")!!
+    private const val MAX_RESULTS = 250
 
     private fun Uri.Builder.appendDefaults() =
-        this.apply {
-            appendQueryParameter("hl", IdentityUtils.localeCode())
-            appendQueryParameter("tier", "aa")
-            appendQueryParameter("dv", CarbonPlayerApplication.instance.googleBuildNumber)
-            appendQueryParameter("client-build-type", "prod")
-        }
+            this.apply {
+                appendQueryParameter("hl", IdentityUtils.localeCode())
+                appendQueryParameter("tier", "aa")
+                appendQueryParameter("dv", CarbonPlayerApplication.instance.googleBuildNumber)
+                appendQueryParameter("client-build-type", "prod")
+            }
 
     fun getConfig(context: Activity): Single<LinkedList<ConfigEntry>> {
         val client = CarbonPlayerApplication.instance.okHttpClient
@@ -82,9 +96,58 @@ object Protocol {
         }
     }
 
+    fun radioFeed(context: Context, remoteSeedId: String, maxEntries: Int, reason: RadioFeedReason,
+                  seedType: Int, sessionToken: String?): Single<RadioFeedResponse> {
+        val adapter = CarbonPlayerApplication.moshi.adapter(RadioFeedResponse::class.java)
+        return Single.fromCallable {
+
+            val client = CarbonPlayerApplication.instance.okHttpClient
+
+            val radioRQ = RadioFeedRequest(
+                    CarbonPlayerApplication.instance.preferences.contentFilterAsInt,
+                    RadioFeedRequest.MixRequest(4, 25),
+                    listOf(RadioFeedRequest.RadioStationRequest(
+                            false,
+                            maxEntries,
+                            remoteSeedId,
+                            null,
+                            null,
+                            RadioSeed.create(remoteSeedId, seedType),
+                            sessionToken
+                    ))
+            )
+
+            val getParams = Uri.Builder()
+                    .appendQueryParameter("alt", "json")
+                    .appendDefaults()
+                    .appendQueryParameter("rz", reason.toApiValue())
+                    .build()
+
+            val request = defaultBuilder(context)
+                    .url(SJ_URL + "radio/stationfeed?" + getParams)
+                    .header("Content-Type", "application/json")
+                    .post(RequestBody.create(TYPE_JSON, radioRQ.toJson().toByteArray()))
+                    .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                response.body()?.source()?.let {
+                    return@fromCallable adapter.fromJson(it)
+                }
+            }
+            if (response.code() in 400..499) {
+                throw handle400(context, response.code(),
+                        response.header("X-Rejection-Reason"))
+            }
+            throw ResponseCodeException(response.body()!!.string())
+
+        }
+    }
+
     @Suppress("DEPRECATION")
-    fun listenNow(context: Activity,
-                  previousDistilledContextToken: String?): Single<InnerJamApiV1Proto.GetHomeResponse> {
+    fun listenNow(context: Activity, previousDistilledContextToken: String?):
+            Single<InnerJamApiV1Proto.GetHomeResponse> {
 
         val builder = GetHomeRequest.newBuilder()
                 .setClientContext(ClientContextFactory.create(context))
@@ -130,6 +193,9 @@ object Protocol {
     }
 
     fun getTopCharts(context: Context, offset: Int, pageSize: Int): Observable<TopChartsResponse> {
+
+        val adapter = CarbonPlayerApplication.moshi.adapter(TopChartsResponse::class.java)
+
         return Observable.fromCallable {
             val client = CarbonPlayerApplication.instance.okHttpClient
 
@@ -145,21 +211,23 @@ object Protocol {
                     .url(SJ_URL + "browse/topchart?" + getParams)
                     .header("Content-Type", "application/json")
                     .build()
-
             val response = client.newCall(request).execute()
-            if(response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-                return@fromCallable TopChartsResponse(JSONObject(response.body()!!.string()))
+            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                response.body()?.source()?.let {
+                    return@fromCallable adapter.fromJson(it)
+                }
             }
-            if(response.code() in 400..499) {
+            if (response.code() in 400..499) {
                 throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
             }
             throw ResponseCodeException(response.body()!!.string())
         }
     }
 
-    fun getNautilusAlbum(context: Context, sourceAlbum: Album, nid: String): Observable<Album> {
+    fun getNautilusAlbum(context: Context, nid: String): Observable<SkyjamAlbum> {
         return Observable.fromCallable {
             val client = CarbonPlayerApplication.instance.okHttpClient
+            val adapter = CarbonPlayerApplication.moshi.adapter(SkyjamAlbum::class.java)
 
             val getParams = Uri.Builder()
                     .appendQueryParameter("alt", "json")
@@ -174,10 +242,55 @@ object Protocol {
                     .build()
 
             val response = client.newCall(request).execute()
-            if(response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-                return@fromCallable Album(sourceAlbum, JSONObject(response.body()!!.string()))
+            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                response.body()?.let { body ->
+                    body.source()?.let {
+                        val s = adapter.fromJson(it)
+                        body.close()
+                        return@fromCallable s
+                    }
+                }
             }
-            if(response.code() in 400..499) {
+            if (response.code() in 400..499) {
+                throw handle400(context, response.code(),
+                        response.header("X-Rejection-Reason"))
+            }
+            response.body()?.string()?.let {
+                throw ResponseCodeException(it)
+            }; throw ResponseCodeException()
+        }
+    }
+
+    fun getNautilusArtist(context: Context,  nid: String): Observable<Artist> {
+
+        return Observable.fromCallable {
+            val client = CarbonPlayerApplication.instance.okHttpClient
+            val adapter = CarbonPlayerApplication.moshi.adapter(Artist::class.java)
+
+            val getParams = Uri.Builder()
+                    .appendQueryParameter("alt", "json")
+                    .appendDefaults()
+                    .appendQueryParameter("nid", nid)
+                    .appendQueryParameter("include-albums", "true")
+                    .appendQueryParameter("num-top-tracks", "50")
+                    .appendQueryParameter("num-related-artists", "20")
+
+            val request = defaultBuilder(context)
+                    .url(SJ_URL + "fetchartist?" + getParams)
+                    .header("Content-Type", "application/json")
+                    .build()
+
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                response.body()?.let { body ->
+                    body.source()?.let {
+                        val s = adapter.fromJson(it)
+                        body.close()
+                        return@fromCallable s
+                    }
+                }
+            }
+            if (response.code() in 400..499) {
                 throw handle400(context, response.code(),
                         response.header("X-Rejection-Reason"))
             }
@@ -187,15 +300,16 @@ object Protocol {
 
     fun getSearch(context: Context, query: String, continuation: String) = Observable.fromCallable {
         val client = CarbonPlayerApplication.instance.okHttpClient
+        val adapter = CarbonPlayerApplication.moshi.adapter(SearchResponse::class.java)
 
         val getParams = Uri.Builder()
                 .appendDefaults()
                 .appendQueryParameter("q", query)
                 .appendQueryParameter("query-type", "1")
                 .apply {
-                    if(CarbonPlayerApplication.instance.useSearchClustering)
+                    if (CarbonPlayerApplication.instance.useSearchClustering)
                         appendQueryParameter("ic", "true")
-                    if(continuation.isNotEmpty())
+                    if (continuation.isNotEmpty())
                         appendQueryParameter("start-token", continuation)
                 }
                 .appendQueryParameter("max-results", "100")
@@ -212,10 +326,12 @@ object Protocol {
                 .build()
 
         val response = client.newCall(request).execute()
-        if(response.isSuccessful && response.code() in 200..299) {
-            return@fromCallable SearchResponse(JSONObject(response.body()!!.string()))
+        if (response.isSuccessful && response.code() in 200..299) {
+            response.body()?.source()?.let {
+                return@fromCallable adapter.fromJson(it)
+            }
         }
-        if(response.code() in 400..499) {
+        if (response.code() in 400..499) {
             throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
         }
         throw ResponseCodeException(response.body()!!.string())
@@ -253,6 +369,7 @@ object Protocol {
                     val r = client.newCall(request).execute()
                     if (!r.isSuccessful) subscriber.onError(ResponseCodeException())
                     val response = r.body()!!.string()
+
                     val j = JSONObject(response)
                     //Timber.d(response);
 
@@ -263,6 +380,7 @@ object Protocol {
                             .mapTo(LinkedList<JSONObject>()) {
                                 itemArray.getJSONObject(it)
                             }
+
                     subscriber.onNext(list)
 
                 } catch (e: IOException) {
@@ -272,46 +390,79 @@ object Protocol {
                 }
 
             }
-            subscriber.onCompleted()
+            subscriber.onComplete()
         }
     }
 
-    @JvmStatic fun listTracks(context: Context): Observable<List<MusicTrack>> {
-        return pagedJSONFeed(context, "trackfeed")
-                .map<List<MusicTrack>> { jsonObjects ->
-                    try {
-                        jsonObjects.map { MusicTrack(it) }
-                    } catch (e: JSONException) {
-                        throw Exceptions.propagate(e)
-                    }
+    private fun <R, T : PagedJsonResponse<R>> rawPagedFeed(context: Context, urlPart: String,
+                                                     adapter: JsonAdapter<T>): Observable<R> {
+
+        val client = CarbonPlayerApplication
+                .instance.okHttpClient
+        val getParams = Uri.Builder()
+                .appendQueryParameter("alt", "json")
+                .appendDefaults()
+
+        return Observable.create<R> { subscriber ->
+
+            var startToken: String? = ""
+
+            while (startToken != null) {
+                Timber.d("startToken: $startToken")
+                val requestJson = JSONObject()
+                try {
+                    requestJson.put("max-results", MAX_RESULTS)
+                    if ("" != startToken) requestJson.put("start-token", startToken)
+                } catch (e: JSONException) {
+                    subscriber.onError(e)
                 }
+
+                startToken = null
+
+                val request = defaultBuilder(context)
+                        .url(SJ_URL + urlPart + "?" + getParams.build().encodedQuery)
+                        .header("Content-Type", "application/json")
+                        .post(RequestBody.create(TYPE_JSON, requestJson.toString()))
+                        .build()
+                try {
+
+                    val r = client.newCall(request).execute()
+                    if (!r.isSuccessful) subscriber.onError(ResponseCodeException())
+
+                    r.body()?.source()?.let { adapter.fromJson(it)?.let { response ->
+                        if (response.nextPageToken != null) startToken = response.nextPageToken
+                        subscriber.onNext(response.data)
+                    } }
+
+                } catch (e: IOException) {
+                    subscriber.onError(e)
+                } catch (e: JSONException) {
+                    subscriber.onError(e)
+                }
+            }
+            subscriber.onComplete()
+        }
     }
 
-    @JvmStatic fun listPlaylists(context: Activity): Observable<List<Playlist>> {
-        return pagedJSONFeed(context, "playlistfeed")
-                .map<List<Playlist>> { jsonObjects ->
-                    try {
-                        jsonObjects.map { Playlist(it) }
-                    } catch (e: JSONException) {
-                        throw Exceptions.propagate(e)
-                    }
-                }
+    @JvmStatic
+    fun listTracks(context: Context): Observable<List<SkyjamTrack>> {
+        val adapter = CarbonPlayerApplication.moshi.adapter(PagedTrackResponse::class.java)
+        return rawPagedFeed<PagedTrackResponseData, PagedTrackResponse>(context, "trackfeed", adapter)
+                .map { response -> response.items }
     }
 
-    @JvmStatic fun listPlaylistEntries(context: Activity): Observable<List<PlaylistEntry>> {
-        return pagedJSONFeed(context, "plentryfeed")
-                .map<List<PlaylistEntry>> { jsonObjects ->
-                    try {
-                        val realm = Realm.getDefaultInstance()
-                        jsonObjects.map {
-                            val t = realm.where(MusicTrack::class.java).equalTo(MusicTrack.ID,
-                                    it.getString("id")).findFirst()
-                            PlaylistEntry(it, t)
-                        }
-                    } catch (e: JSONException) {
-                        throw Exceptions.propagate(e)
-                    }
-                }
+    @JvmStatic
+    fun listPlaylists(context: Activity): Observable<List<SkyjamPlaylist>> {
+        val adapter = CarbonPlayerApplication.moshi.adapter(PagedPlaylistResponse::class.java)
+        return rawPagedFeed(context, "playlistfeed", adapter)
+                .map<List<SkyjamPlaylist>> { response -> response.items }
+    }
+
+    @JvmStatic
+    fun listPlaylistEntries(context: Activity): Observable<List<SkyjamPlentry>> {
+        val adapter = CarbonPlayerApplication.moshi.adapter(PagedPlentryResponse::class.java)
+        return rawPagedFeed(context, "plentryfeed", adapter)
+                .map { response -> response.items }
     }
 
     fun getStreamURL(context: Context, song_id: String): Single<String> {
@@ -363,8 +514,9 @@ object Protocol {
                     .build()
             try {
                 val r = client.newCall(request).execute()
-                if (r.isRedirect) {
-                    subscriber.onSuccess(r.headers().get("Location"))
+                val locHeader = r.headers().get("Location")
+                if (r.isRedirect && locHeader != null) {
+                    subscriber.onSuccess(locHeader)
                 } else {
                     if (r.code() == 401 || r.code() == 402 || r.code() == 403) {
                         val rejectionReason = r.header("X-Rejected-Reason")
@@ -428,11 +580,11 @@ object Protocol {
     }
 
     private fun getNetHeader(context: Context): String {
-        when (IdentityUtils.networkType(context)) {
-            NetworkType.WIFI -> return "wifi"
-            NetworkType.ETHER -> return "ether"
-            NetworkType.MOBILE -> return "mob"
-            else -> return ""
+        return when (IdentityUtils.networkType(context)) {
+            NetworkType.WIFI -> "wifi"
+            NetworkType.ETHER -> "ether"
+            NetworkType.MOBILE -> "mob"
+            else -> ""
         }
     }
 

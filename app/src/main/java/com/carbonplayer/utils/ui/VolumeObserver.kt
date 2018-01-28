@@ -6,7 +6,7 @@ import android.os.Handler
 /**
  * Listens
  */
-class VolumeObserver(
+class VolumeObserver (
         val callback: () -> Unit,
         handler: Handler = Handler()
 ) : ContentObserver(handler) {

@@ -7,15 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.MusicTrack
 import com.carbonplayer.model.entity.SongID
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import kotlinx.android.synthetic.main.topcharts_song_layout.view.*
 
 /**
  * Displays list of tracks w/ ranking
  */
 internal class TopChartsSongAdapter(
-        private val mDataset: List<MusicTrack>,
+        private val mDataset: List<SkyjamTrack>,
         private val clicked: (SongID) -> Unit)
     : RecyclerView.Adapter<TopChartsSongAdapter.ViewHolder>() {
 
@@ -43,9 +43,14 @@ internal class TopChartsSongAdapter(
         holder.itemView.artistName.text = t.artist
         //holder.id = SongID(t)
 
-        Glide.with(holder.itemView)
-                .load(t.albumArtURL)
-                .into(holder.itemView.trackThumb)
+        t.albumArtRef?.first()?.url?.let {
+            Glide.with(holder.itemView)
+                    .load(it)
+                    .into(holder.itemView.trackThumb)
+        }
+
+
+
     }
 
     override fun getItemCount(): Int = mDataset.size

@@ -70,10 +70,10 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
 
             layoutRoot.setOnClickListener(view -> {
 
-                thumb.setTransitionName(album.getId() + "i");
-                contentRoot.setTransitionName(album.getId() + "cr");
-                titleText.setTransitionName(album.getId() + "t");
-                detailText.setTransitionName(album.getId() + "d");
+                thumb.setTransitionName(album.getAlbumId() + "i");
+                contentRoot.setTransitionName(album.getAlbumId() + "cr");
+                titleText.setTransitionName(album.getAlbumId() + "t");
+                detailText.setTransitionName(album.getAlbumId() + "d");
 
                 context.gotoAlbum(album, swatchPair);
             });
@@ -138,14 +138,14 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
 
         Album a = mDataset.get(position);
         holder.titleText.setText(a.getTitle());
-        holder.detailText.setText(a.getArtist());
+        holder.detailText.setText(a.getArtists().first().getName());
         holder.album = a;
 
-        if (!a.getAlbumArtURL().equals("")) {
-            requestManager.load(a.getAlbumArtURL())
+        if (!a.getAlbumArtRef().equals("")) {
+            requestManager.load(a.getAlbumArtRef())
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                     .transition(DrawableTransitionOptions.withCrossFade(200))
-                    .listener(GlidePalette.with(a.getAlbumArtURL())
+                    .listener(GlidePalette.with(a.getAlbumArtRef())
                             .use(GlidePalette.Profile.VIBRANT)
                             .intoCallBack(palette -> {
                                 if (palette != null) {
