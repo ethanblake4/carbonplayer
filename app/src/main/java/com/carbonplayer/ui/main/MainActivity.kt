@@ -156,7 +156,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun scrollCb(dy: Int) {
-        Timber.d("scrollOffset: %d", dy)
         curAppbarOffset = dy
         functionalAppbar.postOnAnimation {
             functionalAppbar.translationY = curAppbarOffset.toFloat()

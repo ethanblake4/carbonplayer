@@ -21,6 +21,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.Album;
+import com.carbonplayer.model.entity.Artist;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.ui.widget.fastscroll.SectionTitleProvider;
 import com.carbonplayer.utils.general.MathUtils;
@@ -32,6 +33,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.realm.RealmResults;
 
 /**
  * Displays albums in variable-size grid view
@@ -138,7 +140,11 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
 
         Album a = mDataset.get(position);
         holder.titleText.setText(a.getTitle());
-        holder.detailText.setText(a.getArtists().first().getName());
+        RealmResults<Artist> ar = a.getArtists();
+        if(ar != null && ar.size() > 0)
+            holder.detailText.setText(ar.first().getName());
+        else holder.detailText.setText("Unknown artist");
+
         holder.album = a;
 
         if (!a.getAlbumArtRef().equals("")) {

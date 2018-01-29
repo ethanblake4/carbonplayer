@@ -71,6 +71,11 @@ public class ParcelableTrack {
         this.estimatedSize = estSize == null ? 0 : estSize;
     }
 
+    @Override
+    public String toString() {
+        return "ParcelableTrack(id: " + this.id + ", title: " + this.title + ")";
+    }
+
     public long getLocalId() {
         return localId;
     }

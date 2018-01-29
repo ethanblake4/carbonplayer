@@ -95,24 +95,27 @@ class MusicPlaybackImpl(
         if (!playerIsPrepared) {
             exoPlayer.prepare(dynamicSource)
             playerIsPrepared = true
+            exoPlayer.seekTo(trackNum, 0L)
         }
         if (!loop.isAlive) loop.start()
         if (!exoPlayer.playWhenReady) exoPlayer.playWhenReady = true
     }
 
-    fun newQueue(queue: List<ParcelableTrack>, initFirst: Boolean = true) {
-        trackNum = 0
+    fun newQueue(queue: List<ParcelableTrack>, track: Int = 0, initFirst: Boolean = true) {
+        Timber.d("newQueue, initFirst: $initFirst")
+        trackNum = track
         val i = 0; while (i < dynamicSource.size) {
             dynamicSource.removeMediaSource(i)
         }
         mirroredQueue.clear()
         mirroredContentQueue.clear()
-        add(queue, initFirst)
+        add(queue, track, initFirst)
         ontrackchanged(trackNum, mirroredQueue[trackNum])
         playerIsPrepared = false
     }
 
     fun skipToTrack(index: Int) {
+        Timber.d("skipToTrack $index")
         if (mirroredQueue.size > index) {
             var todo = { onbuffer(1f) }
 
@@ -170,11 +173,12 @@ class MusicPlaybackImpl(
     }
 
 
-    fun add(tracks: List<ParcelableTrack>, downloadFirst: Boolean = false) {
+    fun add(tracks: List<ParcelableTrack>, track: Int = 0, downloadFirst: Boolean = false) {
+        Timber.d("add tracks, downloadFirst: $downloadFirst")
         mirroredQueue.addAll(tracks)
         val sources = MutableList(tracks.size, { z ->
             val sourcePair = sourceFromTrack(tracks[z])
-            if (z == 0 && downloadFirst && !sourcePair.first.isDownloaded) {
+            if (z == track && downloadFirst && !sourcePair.first.isDownloaded) {
                 sourcePair.first.initDownload()
             }
             mirroredContentQueue.add(sourcePair.first)
@@ -250,6 +254,7 @@ class MusicPlaybackImpl(
     }
 
     private fun sourceFromTrack(track: ParcelableTrack): Pair<Stream, MediaSource> {
+        Timber.d("sourceFromTrack $track")
         val stream = StreamManager.getStream(service, SongID(track), track.title, false)
         return Pair(stream, sourceFromStream(stream))
     }
@@ -261,6 +266,7 @@ class MusicPlaybackImpl(
     }*/
 
     private fun sourceFromStream(stream: Stream): MediaSource {
+        Timber.d("sourceFromStream $stream")
         return ExtractorMediaSource(Uri.parse("DefaultUri"),
                 DataSource.Factory { ExoPlayerDataSource(stream) },
                 DefaultExtractorsFactory(), mainHandler, ExtractorMediaSource.EventListener { e ->

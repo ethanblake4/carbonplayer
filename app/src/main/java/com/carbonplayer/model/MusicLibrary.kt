@@ -128,6 +128,10 @@ object MusicLibrary {
 
             val album = realm.where(Album::class.java)
                     .equalTo(Album.ID, sjTrack.albumId)
+                    .or().beginGroup()
+                    .equalTo(Album.TITLE, sjTrack.album)
+                    .contains("artists.name", sjTrack.artist)
+                    .endGroup()
                     .findFirst()?.apply { this.tracks.add(track) }
                     ?: realm.copyToRealm(Album(sjTrack, track))
 

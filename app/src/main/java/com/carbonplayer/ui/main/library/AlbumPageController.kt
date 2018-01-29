@@ -2,6 +2,7 @@ package com.carbonplayer.ui.main.library
 
 //import kotlinx.android.synthetic.main.activity_main.view.*
 import android.content.Context
+import android.os.Bundle
 import android.os.Parcelable
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -32,7 +33,7 @@ class AlbumPageController : Controller() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
-        //Timber.d("Album - onCreateView. savedInstanceState= %s", if(savedInstanceState == null) "null" else "not null")
+        Timber.d("Album - onCreateView.")
 
         val view = inflater.inflate(R.layout.single_recycler_layout, container, false)
         view.main_recycler.hasFixedSize()
@@ -43,21 +44,30 @@ class AlbumPageController : Controller() {
 
         requestManager = Glide.with(activity)
 
-        /*recyclerState =
-                (savedInstanceState?.getParcelable("recycler") ?: recyclerState)*/
-
-        view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
-
-            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                //(activity as MainActivity).scrollCb(dy)
-            }
-        })
-
         if(activity != null && !subscribed) resubscribe(view)
 
         return view
+    }
+
+    override fun onSaveViewState(view: View, outState: Bundle) {
+
+        Timber.d("onSaveViewState")
+
+        Timber.d("Album - onSaveViewState = saving self state")
+        outState.putParcelable("recycler", view.main_recycler.layoutManager.onSaveInstanceState())
+
+        super.onSaveViewState(view, outState)
+    }
+
+    override fun onRestoreViewState(view: View, savedViewState: Bundle) {
+
+        Timber.d("onRestoreViewState, view: $view, viewCtx: ${view.context}, activity: $activity")
+
+        super.onRestoreViewState(view, savedViewState)
+
+        recyclerState = savedViewState.getParcelable("recycler") ?: recyclerState
+
+        if(activity != null && !subscribed) resubscribe(view)
     }
 
     /*override fun onPause() {
@@ -67,8 +77,8 @@ class AlbumPageController : Controller() {
 
     override fun onDestroyView(view: View) {
         recyclerState = view.main_recycler.layoutManager.onSaveInstanceState()
+        subscribed = false
         super.onDestroyView(view)
-        Timber.d("album: destroyview")
     }
 
     override fun onContextAvailable(context: Context) {
@@ -79,7 +89,7 @@ class AlbumPageController : Controller() {
     }
 
     fun resubscribe(view: View) {
-
+        Timber.d("Resubscribe")
         albumSubscription?.dispose()
         albumSubscription = MusicLibrary.loadAlbums()
                 .subscribe { albums ->

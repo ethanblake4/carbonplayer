@@ -253,14 +253,15 @@ class MusicPlayerService : Service(), MusicFocusable {
         mediaSession = MediaSessionCompat(this, "CarbonMusic")
         mediaSession.setCallback(mediaSessionCallback)
 
+        Timber.d("Will call fromNewQueue with position ${intent.extras.getInt(Constants.KEY.POSITION)}")
+
         fromNewQueue(tracks, intent.extras.getInt(Constants.KEY.POSITION))
     }
 
     private fun fromNewQueue(tracks: List<ParcelableTrack>, pos: Int) {
-        playback.newQueue(tracks)
+        playback.newQueue(tracks, pos)
         audioFocusHelper.requestFocus()
         wifiLock.acquire()
-        playback.skipToTrack(pos)
         playback.seekTo(0)
         playback.play()
     }

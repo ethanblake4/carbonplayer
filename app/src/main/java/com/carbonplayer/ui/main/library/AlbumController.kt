@@ -74,6 +74,9 @@ class AlbumController(
     private var mAdapter: RecyclerView.Adapter<*>? = null
     private var mLayoutManager: RecyclerView.LayoutManager? = null
 
+    private var aId: String
+    private var albumProxy = album
+
     private lateinit var tracks: List<ITrack>
     private lateinit var sjTracks: List<SkyjamTrack>
 
@@ -109,20 +112,31 @@ class AlbumController(
         super.onSaveInstanceState(outState)
     }
 
+    init {
+        aId = album.albumId
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
         root = inflater.inflate(R.layout.activity_songgroup, container, false)
 
-        if(album.description == null && album is Album ) {
+        if(album.description == null && album is Album) {
+
             Protocol.getNautilusAlbum(activity!!, album.albumId)
                     .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
+                    .observeOn(AndroidSchedulers.from(this.activity!!.mainLooper))
                     .delay(300, TimeUnit.MILLISECONDS) /* Prevent animation interrupt */
                     .subscribe({ a ->
+                        val rlm = Realm.getDefaultInstance()
 
-                        (album as Album).updateFrom(a)
+                        albumProxy = rlm.where(Album::class.java)
+                                .equalTo(Album.ID, aId)
+                                .findFirst()!!
+                        rlm.executeTransaction {
+                            (albumProxy as Album).updateFrom(a, it)
+                        }
 
-                        if(view != null && album.description != null && album.description!!.isNotBlank()) {
+                        if (view != null && albumProxy.description != null && albumProxy.description!!.isNotBlank()) {
                             val const = ConstraintSet().apply {
                                 clone(view!!.constraintLayout6)
                                 setMargin(R.id.primaryText, ConstraintSet.TOP,
@@ -136,11 +150,13 @@ class AlbumController(
 
                             TransitionManager.beginDelayedTransition(view!!.constraintLayout6, t)
 
+                            val desc = albumProxy.description
+
                             view!!.post {
                                 const.applyTo(view!!.constraintLayout6)
 
                                 view!!.descriptionText.run {
-                                    text = album.description
+                                    text = desc
                                     setTextColor(bodyColor)
                                     visibility = View.VISIBLE
                                     alpha = 0.0f
@@ -263,7 +279,7 @@ class AlbumController(
                         if((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
                             56 else 0)
 
-        mAdapter = SongListAdapter(tracks) { (id, pos) ->
+        mAdapter = SongListAdapter(tracks) { (_, pos) ->
             manager.fromAlbum(album, pos)
         }
 

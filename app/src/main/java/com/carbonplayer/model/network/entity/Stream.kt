@@ -28,7 +28,7 @@ import java.util.*
 class Stream @JvmOverloads constructor(val context: Context, val id: SongID, trackTitle: String,
                                        private val quality: StreamQuality, doDownload: Boolean = true) {
 
-    private val downloadProgress = PublishSubject.create<Float>()
+    private val downloadProgress = PublishSubject.create<Long>()
     var downloadInitialized = false
     private var completed: Long = 0
     private val seekMs: Long = 0
@@ -58,18 +58,6 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
             return state == DownloadRequest.State.COMPLETED
         }
 
-    val isCompleted: Boolean
-        @Synchronized get() {
-            val state = downloadRequest!!.state
-            return state == DownloadRequest.State.COMPLETED
-        }
-
-    val isFailed: Boolean
-        @Synchronized get() {
-            val state = downloadRequest!!.state
-            return state == DownloadRequest.State.FAILED
-        }
-
     init {
 
         if (!TrackCache.has(context, id, quality)) {
@@ -85,7 +73,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
             val file = TrackCache.getTrackFile(context, id, quality)
             this.filepath = file.absolutePath
             this.downloadRequest = null
-            downloadProgress.onNext(1.0f)
+            downloadProgress.onNext(file.length())
             completed = file.length()
         }
 
@@ -105,7 +93,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                     val originalResponse = chain.proceed(chain.request())
                     originalResponse.newBuilder()
                             .body(ProgressResponseBody(originalResponse.body(), { bytes, len, _ ->
-                                downloadProgress.onNext((bytes / 100.0 / (len / 100.0)).toFloat())
+                                downloadProgress.onNext(bytes)
                             }))
                             .build()
                 })
@@ -129,6 +117,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                             downloadRequest.state = DownloadRequest.State.DOWNLOADING
 
                             val sink = Okio.buffer(Okio.sink(File(filepath!!)))
+
                             val source = response.body()!!.source()
 
                             len = response.body()!!.contentLength()
@@ -138,14 +127,13 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                                 sink.write(source, Math.min(2048, len - writ))
                                 writ += Math.min(2048, len - writ)
                                 synchronized(this@Stream) {
-                                    (this@Stream as java.lang.Object).notifyAll()
+                                    (this as java.lang.Object).notifyAll()
                                 }
-                                //downloadProgress.onNext(writ);
                             }
                             sink.close()
                             downloadRequest.state = DownloadRequest.State.COMPLETED
                             Timber.d("Download Completed")
-                        } catch (e: IOException) {
+                        } catch (e: Exception) {
                             throw Exceptions.propagate(e)
                         }
                         subscriber.onComplete()
@@ -153,7 +141,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.from(context.mainLooper))
-                .subscribe({ x ->
+                .subscribe({ _ ->
                     downloadRequest.state = DownloadRequest.State.COMPLETED
                     Timber.d("Download Completed")
                 }) { error ->
@@ -163,19 +151,16 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                     downloadRequest.state = DownloadRequest.State.FAILED
                 }.addToAutoDispose()
 
-        downloadProgress.subscribe { `val` -> completed = (len / 10000f * `val`!!).toLong() * 10000L }
+        downloadProgress.subscribe { v -> completed = v }
                 .addToAutoDispose()
     }
 
     override fun toString(): String {
-        return "Stream: { seekMs: " + this.seekMs +
-                ", completed: " + this.completed +
-                ", DownloadRequest: " + this.downloadRequest +
-                " }"
+        return "Stream: { seekMs: $seekMs, completed: $completed, DownloadRequest: $downloadRequest }"
     }
 
     fun progressMonitor(): Observable<Float> {
-        return downloadProgress
+        return downloadProgress.map { it.toFloat() / len.toFloat() }
     }
 
     @Synchronized
@@ -183,9 +168,10 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
     fun waitForData(amount: Long) {
         while (!isFinished && this.completed < this.extraChunkSize + amount && this.waitAllowed) {
             val uptimeMs = SystemClock.uptimeMillis()
-            if (lastWait + 10000 < uptimeMs) {
+            if (lastWait + 100 < uptimeMs) {
                 this.lastWait = uptimeMs
-                Timber.i("waiting for %d bytes in file: %s", amount, filepath)
+                Timber.i("current $completed, waiting for $amount bytes in file $filepath")
+
                 //                Timber.i("State: %s", downloadRequest.getState().name());
             }
             (this@Stream as java.lang.Object).wait()
@@ -211,26 +197,6 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
         }
 
         return streamFile
-    }
-
-    internal fun getSongId(): SongID {
-        return this.id
-    }
-
-
-    companion object {
-
-        fun contentListToString(msg: String, list: List<Stream>): String {
-            val builder = StringBuilder()
-            builder.append(msg)
-            builder.append("=[")
-            for (content in list) {
-                builder.append(content.getSongId())
-                builder.append(", ")
-            }
-            builder.append("]")
-            return builder.toString()
-        }
     }
 
 

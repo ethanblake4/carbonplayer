@@ -3,6 +3,7 @@ package com.carbonplayer.model.entity
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
+import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.RealmResults
@@ -65,18 +66,14 @@ open class Album (
 
     )
 
-    fun updateFrom(source: SkyjamAlbum) : Album {
+    fun updateFrom(source: SkyjamAlbum, realm: Realm) : Album {
         kind = source.kind
-        inLibrary = source.inLibrary
         recentTimestamp = source.recentTimestamp
-        title = source.title
-        albumArtist = source.albumArtist
         albumArtRef = source.albumArtRef
         composer = source.composer ?: composer
         year = source.year
-        genre = source.genre
         description = source.description
-        description_attribution = source.description_attribution
+        description_attribution = source.description_attribution?.let { realm.copyToRealm(it) }
         explicitType = source.explicitType
         contentType = source.contentType
         return this
@@ -86,5 +83,6 @@ open class Album (
 
     companion object {
         const val ID = "albumId"
+        const val TITLE = "title"
     }
 }

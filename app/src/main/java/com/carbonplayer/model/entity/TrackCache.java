@@ -2,6 +2,7 @@ package com.carbonplayer.model.entity;
 
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.util.LongSparseArray;
 
 import com.carbonplayer.CarbonPlayerApplication;
@@ -183,7 +184,7 @@ public class TrackCache {
         return removeLowerQualities(cacheFiles);
     }
 
-    public static File getTrackFile(Context context, SongID id, StreamQuality newQuality) {
+    @NonNull public static File getTrackFile(Context context, SongID id, StreamQuality newQuality) {
         File existingFile = removeLowerQualities(context, id);
         if (existingFile != null) return existingFile;
 

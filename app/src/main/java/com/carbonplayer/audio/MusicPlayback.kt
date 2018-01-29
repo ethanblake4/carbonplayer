@@ -26,7 +26,7 @@ class MusicPlayback(
 
     fun setup() = playbackImpl.setup()
 
-    fun newQueue(queue: List<ParcelableTrack>) = playbackImpl.newQueue(queue)
+    fun newQueue(queue: List<ParcelableTrack>, track: Int = 0) = playbackImpl.newQueue(queue, track)
 
     fun getQueue() = playbackImpl.mirroredQueue
 
