@@ -25,21 +25,29 @@ public class TrackCache {
 
     public static boolean has(Context context, SongID id, StreamQuality quality) {
 
+        Timber.d("Does trackCache have %d?", id.getLocalId());
+
         File[] cacheFiles = context.getCacheDir()
                 .listFiles((dir, name) -> name.startsWith(String.valueOf(id.getLocalId())));
 
-        if (cacheFiles.length == 0) return false;
+        if (cacheFiles.length == 0) {
+            Timber.d("Will run!");
+            return false;
+        }
         if (cacheFiles.length > 1) {
             File newFile = removeLowerQualities(cacheFiles);
             String name = newFile == null ? null : newFile.getName();
 
             if (name != null && Integer.parseInt(
                     String.valueOf(name.charAt(name.length() - 1))) >= quality.ordinal()) {
+                Timber.d("We're good!");
                 return true;
             }
+
+            Timber.d("Escaped!!");
         }
 
-        return false;
+        return cacheFiles.length == 1;
     }
 
     public static void evictCache(Context context, long targetSize) {

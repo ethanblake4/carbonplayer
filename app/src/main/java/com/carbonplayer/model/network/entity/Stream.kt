@@ -166,12 +166,12 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
     @Synchronized
     @Throws(InterruptedException::class)
     fun waitForData(amount: Long) {
-        while (!isFinished && this.completed < this.extraChunkSize + amount && this.waitAllowed) {
+        while (!isFinished && this.completed < this.extraChunkSize + amount && this.waitAllowed
+        && this.downloadRequest != null) {
             val uptimeMs = SystemClock.uptimeMillis()
             if (lastWait + 100 < uptimeMs) {
                 this.lastWait = uptimeMs
-                Timber.i("current $completed, waiting for $amount bytes in file $filepath")
-
+                Timber.i("current ${completed + 1}, waiting for $amount bytes in file $filepath")
                 //                Timber.i("State: %s", downloadRequest.getState().name());
             }
             (this@Stream as java.lang.Object).wait()
@@ -192,6 +192,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
         if (location == null) {
             streamFile = null
         } else {
+            location.createNewFile()
             streamFile = RandomAccessFile(location, "r")
             streamFile.seek(offset)
         }
