@@ -15,7 +15,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.exceptions.Exceptions
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
+import io.reactivex.subjects.BehaviorSubject
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.Okio
@@ -28,7 +28,7 @@ import java.util.*
 class Stream @JvmOverloads constructor(val context: Context, val id: SongID, trackTitle: String,
                                        private val quality: StreamQuality, doDownload: Boolean = true) {
 
-    private val downloadProgress = PublishSubject.create<Long>()
+    private val downloadProgress = BehaviorSubject.create<Long>()
     var downloadInitialized = false
     private var completed: Long = 0
     private val seekMs: Long = 0
