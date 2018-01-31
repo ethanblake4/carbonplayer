@@ -48,7 +48,7 @@ open class Album (
 
     constructor(source: SkyjamAlbum) : this (
             source.kind,
-            source.inLibrary,
+            source.inLibrary ?: false,
             source.albumId,
             source.recentTimestamp,
             source.title,
@@ -71,6 +71,19 @@ open class Album (
         recentTimestamp = source.recentTimestamp
         albumArtRef = source.albumArtRef
         composer = source.composer ?: composer
+        year = source.year
+        description = source.description
+        description_attribution = source.description_attribution?.let { realm.copyToRealm(it) }
+        explicitType = source.explicitType
+        contentType = source.contentType
+        return this
+    }
+
+    fun updateFrom(source: Album, realm: Realm) : Album {
+        kind = source.kind
+        recentTimestamp = source.recentTimestamp
+        albumArtRef = source.albumArtRef
+        composer = source.composer
         year = source.year
         description = source.description
         description_attribution = source.description_attribution?.let { realm.copyToRealm(it) }

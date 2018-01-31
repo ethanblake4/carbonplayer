@@ -171,8 +171,10 @@ open class Track(
     companion object {
 
         const val LOCAL_ID = "localId"
-        const val TRACK_ID = "trackId"
+        const val TRACK_ID = "id"
         const val CLIENT_ID = "clientId"
+        const val NAUTILUS_ID = "nid"
+        const val STORE_ID = "storeId"
         const val HAS_CACHED_FILE = "hasCachedFile"
         const val CACHED_FILE_QUALITY = "cachedFileQuality"
         const val STORAGE_TYPE = "storageType"

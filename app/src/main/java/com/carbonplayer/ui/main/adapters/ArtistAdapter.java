@@ -3,14 +3,11 @@ package com.carbonplayer.ui.main.adapters;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.support.annotation.ColorInt;
-import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,7 +20,7 @@ import com.carbonplayer.model.entity.Artist;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.ui.widget.fastscroll.SectionTitleProvider;
 import com.carbonplayer.utils.general.MathUtils;
-import com.github.florent37.glidepalette.BitmapPalette;
+import com.carbonplayer.utils.ui.PaletteUtil;
 import com.github.florent37.glidepalette.GlidePalette;
 
 import java.util.List;
@@ -51,7 +48,7 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         @BindView(R.id.detailText) TextView detailText;
         Artist artist;
         int size;
-        int mainColor;
+        PaletteUtil.SwatchPair swatchPair;
 
         ViewHolder(View v) {
             super(v);
@@ -65,17 +62,19 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
                 titleText.setTransitionName(artist.getArtistId() + "t");
                 detailText.setTransitionName(artist.getArtistId() + "d");
 
+                context.gotoArtist(artist, swatchPair);
+
                 //context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(), mainColor, titleText, detailText);
             });
 
-            ViewTreeObserver vto = thumb.getViewTreeObserver();
+            /*ViewTreeObserver vto = thumb.getViewTreeObserver();
             vto.addOnPreDrawListener(() -> {
                 size = thumb.getMeasuredWidth();
                 ((FrameLayout.LayoutParams) contentRoot.getLayoutParams())
                         .setMargins(0, size, 0, 0);
                 contentRoot.postInvalidate();
                 return true;
-            });
+            });*/
 
             titleText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 50)));
             detailText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 32)));
@@ -129,25 +128,34 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         holder.titleText.setText(artist.getName());
         holder.artist = artist;
 
-        if (artist.getArtistArtRef() != null && !artist.getArtistArtRef().equals("")) {
-            requestManager.load(artist.getArtistArtRef())
+        if (artist.getArtistArtRefs().size() > 0 && !artist.getArtistArtRefs().first().getUrl().equals("")) {
+            requestManager.load(artist.getArtistArtRefs().first().getUrl())
                     .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                     .transition(DrawableTransitionOptions.withCrossFade(200))
-                    .listener(
-                            GlidePalette.with(artist.getArtistArtRef())
-                                    .use(GlidePalette.Profile.VIBRANT)
-                                    .intoBackground(holder.contentRoot)
-                                    .intoTextColor(holder.titleText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
-                                    .intoTextColor(holder.detailText, BitmapPalette.Swatch.BODY_TEXT_COLOR)
-                                    .intoCallBack(palette -> {
-                                        if (palette != null) {
-                                            Palette.Swatch vibra = palette.getVibrantSwatch();
-                                            if (vibra != null)
-                                                holder.mainColor = palette.getVibrantSwatch().getRgb();
-                                            else holder.mainColor = Color.parseColor("#ff333333");
-                                        }
-                                    })
-                                    .crossfade(true, 500)
+                    .listener(GlidePalette.with(artist.getArtistArtRefs().first().getUrl())
+                            .use(GlidePalette.Profile.VIBRANT)
+                            .intoCallBack(palette -> {
+                                if (palette != null) {
+                                    PaletteUtil.SwatchPair pair =
+                                            PaletteUtil.getSwatches(context, palette);
+                                    holder.swatchPair = pair;
+
+                                    PaletteUtil.crossfadeBackground(holder.contentRoot, pair.getPrimary());
+                                    PaletteUtil.crossfadeTitle(holder.titleText, pair.getPrimary());
+                                    PaletteUtil.crossfadeSubtitle(holder.detailText, pair.getPrimary());
+
+                                    /*if(ColorUtils.isDark(holder.swatchPair.getPrimary().getBodyTextColor())) {
+                                        holder.menuButton.setImageTintList(
+                                                CarbonPlayerApplication.instance.getDarkCSL());
+                                    }
+
+                                    /*holder.menuButton.setImageTintList(
+                                            ColorStateList.valueOf(pair.getPrimary().getTitleTextColor())
+                                    );
+                                    holder.menuButton.setAlpha(0.0f);
+                                    holder.menuButton.animate().alpha(1.0f).setDuration(500).start();*/
+                                }
+                            })
                     )
                     .into(holder.thumb);
 

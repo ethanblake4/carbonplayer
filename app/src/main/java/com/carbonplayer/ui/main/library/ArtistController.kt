@@ -27,10 +27,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Artist
-import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.MainActivity
+import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
@@ -64,13 +64,14 @@ class ArtistController(
     private var fabOffset: Int = 0
     private var squareHeight: Int = 0
 
+    private var artistProxy = artist
+    private val aId = artist.artistId
+
     private var expanded = false
     private var ogHeight = 0
 
     private var mAdapter: RecyclerView.Adapter<*>? = null
     private var mLayoutManager: RecyclerView.LayoutManager? = null
-
-    private lateinit var tracks: List<Track>
 
     private lateinit var manager: MusicManager
     private lateinit var requestMgr: RequestManager
@@ -117,17 +118,17 @@ class ArtistController(
                     .delay(300, TimeUnit.MILLISECONDS) /* Prevent animation interrupt */
                     .subscribe({ a ->
 
-                        try {
-                            Realm.getDefaultInstance().executeTransactionAsync { rlm ->
-                                rlm.insertOrUpdate(a)
-                            }
-                        } catch (e: Exception) {
-                            Timber.e(e)
+                        val rlm = Realm.getDefaultInstance()
+
+                        artistProxy = rlm.where(Artist::class.java)
+                                .equalTo(Artist.ID, aId)
+                                .findFirst()!!
+
+                        rlm.executeTransaction {
+                            artistProxy.updateFrom(a, it)
                         }
 
-                        artist = a
-
-                        if(view != null && artist.artistBio != null && artist.artistBio!!.isNotBlank()) {
+                        if(view != null && artistProxy.artistBio != null && artistProxy.artistBio!!.isNotBlank()) {
                             val const = ConstraintSet().apply {
                                 clone(view!!.constraintLayout6)
                                 setMargin(R.id.primaryText, ConstraintSet.TOP,
@@ -139,15 +140,49 @@ class ArtistController(
                                 duration = 250
                             }
 
-                            TransitionManager.beginDelayedTransition(view!!.constraintLayout6, t)
-                            const.applyTo(view!!.constraintLayout6)
+                            val bioText = artistProxy.artistBio
 
-                            view!!.descriptionText.run {
-                                text = artist.artistBio
-                                setTextColor(bodyColor)
-                                visibility = View.VISIBLE
-                                alpha = 0.0f
-                                animate().alpha(1f).setDuration(250).start()
+                            view!!.post {
+                                TransitionManager.beginDelayedTransition(view!!.constraintLayout6, t)
+                                const.applyTo(view!!.constraintLayout6)
+
+                                view!!.descriptionText.run {
+                                    text = bioText
+                                    setTextColor(bodyColor)
+                                    visibility = View.VISIBLE
+                                    alpha = 0.0f
+                                    animate().alpha(1f).setDuration(250).start()
+                                }
+                            }
+
+
+                        }
+
+                        if(view != null && artistProxy.topTracks.isNotEmpty()) {
+
+                            val tpTracks = artistProxy.topTracks.toList()
+
+                            view!!.post {
+                                val params = root.songgroup_recycler.layoutParams
+                                params.height = (tpTracks.take(5).size * MathUtils.dpToPx2(resources, 59)) +
+                                        IdentityUtils.getNavbarHeight(resources) +
+                                        MathUtils.dpToPx2(resources,
+                                                if ((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
+                                                    56 else 0)
+
+                            }
+
+                            this.activity!!.runOnUiThread {
+                                mAdapter = SongListAdapter(artist.topTracks.take(5), {
+                                    Timber.d("clicked ${it.second}")
+                                })
+
+                                // use a linear layout manager
+                                mLayoutManager = LinearLayoutManager(activity)
+
+                                root.songgroup_recycler.layoutManager = mLayoutManager
+
+                                root.songgroup_recycler.adapter = mAdapter
                             }
                         }
                     }, {
@@ -208,13 +243,36 @@ class ArtistController(
         //handler.addTextViewSizeResource(root.secondaryText,
         //        R.dimen.small_text_2, R.dimen.large_text_2)
 
+        if(artist.topTracks.isNotEmpty()) {
+            val params = root.songgroup_recycler.layoutParams
+            params.height = (artist.topTracks.take(5).size * MathUtils.dpToPx2(resources, 59)) +
+                    IdentityUtils.getNavbarHeight(resources) +
+                    MathUtils.dpToPx2(resources,
+                            if ((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
+                                56 else 0)
+
+            mAdapter = SongListAdapter(artist.topTracks.take(5), {
+                Timber.d("clicked ${it.second}")
+            })
+
+            // use a linear layout manager
+            mLayoutManager = LinearLayoutManager(activity)
+
+            root.songgroup_recycler.layoutManager = mLayoutManager
+
+            root.songgroup_recycler.adapter = mAdapter
+        }
+
         requestMgr = Glide.with(activity as Activity)
 
-        requestMgr.load(artist.artistArtRef)
-                .apply(
-                        RequestOptions.overrideOf(preImageWidth, preImageWidth)
-                                .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
-                .into(root.main_backdrop)
+        artist.artistArtRefs.first()?.let {
+            requestMgr.load(it.url)
+                    .apply(
+                            RequestOptions.overrideOf(preImageWidth, preImageWidth)
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
+                    .into(root.main_backdrop)
+        }
+
 
         if(!artist.artistBio.isNullOrBlank()) {
 
@@ -249,28 +307,7 @@ class ArtistController(
 
         root.songgroup_recycler.isNestedScrollingEnabled = false
 
-        // use a linear layout manager
-        mLayoutManager = LinearLayoutManager(activity)
 
-        root.songgroup_recycler.layoutManager = mLayoutManager
-
-        //tracks = MusicLibrary.getInstance().getAllAlbumTracks(album.id)
-
-        val params = root.songgroup_recycler.layoutParams
-        params.height = (tracks.size * MathUtils.dpToPx2(resources, 59)) +
-                IdentityUtils.getNavbarHeight(resources) +
-                MathUtils.dpToPx2(resources,
-                        if((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
-                            56 else 0)
-
-        /*mAdapter = SongListAdapter(tracks) { (id, pos) ->
-            manager.fromAlbum(album.id, pos)
-        }
-
-        root.play_fab.setOnClickListener {
-            manager.fromAlbum(album.id, 0)
-        }*/
-        root.songgroup_recycler.adapter = mAdapter
 
         root.expandDescriptionChevron.setOnClickListener {
 

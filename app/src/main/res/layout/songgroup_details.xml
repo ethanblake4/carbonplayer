@@ -108,7 +108,7 @@
                 android:layout_marginBottom="4dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:background="?android:selectableItemBackgroundBorderless"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -117,18 +117,28 @@
         </android.support.constraint.ConstraintLayout>
 
         <FrameLayout
+            android:id="@+id/artistTracksHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#fff"
-            android:padding="10dp">
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:layout_margin="10dp"
                 android:fontFeatureSettings="smcp"
-                android:text="top tracks"
+                android:text="Top Tracks"
                 android:textAppearance="@android:style/TextAppearance.Material.Menu"
                 android:textColor="#555" />
+
+            <Button
+                android:id="@+id/artistSeeMore"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_gravity="right"
+                android:layout_marginRight="6dp"
+                android:text="@string/see_more" />
         </FrameLayout>
 
         <android.support.v7.widget.RecyclerView
@@ -136,6 +146,63 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/songgroup_recycler"/>
+
+        <FrameLayout
+            android:id="@+id/artistArtistsHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:background="#fff">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="10dp"
+                android:fontFeatureSettings="smcp"
+                android:text="@string/related_artists"
+                android:textAppearance="@android:style/TextAppearance.Material.Menu"
+                android:textColor="#555" />
+
+        </FrameLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:background="#fff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/artistgroup_recycler"
+            android:visibility="gone"/>
+
+        <FrameLayout
+            android:id="@+id/artistAlbumsHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:background="#fff">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="10dp"
+                android:fontFeatureSettings="smcp"
+                android:text="@string/albums"
+                android:textAppearance="@android:style/TextAppearance.Material.Menu"
+                android:textColor="#555" />
+
+            <Button
+                android:id="@+id/artistAllAlbums"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_gravity="right"
+                android:layout_marginRight="6dp"
+                android:text="@string/all_albums" />
+        </FrameLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:background="#fff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/albumgroup_recycler"
+            android:visibility="gone"/>
 
     </LinearLayout>
 

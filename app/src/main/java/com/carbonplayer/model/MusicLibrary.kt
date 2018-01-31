@@ -11,6 +11,7 @@ import com.carbonplayer.model.entity.exception.NoNautilusException
 import com.carbonplayer.model.entity.primitive.FinalBool
 import com.carbonplayer.model.entity.primitive.RealmInteger
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import com.carbonplayer.model.entity.skyjam.SkyjamPlaylist
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.network.Protocol
@@ -21,6 +22,7 @@ import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import io.realm.Realm
+import io.realm.RealmList
 import io.realm.RealmResults
 import io.realm.Sort
 import timber.log.Timber
@@ -56,6 +58,7 @@ object MusicLibrary {
     fun getMusicLibrary(context: Activity, onError: Consumer<Throwable>, update: Boolean,
                            onProgress: Consumer<Pair<Boolean, Int>>, onSuccess: Action) {
         val trackObservable = Protocol.listTracks(context)
+
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
 
@@ -116,7 +119,7 @@ object MusicLibrary {
                 artistPairs.forEach { (id, name) ->
                     artists.add(realm.where(Artist::class.java)
                             .equalTo(Artist.ID, id)
-                            .findFirst() ?: Artist(id, name)
+                            .findFirst() ?: Artist(id, name, sjTrack.artistArtRef)
                     )
                 }
             }
@@ -146,6 +149,48 @@ object MusicLibrary {
         }
 
         return outTracks
+    }
+
+    fun processArtists(src: List<SkyjamArtist>, realm: Realm): RealmList<Artist> {
+        return src.mapTo(RealmList(), {
+            realm.where(Artist::class.java)
+                    .equalTo(Artist.ID, it.artistId)
+            Artist(it, realm)
+        })
+    }
+
+    /**
+     * Transforms a list of [Album]s into a RealmList of [Album]s
+     */
+    fun processAlbums(albums: List<Album>, realm: Realm) : RealmList<Album> {
+        val out = RealmList<Album>()
+
+        albums.forEach { a ->
+            out.add(realm.where(Album::class.java)
+                    .equalTo(Album.ID, a.albumId)
+                    .or().beginGroup()
+                    .equalTo(Album.TITLE, a.title)
+                    .apply { a.artists?.first()?.let { contains("artists.name", it.name)} }
+                    .endGroup()
+                    .findFirst()?.updateFrom(a, realm)
+                    ?: realm.copyToRealm(a))
+        }
+
+        return out
+    }
+
+    /**
+     * Transforms a list of [SkyjamTrack]s into a RealmList of [Track]s
+     */
+    fun processTracks(tracks: List<SkyjamTrack>, realm: Realm): RealmList<Track> {
+        return tracks.mapTo(RealmList(), {
+            realm.where(Track::class.java)
+                    .equalTo(Track.TRACK_ID, it.id)
+                    .or().equalTo(Track.CLIENT_ID, it.clientId)
+                    .or().equalTo(Track.NAUTILUS_ID, it.nid)
+                    .or().equalTo(Track.STORE_ID, it.storeId)
+            Track(nextLocalIdForTrack(realm), it)
+        })
     }
 
     private fun nextLocalIdForTrack(realm: Realm) =
@@ -261,9 +306,9 @@ object MusicLibrary {
     fun getAllAlbumTracks(album: IAlbum): List<ITrack> {
         return if(album is Album)
             album.tracks.sort(Track.TRACK_NUMBER)
-        else (album as SkyjamAlbum).tracks.sortedBy {
+        else (album as SkyjamAlbum).tracks?.sortedBy {
             it.trackNumber
-        }
+        } ?: listOf()
 
     }
 

@@ -97,4 +97,8 @@
 
     <string name="settings_appearance_opt_primary_color_mode">Primary color mode</string>
     <string name="settings_opt_appearance_accent_color_mode">Accent color mode</string>
+    <string name="see_more">See More</string>
+    <string name="all_albums">All Albums</string>
+    <string name="related_artists">Related Artists</string>
+    <string name="albums">Albums</string>
 </resources>

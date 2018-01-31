@@ -10,7 +10,7 @@ import com.carbonplayer.model.entity.base.IAlbum
 data class SkyjamAlbum (
 
         override val kind: String /* should be "sj#album" */,
-        override val inLibrary: Boolean = true,
+        override val inLibrary: Boolean?,
         override val albumId: String = MusicLibrary.UNKNOWN_ALBUM_ID,
         override val recentTimestamp: Long?,
         override val title: String = "",
@@ -21,7 +21,7 @@ data class SkyjamAlbum (
         override val composer: String?,
         override val year: Int = 0,
         override val genre: String = "",
-        val tracks: List<SkyjamTrack>,
+        val tracks: List<SkyjamTrack>?,
         override val description: String?,
         override val description_attribution: Attribution?,
         override val explicitType: String?,

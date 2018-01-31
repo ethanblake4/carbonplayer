@@ -16,11 +16,12 @@ import com.bluelinelabs.conductor.RouterTransaction
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
+import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.base.IAlbum
-import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
 import com.carbonplayer.ui.main.library.AlbumController
+import com.carbonplayer.ui.main.library.ArtistController
 import com.carbonplayer.ui.main.library.LibraryController
 import com.carbonplayer.ui.settings.Settings
 import com.carbonplayer.ui.transition.SimpleScaleTransition
@@ -151,8 +152,15 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun gotoAlbum(album: SkyjamAlbum, swatchPair: PaletteUtil.SwatchPair) {
+    fun gotoArtist(artist: Artist, swatchPair: PaletteUtil.SwatchPair) {
+        val frag = ArtistController(artist, swatchPair)
 
+        router.pushController(RouterTransaction.with(frag)
+                .pushChangeHandler(SimpleScaleTransition(this))
+                .popChangeHandler(SimpleScaleTransition(this)))
+
+        lastAppbarText = main_actionbar_text.text.toString()
+        main_actionbar_text.text = ""
     }
 
     fun scrollCb(dy: Int) {

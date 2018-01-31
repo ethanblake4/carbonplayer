@@ -5,7 +5,6 @@ import android.content.Context
 import android.net.Uri
 import android.net.http.AndroidHttpClient
 import com.carbonplayer.CarbonPlayerApplication
-import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.ConfigEntry
 import com.carbonplayer.model.entity.SearchResponse
 import com.carbonplayer.model.entity.TopChartsResponse
@@ -19,10 +18,7 @@ import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeRe
 import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.entity.radio.request.RadioFeedRequest
 import com.carbonplayer.model.entity.radio.response.RadioFeedResponse
-import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
-import com.carbonplayer.model.entity.skyjam.SkyjamPlaylist
-import com.carbonplayer.model.entity.skyjam.SkyjamPlentry
-import com.carbonplayer.model.entity.skyjam.SkyjamTrack
+import com.carbonplayer.model.entity.skyjam.*
 import com.carbonplayer.model.network.entity.*
 import com.carbonplayer.model.network.utils.ClientContextFactory
 import com.carbonplayer.model.network.utils.IOUtils
@@ -261,11 +257,11 @@ object Protocol {
         }
     }
 
-    fun getNautilusArtist(context: Context,  nid: String): Observable<Artist> {
+    fun getNautilusArtist(context: Context,  nid: String): Observable<SkyjamArtist> {
 
         return Observable.fromCallable {
             val client = CarbonPlayerApplication.instance.okHttpClient
-            val adapter = CarbonPlayerApplication.moshi.adapter(Artist::class.java)
+            val adapter = CarbonPlayerApplication.moshi.adapter(SkyjamArtist::class.java)
 
             val getParams = Uri.Builder()
                     .appendQueryParameter("alt", "json")

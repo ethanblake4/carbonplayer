@@ -4,7 +4,7 @@ import com.carbonplayer.model.entity.Attribution
 
 interface IAlbum {
     val kind: String
-    val inLibrary: Boolean
+    val inLibrary: Boolean?
     val albumId: String
     val recentTimestamp: Long?
     val title: String

@@ -8,8 +8,6 @@ import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -82,14 +80,14 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
 
             menuButton.setOnClickListener(view -> context.showAlbumPopup(view, album));
 
-            ViewTreeObserver vto = thumb.getViewTreeObserver();
+            /*ViewTreeObserver vto = thumb.getViewTreeObserver();
             vto.addOnPreDrawListener(() -> {
                 size = thumb.getMeasuredWidth();
                 ((FrameLayout.LayoutParams) contentRoot.getLayoutParams())
                         .setMargins(0, size, 0, 0);
                 contentRoot.postInvalidate();
                 return true;
-            });
+            });*/
 
             titleText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 50)));
             detailText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 32)));

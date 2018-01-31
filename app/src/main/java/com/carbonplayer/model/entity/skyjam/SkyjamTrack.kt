@@ -34,6 +34,7 @@ data class SkyjamTrack(
         override val albumId: String = MusicLibrary.UNKNOWN_ALBUM_ID,
         override val albumArtist: String,
         val albumArtRef: List<Image>?,
+        val artistArtRef: List<Image>?,
 
         override val trackNumber: Int,
         override val totalTrackCount: Int?,
