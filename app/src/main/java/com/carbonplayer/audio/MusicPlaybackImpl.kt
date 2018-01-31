@@ -101,6 +101,7 @@ class MusicPlaybackImpl(
         if (!exoPlayer.playWhenReady) exoPlayer.playWhenReady = true
     }
 
+    @Synchronized
     fun newQueue(queue: List<ParcelableTrack>, track: Int = 0, initFirst: Boolean = true) {
         Timber.d("newQueue, initFirst: $initFirst")
         trackNum = track
@@ -173,6 +174,7 @@ class MusicPlaybackImpl(
     }
 
 
+    @Synchronized
     fun add(tracks: List<ParcelableTrack>, track: Int = 0, downloadFirst: Boolean = false) {
         Timber.d("add tracks, downloadFirst: $downloadFirst")
         mirroredQueue.addAll(tracks)
@@ -232,6 +234,7 @@ class MusicPlaybackImpl(
 
     fun getCurrentPosition() = exoPlayer.currentPosition
 
+    @Synchronized
     private fun execLoop() {
         if (exoPlayer.playWhenReady) {
             // Playing

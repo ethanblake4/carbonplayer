@@ -33,7 +33,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
     private var completed: Long = 0
     private val seekMs: Long = 0
     private val downloadRequest: DownloadRequest?
-    private val extraChunkSize: Long = 0
+    private val extraChunkSize: Long = 2048
     private var filepath: String? = null
     var waitAllowed = true
     @Volatile var startReadPoint: Long = 0
@@ -112,8 +112,13 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                 .flatMap { url ->
                     Completable.create { subscriber ->
                         try {
+
+
+                            Timber.d("Request to $url")
+
                             val response = client.newCall(Request.Builder()
                                     .url(url).build()).execute()
+
                             downloadRequest.state = DownloadRequest.State.DOWNLOADING
 
                             val sink = Okio.buffer(Okio.sink(File(filepath!!)))
@@ -123,14 +128,33 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                             len = response.body()!!.contentLength()
                             var writ: Long = 0
 
-                            while (writ < len) {
-                                sink.write(source, Math.min(2048, len - writ))
-                                writ += Math.min(2048, len - writ)
-                                synchronized(this@Stream) {
-                                    (this as java.lang.Object).notifyAll()
+                            Timber.d("len is $len")
+
+                            if(len != -1L)
+                                while (writ < len) {
+
+                                    sink.write(source, Math.min(2048, len - writ))
+                                    writ += Math.min(2048, len - writ)
+                                    synchronized(this@Stream) {
+                                        (this as java.lang.Object).notifyAll()
+                                    }
                                 }
-                            }
+                            else
+                                try {
+                                    while (true) {
+                                        sink.write(source, 2048)
+                                        writ += 2048
+                                        synchronized(this@Stream) {
+                                            (this as java.lang.Object).notifyAll()
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Timber.d("-1-indexed source completed")
+                                }
+
+
                             sink.close()
+
                             downloadRequest.state = DownloadRequest.State.COMPLETED
                             Timber.d("Download Completed")
                         } catch (e: Exception) {
@@ -169,7 +193,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
         while (!isFinished && this.completed < this.extraChunkSize + amount && this.waitAllowed
         && this.downloadRequest != null) {
             val uptimeMs = SystemClock.uptimeMillis()
-            if (lastWait + 100 < uptimeMs) {
+            if (lastWait < uptimeMs) {
                 this.lastWait = uptimeMs
                 Timber.i("current ${completed + 1}, waiting for $amount bytes in file $filepath")
                 //                Timber.i("State: %s", downloadRequest.getState().name());
@@ -192,7 +216,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
         if (location == null) {
             streamFile = null
         } else {
-            location.createNewFile()
+            //location.createNewFile()
             streamFile = RandomAccessFile(location, "r")
             streamFile.seek(offset)
         }

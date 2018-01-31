@@ -70,6 +70,7 @@ class NowPlayingHelper(private val activity: Activity) {
     private var connection: ServiceConnection? = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             messenger = Messenger(service)
+
             try {
                 Timber.d("Registering bound client")
                 val msg = Message.obtain(null, Constants.MESSAGE.REGISTER_CLIENT)

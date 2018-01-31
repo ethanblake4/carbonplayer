@@ -27,6 +27,7 @@ import java.util.*
 /**
  * Music player background service
  */
+@SuppressLint("WakelockTimeout")
 class MusicPlayerService : Service(), MusicFocusable {
 
     internal lateinit var audioFocusHelper: AudioFocusHelper
@@ -44,6 +45,7 @@ class MusicPlayerService : Service(), MusicFocusable {
     private lateinit var notificationMgr: NotificationManagerCompat
 
     internal lateinit var wifiLock: WifiManager.WifiLock
+    internal lateinit var wakeLock: PowerManager.WakeLock
 
     private lateinit var notificationIntent: Intent
     private lateinit var previousIntent: Intent
@@ -61,9 +63,6 @@ class MusicPlayerService : Service(), MusicFocusable {
 
     internal val messenger = Messenger(IncomingHandler())
 
-    override fun onCreate() {
-        super.onCreate()
-    }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         when (intent.action) {
@@ -91,10 +90,12 @@ class MusicPlayerService : Service(), MusicFocusable {
                     playback.pause()
                     audioFocusHelper.abandonFocus()
                     wifiLock.release()
+                    wakeLock.release()
                 } else {
                     playback.play()
                     audioFocusHelper.requestFocus()
                     wifiLock.acquire()
+                    wakeLock.acquire()
                 }
             }
             Constants.ACTION.NEXT -> {
@@ -146,14 +147,18 @@ class MusicPlayerService : Service(), MusicFocusable {
                 stopSelf()
             }
         }
-        return Service.START_STICKY
+        return Service.START_NOT_STICKY
     }
 
     private fun initService(intent: Intent) {
 
         wifiLock = (applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager)
-                .createWifiLock(WifiManager.WIFI_MODE_FULL, "carbon")
+                .createWifiLock(WifiManager.WIFI_MODE_FULL, TAG)
         wifiLock.setReferenceCounted(false)
+
+        wakeLock = (applicationContext.getSystemService(Context.POWER_SERVICE) as PowerManager)
+                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG)
+        wakeLock.setReferenceCounted(false)
 
         notificationMgr = NotificationManagerCompat.from(this)
 
@@ -183,6 +188,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 MusicPlayback.PlayState.NOT_PLAYING -> {
                     audioFocusHelper.abandonFocus()
                     if (wifiLock.isHeld) wifiLock.release()
+                    if (wakeLock.isHeld) wakeLock.release()
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_NONE,
                                     playback.getCurrentPosition(), 1.0f).build())
@@ -190,12 +196,14 @@ class MusicPlayerService : Service(), MusicFocusable {
                 }
                 MusicPlayback.PlayState.STARTING -> {
                     if (!wifiLock.isHeld) wifiLock.acquire()
+                    if (!wakeLock.isHeld) wakeLock.acquire()
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_CONNECTING,
                                     playback.getCurrentPosition(), 1.0f).build())
                 }
                 MusicPlayback.PlayState.BUFFERING -> {
                     if (!wifiLock.isHeld) wifiLock.acquire()
+                    if (!wakeLock.isHeld) wakeLock.acquire()
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_BUFFERING,
                                     playback.getCurrentPosition(), 1.0f).build())
@@ -204,6 +212,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 }
                 MusicPlayback.PlayState.PLAYING -> {
                     if (!wifiLock.isHeld) wifiLock.acquire()
+                    if (!wakeLock.isHeld) wakeLock.acquire()
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(if (playback.isUnpaused())
                                 PlaybackStateCompat.STATE_PLAYING else
@@ -233,6 +242,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 audioFocus = AudioFocus.Focused
                 if (playback.wasPausedFromFocusLoss) {
                     if (!wifiLock.isHeld) wifiLock.acquire()
+                    if (!wakeLock.isHeld) wakeLock.acquire()
                     playback.play()
                 } else if (playback.isDucked()) {
                     playback.unsetDucked()
@@ -247,10 +257,11 @@ class MusicPlayerService : Service(), MusicFocusable {
                     playback.wasPausedFromFocusLoss = true
                     playback.pause()
                     if (wifiLock.isHeld) wifiLock.release()
+                    if (wakeLock.isHeld) wakeLock.release()
                 }
             }
         })
-        mediaSession = MediaSessionCompat(this, "CarbonMusic")
+        mediaSession = MediaSessionCompat(this, TAG)
         mediaSession.setCallback(mediaSessionCallback)
 
         Timber.d("Will call fromNewQueue with position ${intent.extras.getInt(Constants.KEY.POSITION)}")
@@ -502,6 +513,10 @@ class MusicPlayerService : Service(), MusicFocusable {
         override fun onCustomAction(action: String, extras: Bundle?) {
             super.onCustomAction(action, extras)
         }
+    }
+
+    companion object {
+        const val TAG = "CarbonMplayService"
     }
 
 }

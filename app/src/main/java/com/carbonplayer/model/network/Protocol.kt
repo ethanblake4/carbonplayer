@@ -511,6 +511,7 @@ object Protocol {
             try {
                 val r = client.newCall(request).execute()
                 val locHeader = r.headers().get("Location")
+                Timber.d("Location is $locHeader")
                 if (r.isRedirect && locHeader != null) {
                     subscriber.onSuccess(locHeader)
                 } else {
@@ -615,11 +616,13 @@ object Protocol {
 
     private fun bearerBuilder(context: Context): Request.Builder {
         Timber.d("Bearer token: %s", CarbonPlayerApplication.instance.preferences.BearerAuth)
-
+        Timber.d("DeviceID: ${IdentityUtils.getGservicesId(context, true)}")
+        Timber.d("UserAgent: ${CarbonPlayerApplication.instance.googleUserAgent}")
         return Request.Builder()
                 .header("User-Agent", CarbonPlayerApplication.instance.googleUserAgent)
                 .header("Authorization", "Bearer " +
                         CarbonPlayerApplication.instance.preferences.BearerAuth)
+
                 .header("X-Device-ID", IdentityUtils.getGservicesId(context, true))
                 .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context))
     }
