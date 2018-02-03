@@ -25,8 +25,13 @@ import java.io.IOException
 import java.io.RandomAccessFile
 import java.util.*
 
-class Stream @JvmOverloads constructor(val context: Context, val id: SongID, trackTitle: String,
-                                       private val quality: StreamQuality, doDownload: Boolean = true) {
+class Stream (
+        val context: Context,
+        val id: SongID,
+        trackTitle: String,
+        private val quality: StreamQuality,
+        doDownload: Boolean = true
+) {
 
     private val downloadProgress = BehaviorSubject.create<Long>()
     var downloadInitialized = false
@@ -71,8 +76,8 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
         } else {
             Timber.i("File already exists")
             val file = TrackCache.getTrackFile(context, id, quality)
-            this.filepath = file.absolutePath
-            this.downloadRequest = null
+            filepath = file.absolutePath
+            downloadRequest = null
             downloadProgress.onNext(file.length())
             completed = file.length()
         }
@@ -81,7 +86,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
 
     fun initDownload() {
         downloadInitialized = true
-        Timber.i("InitDownload for %s", this.toString())
+        Timber.i("InitDownload for $this")
         if (downloadRequest == null) return
 
 
@@ -98,11 +103,8 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                             .build()
                 })
 
-        var useId = id.id
-        if (useId == null) useId = id.storeId
-        if (useId == null) useId = id.nautilusID
 
-        Protocol.getStreamURL(context, useId!!)
+        Protocol.getStreamURL(context, id.id ?: id.storeId!!)
                 .retry { tries, err ->
                     if (err !is ServerRejectionException) return@retry false
                     if (err.rejectionReason !== ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED)
@@ -111,8 +113,8 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                 }
                 .flatMap { url ->
                     Completable.create { subscriber ->
-                        try {
 
+                        try {
 
                             Timber.d("Request to $url")
 
@@ -135,20 +137,23 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
 
                                     sink.write(source, Math.min(2048, len - writ))
                                     writ += Math.min(2048, len - writ)
+                                    completed = writ
                                     synchronized(this@Stream) {
                                         (this as java.lang.Object).notifyAll()
                                     }
+
                                 }
-                            else
+                            else /* What causes this? Very annoying... */
                                 try {
                                     while (true) {
                                         sink.write(source, 2048)
                                         writ += 2048
+                                        completed = writ
                                         synchronized(this@Stream) {
                                             (this as java.lang.Object).notifyAll()
                                         }
                                     }
-                                } catch (e: Exception) {
+                                } catch (e: Exception) { // Expected
                                     Timber.d("-1-indexed source completed")
                                 }
 
@@ -174,9 +179,6 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
                     Timber.e(error, "Exception getting stream URL")
                     downloadRequest.state = DownloadRequest.State.FAILED
                 }.addToAutoDispose()
-
-        downloadProgress.subscribe { v -> completed = v }
-                .addToAutoDispose()
     }
 
     override fun toString(): String {
@@ -190,13 +192,11 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
     @Synchronized
     @Throws(InterruptedException::class)
     fun waitForData(amount: Long) {
-        while (!isFinished && this.completed < this.extraChunkSize + amount && this.waitAllowed
-        && this.downloadRequest != null) {
+        while (!isFinished && completed < extraChunkSize + amount && waitAllowed && downloadRequest != null) {
             val uptimeMs = SystemClock.uptimeMillis()
             if (lastWait < uptimeMs) {
                 this.lastWait = uptimeMs
-                Timber.i("current ${completed + 1}, waiting for $amount bytes in file $filepath")
-                //                Timber.i("State: %s", downloadRequest.getState().name());
+                Timber.i("current $completed, waiting for ${amount + extraChunkSize} bytes in file $filepath")
             }
             (this@Stream as java.lang.Object).wait()
         }
@@ -207,7 +207,7 @@ class Stream @JvmOverloads constructor(val context: Context, val id: SongID, tra
     fun getStreamFile(offset: Long): RandomAccessFile? {
         val streamFile: RandomAccessFile?
         var location: File? = null
-        if (this.filepath != null) {
+        if (filepath != null) {
             location = File(this.filepath!!)
         } else if (downloadRequest != null) {
             location = downloadRequest.fileLocation.fullPath

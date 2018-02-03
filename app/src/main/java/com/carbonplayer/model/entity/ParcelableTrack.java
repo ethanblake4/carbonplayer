@@ -60,7 +60,7 @@ public class ParcelableTrack {
         this.storeId = source.getStoreId();
         this.title = source.getTitle();
         this.artist = source.getArtist();
-        this.album = Objects.requireNonNull(Objects.requireNonNull(source.getAlbums()).first()).getTitle();
+        this.album = Objects.requireNonNull(Objects.requireNonNull(source.getAlbums()).first()).getName();
         this.year = orZero(source.getYear());
         this.trackNumber = orZero(source.getTrackNumber());
         this.genre = source.getGenre();
@@ -73,7 +73,7 @@ public class ParcelableTrack {
 
     @Override
     public String toString() {
-        return "ParcelableTrack(id: " + this.id + ", title: " + this.title + ")";
+        return "ParcelableTrack(id: " + this.id + ", name: " + this.title + ")";
     }
 
     public long getLocalId() {
@@ -206,6 +206,7 @@ public class ParcelableTrack {
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, getAlbumArtURL())
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, getTitle())
                 .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, getTrackNumber())
+
              /*   .putLong(MediaMetadata.METADATA_KEY_NUM_TRACKS, allTracks.size())*/
                 .build();
     }

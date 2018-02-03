@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.carbonplayer.ui.widget.NowPlayingFrame
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.carbonplayer.ui.widget.NowPlayingFrame xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nowplaying_frame"
     android:layout_width="match_parent"
-    android:layout_height="56dp"
+    android:layout_height="match_parent"
     android:visibility="visible">
 
     <com.carbonplayer.ui.widget.SquareImageView
@@ -47,7 +46,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="68dp"
         android:layout_marginTop="30dp"
-        android:text="Artist"/>
+        android:text="Artist" />
 
     <ImageView
         android:id="@+id/npui_fastforward"
@@ -86,13 +85,13 @@
         app:fabSize="mini" />
 
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/npui_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#fff">
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/npui_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#fff">
 
-        </android.support.v7.widget.RecyclerView>
+    </android.support.v7.widget.RecyclerView>
 
 
 </com.carbonplayer.ui.widget.NowPlayingFrame>

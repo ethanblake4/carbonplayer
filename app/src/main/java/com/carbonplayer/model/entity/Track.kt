@@ -58,7 +58,7 @@ open class Track(
         get() = albums?.first()?.artists?.map { it.name }?.reduce { acc, name -> acc + " & " + name } ?: "Error"
 
     override val album: String
-        get() = albums?.first()?.title ?: ""
+        get() = albums?.first()?.name ?: ""
 
     override val albumId: String
         get() = albums?.first()?.albumId ?: ""
@@ -165,7 +165,7 @@ open class Track(
         return ParcelableTrack(this)
     }
 
-    override fun toString() = "Track { id: $id, title: $title, album: $album, trackNumber: $trackNumber, " +
+    override fun toString() = "Track { id: $id, name: $title, album: $album, trackNumber: $trackNumber, " +
                 "albumId: ${albums?.first()?.albumId ?: ""}"
 
     companion object {

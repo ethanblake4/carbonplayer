@@ -261,7 +261,7 @@ class AlbumController(
 
 
         root.secondaryText.text = if (album is Album) (album as Album).artists?.first()?.name ?: album.albumArtist else album.albumArtist
-        root.primaryText.text = album.title
+        root.primaryText.text = album.name
 
         root.songgroup_recycler.isNestedScrollingEnabled = false
 

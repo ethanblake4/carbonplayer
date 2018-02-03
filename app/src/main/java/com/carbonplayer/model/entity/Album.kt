@@ -20,7 +20,7 @@ open class Album (
         override var inLibrary: Boolean = false,
         @PrimaryKey override var albumId: String = "",
         override var recentTimestamp: Long? = null,
-        override var title: String = "",
+        override var name: String = "",
         override var albumArtist: String = "",
         override var composer: String = "",
         override var year: Int = 0,
@@ -51,7 +51,7 @@ open class Album (
             source.inLibrary ?: false,
             source.albumId,
             source.recentTimestamp,
-            source.title,
+            source.name,
             source.albumArtist,
             source.composer?: "",
             source.year,
@@ -96,6 +96,6 @@ open class Album (
 
     companion object {
         const val ID = "albumId"
-        const val TITLE = "title"
+        const val NAME = "name"
     }
 }

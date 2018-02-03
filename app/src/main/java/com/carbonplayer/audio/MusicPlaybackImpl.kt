@@ -10,7 +10,6 @@ import com.carbonplayer.model.network.StreamManager
 import com.carbonplayer.model.network.entity.ExoPlayerDataSource
 import com.carbonplayer.model.network.entity.Stream
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.DynamicConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
@@ -18,7 +17,6 @@ import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
-import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultAllocator
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import io.reactivex.disposables.Disposable
@@ -40,8 +38,8 @@ class MusicPlaybackImpl(
 
     private var renderersFactory = DefaultRenderersFactory(service)
     private val allocator = DefaultAllocator(true, 64 * 1024)
-    private val loadControl = DefaultLoadControl(allocator, 6000, 10000,
-            2000, 5000)
+    private val loadControl = DefaultLoadControl(allocator, 2000, 4000,
+            1000, 1500, C.LENGTH_UNSET, false)
 
     private val trackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
     private val trackSelector = DefaultTrackSelector(trackSelectionFactory)
@@ -270,12 +268,8 @@ class MusicPlaybackImpl(
 
     private fun sourceFromStream(stream: Stream): MediaSource {
         Timber.d("sourceFromStream $stream")
-        return ExtractorMediaSource(Uri.parse("DefaultUri"),
-                DataSource.Factory { ExoPlayerDataSource(stream) },
-                DefaultExtractorsFactory(), mainHandler, ExtractorMediaSource.EventListener { e ->
-            Timber.e(e, "Error in buildMediaSource() -> extractorMediaSource")
-            onerror(PlaybackException())
-        })
+        return ExtractorMediaSource.Factory( { ExoPlayerDataSource(stream) })
+                .createMediaSource(Uri.parse("DefaultUri"))
     }
 
     override fun onPlayerError(error: ExoPlaybackException?) {
@@ -315,8 +309,8 @@ class MusicPlaybackImpl(
         Timber.d("Loading: " + if (isLoading) "true" else "false")
     }
 
-    override fun onPositionDiscontinuity() {
-        Timber.d("Position Discontinuity")
+    override fun onPositionDiscontinuity(@Player.DiscontinuityReason reason: Int) {
+        Timber.d("Position Discontinuity: $reason")
         if (exoPlayer.currentWindowIndex == lastKnownWindowIndex + 1 && !disallowNextAutoInc) {
             trackNum++
             Timber.i("Discontinuity -> Next Track")
@@ -335,6 +329,7 @@ class MusicPlaybackImpl(
 
     override fun onTimelineChanged(timeline: Timeline?, manifest: Any?) {
         Timber.d("Timeline changed")
+
     }
 
     override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
@@ -347,6 +342,14 @@ class MusicPlaybackImpl(
 
     override fun onRepeatModeChanged(repeatMode: Int) {
         Timber.d("Repeat mode changed")
+    }
+
+    override fun onSeekProcessed() {
+        Timber.d("Seek processed")
+    }
+
+    override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+        Timber.d("Shuffle mode: $shuffleModeEnabled")
     }
 
     companion object {

@@ -43,8 +43,8 @@ public abstract class ScrollerViewProvider {
     public abstract View provideBubbleView(ViewGroup container);
 
     /**
-     * Bubble view has to provide a {@link TextView} that will show the index title.
-     * @return A {@link TextView} that will hold the index title.
+     * Bubble view has to provide a {@link TextView} that will show the index name.
+     * @return A {@link TextView} that will hold the index name.
      */
     public abstract TextView provideBubbleTextView();
 

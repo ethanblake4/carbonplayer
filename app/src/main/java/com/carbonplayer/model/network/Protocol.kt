@@ -34,6 +34,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.protocol.ClientContext
+import org.apache.http.impl.client.BasicCookieStore
+import org.apache.http.protocol.BasicHttpContext
 import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
@@ -96,6 +99,7 @@ object Protocol {
                   seedType: Int, sessionToken: String?): Single<RadioFeedResponse> {
         val adapter = CarbonPlayerApplication.moshi.adapter(RadioFeedResponse::class.java)
         return Single.fromCallable {
+
 
             val client = CarbonPlayerApplication.instance.okHttpClient
 
@@ -160,6 +164,13 @@ object Protocol {
                 val entity = AndroidHttpClient.getCompressedEntity(
                         homeRequest.toByteArray(), context.contentResolver)
                 entity.setContentType("application/x-protobuf")
+                val cookieStore =  BasicCookieStore()
+
+                // Create local HTTP context
+                val localContext =  BasicHttpContext()
+                // Bind custom cookie store to the local context
+                localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore)
+
                 val httpRequest = HttpPost(PA_URL + "gethome?alt=proto")
                 httpRequest.entity = entity
                 httpRequest.setHeader("X-Device-ID", deviceId)
@@ -167,7 +178,7 @@ object Protocol {
                 httpRequest.setHeader("Authorization", "Bearer " +
                         CarbonPlayerApplication.instance.preferences.PlayMusicOAuth)
                 val response = CarbonPlayerApplication.instance.androidHttpClient
-                        .execute(httpRequest)
+                        .execute(httpRequest, localContext)
                 if (response.statusLine.statusCode == 401) {
                     GoogleLogin.retryPlayOAuthSync(context)
                     subscriber.onError(ServerRejectionException(

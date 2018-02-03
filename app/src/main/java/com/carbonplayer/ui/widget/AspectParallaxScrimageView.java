@@ -12,7 +12,7 @@ import static com.carbonplayer.utils.general.MathUtils.aspectHeightMultiple;
 public class AspectParallaxScrimageView extends ParallaxScrimageViewSz {
 
     public ImageReferenceV1Proto.ImageReference.AspectRatio aspect =
-            ImageReferenceV1Proto.ImageReference.AspectRatio.FOUR_BY_THREE;
+            ImageReferenceV1Proto.ImageReference.AspectRatio.THREE_BY_TWO;
 
     public AspectParallaxScrimageView(Context context, AttributeSet attrs) {
         super(context, attrs);

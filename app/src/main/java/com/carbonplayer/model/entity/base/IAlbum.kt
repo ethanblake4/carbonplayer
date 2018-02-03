@@ -7,7 +7,7 @@ interface IAlbum {
     val inLibrary: Boolean?
     val albumId: String
     val recentTimestamp: Long?
-    val title: String
+    val name: String
     val albumArtist: String
     val albumArtRef: String
     val artistId: List<String>

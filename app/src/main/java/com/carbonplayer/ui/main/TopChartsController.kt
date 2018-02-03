@@ -1,6 +1,7 @@
 package com.carbonplayer.ui.main
 
 import android.content.Context
+import android.support.design.widget.CollapsingToolbarLayout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,7 @@ import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.topcharts.TopChartsAlbumPage
 import com.carbonplayer.ui.main.topcharts.TopChartsSongPage
 import com.carbonplayer.utils.addToAutoDispose
+import com.carbonplayer.utils.general.IdentityUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.controller_topcharts.view.*
@@ -35,8 +37,12 @@ class TopChartsController : Controller() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ response ->
                     currentResponse = response
-                    currentSongPage?.let { it.songList = response.tracks }
-                    currentAlbumPage?.let { it.albumList = response.albums }
+                    currentSongPage?.let { it.songList = response.chart.tracks }
+                    currentAlbumPage?.let { it.albumList = response.chart.albums }
+                    view?.let {
+                        Glide.with(activity).load(response.header.header_image.url)
+                                .into(it.topcharts_header_image)
+                    }
                 }, { err ->
                     Timber.e(err)
                 }).addToAutoDispose()
@@ -52,12 +58,12 @@ class TopChartsController : Controller() {
                     when(position) {
                         0 -> {
                             currentSongPage = TopChartsSongPage()
-                            currentResponse?.let { currentSongPage!!.songList = it.tracks }
+                            currentResponse?.let { currentSongPage!!.songList = it.chart.tracks }
                             router.setRoot(RouterTransaction.with(currentSongPage!!))
                         }
                         1 -> {
                             currentAlbumPage = TopChartsAlbumPage()
-                            currentResponse?.let { currentAlbumPage!!.albumList = it.albums }
+                            currentResponse?.let { currentAlbumPage!!.albumList = it.chart.albums }
                             router.setRoot(RouterTransaction.with(currentAlbumPage!!))
                         }
                     }
@@ -78,8 +84,11 @@ class TopChartsController : Controller() {
 
         v.topcharts_tabs.setupWithViewPager(v.topChartsPager)
 
+        (v.toolbar2.layoutParams as CollapsingToolbarLayout.LayoutParams).topMargin +=
+                IdentityUtils.getStatusBarHeight(resources) / 2
+
         currentResponse?.let {
-            Glide.with(activity).load(it.image.url)
+            Glide.with(activity).load(it.header.header_image.url)
                     .into(v.topcharts_header_image)
         }
 

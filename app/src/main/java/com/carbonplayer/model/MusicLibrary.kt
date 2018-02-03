@@ -132,7 +132,7 @@ object MusicLibrary {
             val album = realm.where(Album::class.java)
                     .equalTo(Album.ID, sjTrack.albumId)
                     .or().beginGroup()
-                    .equalTo(Album.TITLE, sjTrack.album)
+                    .equalTo(Album.NAME, sjTrack.album)
                     .contains("artists.name", sjTrack.artist)
                     .endGroup()
                     .findFirst()?.apply { this.tracks.add(track) }
@@ -152,11 +152,13 @@ object MusicLibrary {
     }
 
     fun processArtists(src: List<SkyjamArtist>, realm: Realm): RealmList<Artist> {
-        return src.mapTo(RealmList(), {
-            realm.where(Artist::class.java)
+        val lis = RealmList<Artist>()
+        src.forEach {
+            lis.add(realm.where(Artist::class.java)
                     .equalTo(Artist.ID, it.artistId)
-            Artist(it, realm)
-        })
+                    .findFirst() ?: Artist(it, realm))
+        }
+        return lis
     }
 
     /**
@@ -169,8 +171,11 @@ object MusicLibrary {
             out.add(realm.where(Album::class.java)
                     .equalTo(Album.ID, a.albumId)
                     .or().beginGroup()
-                    .equalTo(Album.TITLE, a.title)
-                    .apply { a.artists?.first()?.let { contains("artists.name", it.name)} }
+                    .equalTo(Album.NAME, a.name)
+                    .apply { a.artists?.forEachIndexed { i, artist ->
+                        if (i != 0) or()
+                        contains("artists.name", artist.name)
+                    } }
                     .endGroup()
                     .findFirst()?.updateFrom(a, realm)
                     ?: realm.copyToRealm(a))
@@ -183,14 +188,15 @@ object MusicLibrary {
      * Transforms a list of [SkyjamTrack]s into a RealmList of [Track]s
      */
     fun processTracks(tracks: List<SkyjamTrack>, realm: Realm): RealmList<Track> {
-        return tracks.mapTo(RealmList(), {
+        return tracks.mapTo(RealmList<Track>()) {
             realm.where(Track::class.java)
                     .equalTo(Track.TRACK_ID, it.id)
                     .or().equalTo(Track.CLIENT_ID, it.clientId)
                     .or().equalTo(Track.NAUTILUS_ID, it.nid)
                     .or().equalTo(Track.STORE_ID, it.storeId)
+                    .findFirst() ?:
             Track(nextLocalIdForTrack(realm), it)
-        })
+        }
     }
 
     private fun nextLocalIdForTrack(realm: Realm) =
@@ -282,7 +288,7 @@ object MusicLibrary {
     fun loadAlbums(): Flowable<RealmResults<Album>> {
         return Realm.getDefaultInstance().where(Album::class.java)
                 .equalTo("inLibrary", true)
-                .sort("title", Sort.ASCENDING)
+                .sort("name", Sort.ASCENDING)
                 .findAllAsync()
                 .asFlowable()
     }

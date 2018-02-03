@@ -47,7 +47,7 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
 
     @Override
     public String getSectionTitle(int position) {
-        return mDataset.get(position).getTitle().substring(0, 1).toUpperCase();
+        return mDataset.get(position).getName().substring(0, 1).toUpperCase();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -137,7 +137,7 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
         holder.detailText.setTextColor(defaultTextColor);
 
         Album a = mDataset.get(position);
-        holder.titleText.setText(a.getTitle());
+        holder.titleText.setText(a.getName());
         RealmResults<Artist> ar = a.getArtists();
         if(ar != null && ar.size() > 0)
             holder.detailText.setText(ar.first().getName());

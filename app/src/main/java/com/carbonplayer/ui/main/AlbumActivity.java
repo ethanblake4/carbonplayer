@@ -145,7 +145,7 @@ public class AlbumActivity extends AppCompatActivity {
                 .into(albumart), 1000);*/
 
         secondaryText.setText(mAlbum.getArtists().first().getName());
-        primaryText.setText(mAlbum.getTitle());
+        primaryText.setText(mAlbum.getName());
 
         songList.setNestedScrollingEnabled(false);
 

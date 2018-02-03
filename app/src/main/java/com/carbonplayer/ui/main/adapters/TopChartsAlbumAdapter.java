@@ -8,8 +8,6 @@ import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -73,14 +71,14 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
 
 
 
-            ViewTreeObserver vto = thumb.getViewTreeObserver();
+            /*ViewTreeObserver vto = thumb.getViewTreeObserver();
             vto.addOnPreDrawListener(() -> {
                 size = thumb.getMeasuredWidth();
                 ((FrameLayout.LayoutParams) contentRoot.getLayoutParams())
                         .setMargins(0, size, 0, 0);
                 contentRoot.postInvalidate();
                 return true;
-            });
+            });*/
 
             titleText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 50)));
             detailText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 32)));
@@ -131,8 +129,8 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
         holder.detailText.setTextColor(defaultTextColor);
 
         SkyjamAlbum a = mDataset.get(position);
-        holder.titleText.setText(a.getTitle());
-        holder.detailText.setText(a.getArtist());
+        holder.titleText.setText(a.getName());
+        holder.detailText.setText(a.getAlbumArtist());
         holder.album = a;
 
         if (!a.getAlbumArtRef().equals("")) {

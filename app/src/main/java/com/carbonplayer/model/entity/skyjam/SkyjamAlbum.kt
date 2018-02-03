@@ -13,7 +13,7 @@ data class SkyjamAlbum (
         override val inLibrary: Boolean?,
         override val albumId: String = MusicLibrary.UNKNOWN_ALBUM_ID,
         override val recentTimestamp: Long?,
-        override val title: String = "",
+        override val name: String = "",
         override val albumArtist: String,
         override val albumArtRef: String,
         val artist: String,

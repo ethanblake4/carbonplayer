@@ -86,7 +86,7 @@ public class FastScroller extends LinearLayout {
     /**
      * Attach the {@link FastScroller} to {@link RecyclerView}. Should be used after the adapter is set
      * to the {@link RecyclerView}. If the adapter implements SectionTitleProvider, the FastScroller
-     * will show a bubble with title.
+     * will show a bubble with name.
      * @param recyclerView A {@link RecyclerView} to attach the {@link FastScroller} to.
      */
     public void setRecyclerView(RecyclerView recyclerView) {

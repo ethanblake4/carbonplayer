@@ -21,10 +21,12 @@ import com.carbonplayer.ui.widget.ParallaxScrimageViewSz;
 import com.carbonplayer.utils.protocol.ProtoUtils;
 import com.carbonplayer.utils.ui.ColorUtils;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.functions.Action;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
@@ -48,6 +50,7 @@ public final class FullBleedListAdapter
     private List<FullBleedModule> dataset;
     private Function1<FullBleedModule, Unit> callback;
     private RequestManager requestManager;
+    private List<Action> scrollCallbacks = new LinkedList<>();
 
     class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -161,7 +164,21 @@ public final class FullBleedListAdapter
 
         recycler.addOnScrollListener(vh.listener);
 
+        scrollCallbacks.add(() -> {
+            int[] loc = new int[2];
+            vh.image.getLocationInWindow(loc);
+            vh.image.setTranslationY(-loc[1] * 0.12f);
+        });
+
         return vh;
+    }
+
+    public Action getScrollCallback() {
+        return () -> {
+            for (Action cb: scrollCallbacks) {
+                cb.run();
+            }
+        };
     }
 
 

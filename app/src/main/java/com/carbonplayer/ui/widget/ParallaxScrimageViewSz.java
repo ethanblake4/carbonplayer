@@ -139,6 +139,8 @@ public class ParallaxScrimageViewSz extends AppCompatImageView {
             super.onDraw(canvas);
             //canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), scrimPaint);
         }
+
+        canvas.drawColor(ColorUtils.modifyAlpha(scrimColor, scrimAlpha));
     }
 
     @Override

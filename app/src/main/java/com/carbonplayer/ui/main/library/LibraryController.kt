@@ -20,14 +20,8 @@ class LibraryController : Controller() {
     var adapter: RouterPagerAdapter? = null
     var curPage = 0
 
-
-    fun LayoutInflater.addNumbers(x: Int, y: Int) : Int {
-        return x + y;
-    }
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
-        inflater.addNumbers(4, 5)
 
         /*Timber.d("Library - onCreateView. savedInstanceState= %s",
                 if(savedInstanceState == null) "null" else "not null")*/

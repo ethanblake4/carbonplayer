@@ -1,6 +1,7 @@
 package com.carbonplayer.ui.main
 
 import android.support.design.widget.AppBarLayout
+import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -21,6 +22,7 @@ import com.carbonplayer.ui.main.adaptivehome.FullBleedListAdapter
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.functions.Action
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.adaptivehome.view.*
 import timber.log.Timber
@@ -30,6 +32,7 @@ class HomeController : Controller() {
     lateinit var adapter: FullBleedListAdapter
     lateinit var layoutManager: RecyclerView.LayoutManager
     lateinit var requestManager: RequestManager
+    var currentScrollCallback: Action? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
@@ -46,26 +49,21 @@ class HomeController : Controller() {
         (view.toolbar.layoutParams as AppBarLayout.LayoutParams).bottomMargin +=
                 IdentityUtils.getStatusBarHeight(resources) / 2
 
+        view.app_bar.addOnOffsetChangedListener({ _, i ->
+            (activity as MainActivity).scrollCb(i)
+            currentScrollCallback?.run()
+        })
+
         layoutManager = LinearLayoutManager(activity)
 
         view.main_recycler.layoutManager = layoutManager
 
         view.main_recycler.recycledViewPool.setMaxRecycledViews(0, 2)
 
-        /*view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
-
-            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                (activity as MainActivity).scrollCb(dy)
-            }
-        })*/
-
-        /*view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-            }
-        })*/
+        view.swipeRefreshLayout.setOnRefreshListener {
+            Timber.d("Will refresh")
+            refresh()
+        }
 
         CarbonPlayerApplication.instance.homeLastResponse?.let {
             processHomeRequest(it)
@@ -92,7 +90,11 @@ class HomeController : Controller() {
                     CarbonPlayerApplication.instance.homeLastResponse = home
                     processHomeRequest(home)
                 }, { err ->
-                    Timber.e("Error in listennow", err)
+                    Timber.e(err)
+                    view?.adaptiveHomeCoordinator?.let {
+                        Snackbar.make(it, "Error " +
+                                "", Snackbar.LENGTH_SHORT)
+                    }
                 }).addToAutoDispose()
 
     }
@@ -114,7 +116,14 @@ class HomeController : Controller() {
                             }
                         },
                         { mod: FullBleedModuleV1Proto.FullBleedModule -> Timber.d(mod.toString()) },
-                        requestManager, view!!.main_recycler)
+                        requestManager, view!!.main_recycler).apply { currentScrollCallback = this.scrollCallback }
+
+                view?.swipeRefreshLayout?.isRefreshing = false
+            }
+            else -> {
+                view?.adaptiveHomeCoordinator?.let {
+                    Snackbar.make(it, "Error processing server response", Snackbar.LENGTH_SHORT)
+                }
             }
         }
     }
