@@ -39,7 +39,7 @@ internal class TopChartsSongAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val t = mDataset[position]
         holder.itemView.trackName.text = t.title
-        holder.itemView.trackRanking.text = position.toString()
+        holder.itemView.trackRanking.text = (position + 1).toString()
         holder.itemView.artistName.text = t.artist
         //holder.id = SongID(t)
 

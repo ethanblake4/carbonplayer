@@ -7,7 +7,6 @@ import android.net.http.AndroidHttpClient
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.model.entity.ConfigEntry
 import com.carbonplayer.model.entity.SearchResponse
-import com.carbonplayer.model.entity.TopChartsResponse
 import com.carbonplayer.model.entity.enums.NetworkType
 import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.entity.enums.StreamQuality
@@ -216,6 +215,67 @@ object Protocol {
 
             val request = defaultBuilder(context)
                     .url(SJ_URL + "browse/topchart?" + getParams)
+                    .header("Content-Type", "application/json")
+                    .build()
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                response.body()?.source()?.let {
+                    return@fromCallable adapter.fromJson(it)
+                }
+            }
+            if (response.code() in 400..499) {
+                throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
+            }
+            throw ResponseCodeException(response.body()!!.string())
+        }
+    }
+
+    fun getTopChartsGenres(context: Context): Observable<TopChartsGenres> {
+
+        val adapter = CarbonPlayerApplication.moshi.adapter(TopChartsGenres::class.java)
+
+        return Observable.fromCallable {
+            val client = CarbonPlayerApplication.instance.okHttpClient
+
+            val getParams = Uri.Builder()
+                    .appendQueryParameter("alt", "json")
+                    .appendDefaults()
+
+            val request = defaultBuilder(context)
+                    .url(SJ_URL + "browse/topchartgenres?" + getParams)
+                    .header("Content-Type", "application/json")
+                    .build()
+
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                response.body()?.source()?.let {
+                    return@fromCallable adapter.fromJson(it)
+                }
+            }
+            if (response.code() in 400..499) {
+                throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
+            }
+            throw ResponseCodeException(response.body()!!.string())
+        }
+    }
+
+    fun getTopChartsFor(context: Context, genre: String, offset: Int, pageSize: Int): Observable<TopChartsResponse> {
+
+        val adapter = CarbonPlayerApplication.moshi.adapter(TopChartsResponse::class.java)
+
+        return Observable.fromCallable {
+            val client = CarbonPlayerApplication.instance.okHttpClient
+
+            val getParams = Uri.Builder()
+                    .appendQueryParameter("alt", "json")
+                    .appendDefaults()
+                    .appendQueryParameter("tracksOffset", offset.toString())
+                    .appendQueryParameter("albumsOffset", offset.toString())
+                    .appendQueryParameter("maxTracks", pageSize.toString())
+                    .appendQueryParameter("maxAlbums", pageSize.toString())
+
+            val request = defaultBuilder(context)
+                    .url(SJ_URL + "browse/topchartforgenre/$genre?" + getParams)
                     .header("Content-Type", "application/json")
                     .build()
             val response = client.newCall(request).execute()

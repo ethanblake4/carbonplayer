@@ -10,8 +10,9 @@ import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
 import com.bluelinelabs.conductor.support.RouterPagerAdapter
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.TopChartsResponse
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.topcharts.TopChartsAlbumPage
 import com.carbonplayer.ui.main.topcharts.TopChartsSongPage
@@ -27,20 +28,77 @@ class TopChartsController : Controller() {
     var currentSongPage: TopChartsSongPage? = null
     var currentAlbumPage: TopChartsAlbumPage? = null
 
-    var currentResponse: TopChartsResponse? = null
-
     override fun onContextAvailable(context: Context) {
         super.onContextAvailable(context)
 
-        Protocol.getTopCharts(context, 0, 100)
+        getCharts(context)
+
+        Protocol.getTopChartsGenres(context)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+
+                    (activity as MainActivity).callbackWithTopChartsGenres(it.genres, {
+                        Timber.d("selected $it")
+
+                        if(it == DEFAULT_CHART) getCharts(context)
+                        else applyCachedChart(context, it)
+                    })
+                }.addToAutoDispose()
+    }
+
+    fun getCharts(context: Context) {
+
+        Protocol.getTopCharts(context, 0, CHART_ENTRIES)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ response ->
-                    currentResponse = response
+
+                    CarbonPlayerApplication.instance.topchartsResponseMap[DEFAULT_CHART] = response
+
                     currentSongPage?.let { it.songList = response.chart.tracks }
                     currentAlbumPage?.let { it.albumList = response.chart.albums }
                     view?.let {
                         Glide.with(activity).load(response.header.header_image.url)
+                                .transition(DrawableTransitionOptions.withCrossFade(200))
+                                .into(it.topcharts_header_image)
+                    }
+
+                    view?.topChartsSwipeRefresh?.isRefreshing = false
+                }, { err ->
+                    Timber.e(err)
+                }).addToAutoDispose()
+    }
+
+    fun applyCachedChart(context: Context, id: String) {
+
+        CarbonPlayerApplication.instance.topchartsResponseMap[id]?.let { response ->
+            currentSongPage?.let { it.songList = response.chart.tracks }
+            currentAlbumPage?.let { it.albumList = response.chart.albums }
+            CarbonPlayerApplication.instance.topchartsResponseMap[id] = response
+
+            view?.let {
+                Glide.with(activity).load(response.header.header_image.url)
+                        .transition(DrawableTransitionOptions.withCrossFade(200))
+                        .into(it.topcharts_header_image)
+            }
+        }
+
+        getChartsFor(context, id)
+    }
+
+    fun getChartsFor(context: Context, id: String) {
+        Protocol.getTopChartsFor(context, id, 0, CHART_ENTRIES)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ response ->
+                    currentSongPage?.let { it.songList = response.chart.tracks }
+                    currentAlbumPage?.let { it.albumList = response.chart.albums }
+                    CarbonPlayerApplication.instance.topchartsResponseMap[id] = response
+
+                    view?.let {
+                        Glide.with(activity).load(response.header.header_image.url)
+                                .transition(DrawableTransitionOptions.withCrossFade(200))
                                 .into(it.topcharts_header_image)
                     }
                 }, { err ->
@@ -58,12 +116,16 @@ class TopChartsController : Controller() {
                     when(position) {
                         0 -> {
                             currentSongPage = TopChartsSongPage()
-                            currentResponse?.let { currentSongPage!!.songList = it.chart.tracks }
+                            CarbonPlayerApplication.instance.topchartsResponseMap[DEFAULT_CHART]?.let {
+                                currentSongPage!!.songList = it.chart.tracks
+                            }
                             router.setRoot(RouterTransaction.with(currentSongPage!!))
                         }
                         1 -> {
                             currentAlbumPage = TopChartsAlbumPage()
-                            currentResponse?.let { currentAlbumPage!!.albumList = it.chart.albums }
+                            CarbonPlayerApplication.instance.topchartsResponseMap[DEFAULT_CHART]?.let {
+                                currentAlbumPage!!.albumList = it.chart.albums
+                            }
                             router.setRoot(RouterTransaction.with(currentAlbumPage!!))
                         }
                     }
@@ -84,15 +146,22 @@ class TopChartsController : Controller() {
 
         v.topcharts_tabs.setupWithViewPager(v.topChartsPager)
 
-        (v.toolbar2.layoutParams as CollapsingToolbarLayout.LayoutParams).topMargin +=
-                IdentityUtils.getStatusBarHeight(resources) / 2
+        v.topChartsSwipeRefresh.isRefreshing = true
 
-        currentResponse?.let {
+        (v.toolbar2.layoutParams as CollapsingToolbarLayout.LayoutParams).topMargin +=
+                IdentityUtils.getStatusBarHeight(resources)
+
+        CarbonPlayerApplication.instance.topchartsResponseMap[DEFAULT_CHART]?.let {
             Glide.with(activity).load(it.header.header_image.url)
                     .into(v.topcharts_header_image)
         }
 
         return v
+    }
+
+    companion object {
+        const val DEFAULT_CHART = "DEFAULT"
+        const val CHART_ENTRIES = 100
     }
 
 

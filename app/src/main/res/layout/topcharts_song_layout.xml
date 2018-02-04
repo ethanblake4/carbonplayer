@@ -6,6 +6,7 @@
     style="@style/DarkRippleTheme"
     android:layout_width="match_parent"
     android:layout_height="56dp"
+    android:background="?android:attr/selectableItemBackground"
     android:orientation="horizontal">
 
     <FrameLayout
@@ -51,10 +52,9 @@
             android:id="@+id/trackName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif"
+            android:maxLines="1"
             android:text="Divinity (ft. Amy Millan)"
-            android:textAppearance="@android:style/TextAppearance.Material.Title"
-            android:textColor="#ccc"
+            android:textAppearance="@android:style/TextAppearance.Material.Body2"
             tools:ignore="HardcodedText" />
 
         <TextView

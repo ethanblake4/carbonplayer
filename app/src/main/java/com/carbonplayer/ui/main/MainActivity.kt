@@ -9,6 +9,8 @@ import android.support.v7.widget.PopupMenu
 import android.view.ContextThemeWrapper
 import android.view.KeyEvent
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import com.bluelinelabs.conductor.Conductor
 import com.bluelinelabs.conductor.Router
@@ -18,6 +20,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
 import com.carbonplayer.ui.main.library.AlbumController
@@ -86,11 +89,31 @@ class MainActivity : AppCompatActivity() {
                 else -> LibraryController()
             }
 
-            main_actionbar_text.text = when (item.itemId) {
-                R.id.action_topcharts -> "Top Charts"
-                R.id.action_home -> "Home"
-                R.id.action_library -> "My Library"
-                else -> "Carbon Player"
+             when (item.itemId) {
+                R.id.action_topcharts -> {
+                    main_actionbar_text.visibility = View.GONE
+                    topChartsSpinner.visibility = View.VISIBLE
+                    topChartsSpinner.adapter = ArrayAdapter(
+                            this,
+                            R.layout.topcharts_spinner_item,
+                            listOf("Top Charts")
+                    )
+                }
+                R.id.action_home -> {
+                    main_actionbar_text.visibility = View.VISIBLE
+                    topChartsSpinner.visibility = View.GONE
+                    main_actionbar_text.text ="Home"
+                }
+                R.id.action_library -> {
+                    main_actionbar_text.visibility = View.VISIBLE
+                    topChartsSpinner.visibility = View.GONE
+                    main_actionbar_text.text ="My Library"
+                }
+                else -> {
+                    main_actionbar_text.visibility = View.VISIBLE
+                    topChartsSpinner.visibility = View.GONE
+                    main_actionbar_text.text = "Carbon Player"
+                }
             }
 
             lastAppbarText = main_actionbar_text.text.toString()
@@ -137,6 +160,25 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle?) {
         Icepick.saveInstanceState(this, outState)
         super.onSaveInstanceState(outState)
+    }
+
+    fun callbackWithTopChartsGenres(genres: List<TopChartsGenres.Genre>, callback: (String) -> Unit) {
+        topChartsSpinner.adapter = ArrayAdapter(
+                this,
+                R.layout.topcharts_spinner_item,
+                mutableListOf("Top Charts").apply { addAll(genres.map { it.title }) }
+        )
+
+        topChartsSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                Timber.d("Nothing selected")
+            }
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if(position == 0) callback(TopChartsController.DEFAULT_CHART)
+                else callback(genres[position - 1].id)
+            }
+        }
     }
 
     fun gotoAlbum(album: IAlbum, swatchPair: PaletteUtil.SwatchPair) {

@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fitsSystemWindows="true"
-            app:contentScrim="?attr/colorPrimary"
+            app:contentScrim="#8222"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
             <com.carbonplayer.ui.widget.AspectParallaxScrimageView
@@ -30,7 +30,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layout_collapseMode="parallax"
-                app:scrimColor="#000"
+                app:scrimColor="#222"
                 app:scrimAlpha="0.3"
                 app:layout_collapseParallaxMultiplier="0.5" />
 
@@ -67,11 +67,18 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <android.support.v4.view.ViewPager
-        android:id="@+id/topChartsPager"
+    <com.carbonplayer.ui.widget.CustomSwipeToRefresh
+        android:id="@+id/topChartsSwipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/topChartsPager"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </com.carbonplayer.ui.widget.CustomSwipeToRefresh>
 
 </com.otaliastudios.nestedscrollcoordinatorlayout.NestedScrollCoordinatorLayout>
 <!--/ScrollView-->
