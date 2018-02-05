@@ -8,12 +8,10 @@ apply plugin: 'kotlin-kapt'
 
 apply plugin: 'realm-android'
 
-
-if(project.hasProperty("carbonplayer.properties")
-        && new File(project.property("carbonplayer.properties")).exists()) {
+if(new File("carbonplayer.properties").exists()) {
 
     Properties props = new Properties()
-    props.load(new FileInputStream(file(project.property("carbonplayer.properties"))))
+    props.load(new FileInputStream(new File("carbonplayer.properties")))
     android {
         signingConfigs {
             config {
@@ -194,7 +192,7 @@ dependencies {
 apply plugin: 'com.google.gms.google-services'
 
 android {
-    buildToolsVersion '27.0.2'
+    buildToolsVersion '27.0.3'
 }
 
 androidExtensions {

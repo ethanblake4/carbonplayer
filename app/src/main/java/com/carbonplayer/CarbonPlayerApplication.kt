@@ -10,6 +10,7 @@ import android.net.http.AndroidHttpClient
 import android.os.Build
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
+import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.model.entity.skyjam.TopChartsResponse
 import com.carbonplayer.model.network.utils.RealmListJsonAdapterFactory
 import com.carbonplayer.utils.CrashReportingTree
@@ -121,8 +122,10 @@ class CarbonPlayerApplication : Application() {
     val darkCSL = ColorStateList.valueOf(Color.DKGRAY)
 
     var homeLastResponse: InnerJamApiV1Proto.GetHomeResponse? = null
-    var topchartsResponseMap: MutableMap<String, TopChartsResponse> = mutableMapOf()
     var homePdContextToken: String? = null
+
+    var topchartsResponseMap: MutableMap<String, TopChartsResponse> = mutableMapOf()
+    var lastTopChartsGenres: TopChartsGenres? = null
 
     lateinit var okHttpClient: OkHttpClient
     lateinit var androidHttpClient: AndroidHttpClient

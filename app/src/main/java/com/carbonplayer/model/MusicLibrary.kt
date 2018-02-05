@@ -73,7 +73,7 @@ object MusicLibrary {
     }
 
 
-    fun addToDatabase(realm: Realm, tracks: List<SkyjamTrack>, update: Boolean = true,
+    private fun addToDatabase(realm: Realm, tracks: List<SkyjamTrack>, update: Boolean = true,
                       received: AtomicInteger? = null): List<Track> {
 
         val outTracks = mutableListOf<Track>()
@@ -81,74 +81,77 @@ object MusicLibrary {
         tracks.forEach { sjTrack ->
 
             received?.incrementAndGet()
-
-            val artistPairs = mutableMapOf<String, String>()
-            var treatAsOneArtist = false
-
-            if(sjTrack.artistId != null) {
-                val _artists = sjTrack.artist.split(" & ")
-                // For most cases
-                if (_artists.size == sjTrack.artistId.size) {
-                    (0 until _artists.size).forEach {
-                        artistPairs[sjTrack.artistId[it]] = _artists[it]
-                    }
-                } else if (_artists.size > sjTrack.artistId.size) {
-                    // Fixes e.g. "Tom Petty & The Heartbreakers"
-                    val noTheSize = _artists.size -
-                            _artists.count { it.startsWith("the", true) } +
-                            if(_artists[0].startsWith("The")) 1 else 0
-                    if ( noTheSize == sjTrack.artistId.size) {
-                        (0 until noTheSize).forEach {
-                            if(it == 0 || !_artists[it].startsWith("the", true)) {
-                                artistPairs[sjTrack.artistId[it]] = _artists[it]
-                            }
-                        }
-                    } else treatAsOneArtist = true  // Fallback: treat as a single artist
-                }
-            }
-
-            val artists = mutableListOf<Artist>()
-            val managedArtists = mutableListOf<Artist>()
-
-            if(treatAsOneArtist) {
-                artists.add(realm.where(Artist::class.java)
-                        .equalTo(Artist.ID, sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID)
-                        .findFirst()
-                        ?: Artist(sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID, sjTrack.artist))
-            } else {
-                artistPairs.forEach { (id, name) ->
-                    artists.add(realm.where(Artist::class.java)
-                            .equalTo(Artist.ID, id)
-                            .findFirst() ?: Artist(id, name, sjTrack.artistArtRef)
-                    )
-                }
-            }
-
-            sjTrack.inLibrary = false
-
-            val track = if (update) insertOrUpdateTrack(realm, sjTrack)
-            else realm.copyToRealm(Track(nextLocalIdForTrack(realm), sjTrack))
-
-            val album = realm.where(Album::class.java)
-                    .equalTo(Album.ID, sjTrack.albumId)
-                    .or().beginGroup()
-                    .equalTo(Album.NAME, sjTrack.album)
-                    .contains("artists.name", sjTrack.artist)
-                    .endGroup()
-                    .findFirst()?.apply { this.tracks.add(track) }
-                    ?: realm.copyToRealm(Album(sjTrack, track))
-
-            artists.forEach {
-                if (!it.albums.contains(album)) {
-                    it.albums.add(album)
-                }
-                managedArtists.add(if(!it.isManaged) realm.copyToRealm(it) else it)
-            }
-
-            outTracks.add(track)
+            outTracks.add(addOneToDatabase(realm, sjTrack, update))
         }
 
         return outTracks
+    }
+
+    fun addOneToDatabase(realm: Realm, sjTrack: SkyjamTrack, update: Boolean = true) : Track {
+        val artistPairs = mutableMapOf<String, String>()
+        var treatAsOneArtist = false
+
+        if(sjTrack.artistId != null) {
+            val _artists = sjTrack.artist.split(", ").flatMap { it.split(" & ") }
+            // For most cases
+            if (_artists.size == sjTrack.artistId.size) {
+                (0 until _artists.size).forEach {
+                    artistPairs[sjTrack.artistId[it]] = _artists[it]
+                }
+            } else if (_artists.size > sjTrack.artistId.size) {
+                // Fixes e.g. "Tom Petty & The Heartbreakers"
+                val noTheSize = _artists.size -
+                        _artists.count { it.startsWith("the", true) } +
+                        if(_artists[0].startsWith("The")) 1 else 0
+                if ( noTheSize == sjTrack.artistId.size) {
+                    (0 until noTheSize).forEach {
+                        if(it == 0 || !_artists[it].startsWith("the", true)) {
+                            artistPairs[sjTrack.artistId[it]] = _artists[it]
+                        }
+                    }
+                } else treatAsOneArtist = true  // Fallback: treat as a single artist
+            }
+        }
+
+        val artists = mutableListOf<Artist>()
+        val managedArtists = mutableListOf<Artist>()
+
+        if(treatAsOneArtist) {
+            artists.add(realm.where(Artist::class.java)
+                    .equalTo(Artist.ID, sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID)
+                    .findFirst()
+                    ?: Artist(sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID, sjTrack.artist))
+        } else {
+            artistPairs.forEach { (id, name) ->
+                artists.add(realm.where(Artist::class.java)
+                        .equalTo(Artist.ID, id)
+                        .findFirst() ?: Artist(id, name, sjTrack.artistArtRef)
+                )
+            }
+        }
+
+        sjTrack.inLibrary = false
+
+        val track = if (update) insertOrUpdateTrack(realm, sjTrack)
+        else realm.copyToRealm(Track(nextLocalIdForTrack(realm), sjTrack))
+
+        val album = realm.where(Album::class.java)
+                .equalTo(Album.ID, sjTrack.albumId)
+                .or().beginGroup()
+                .equalTo(Album.NAME, sjTrack.album)
+                .contains("artists.name", sjTrack.artist)
+                .endGroup()
+                .findFirst()?.apply { this.tracks.add(track) }
+                ?: realm.copyToRealm(Album(sjTrack, track))
+
+        artists.forEach {
+            if (!it.albums.contains(album)) {
+                it.albums.add(album)
+            }
+            managedArtists.add(if(!it.isManaged) realm.copyToRealm(it) else it)
+        }
+
+        return track
     }
 
     fun processArtists(src: List<SkyjamArtist>, realm: Realm): RealmList<Artist> {
@@ -205,17 +208,26 @@ object MusicLibrary {
     private fun nextLocalIdForPlaylist(realm: Realm) =
             realm.where(Playlist::class.java).max(Playlist.LOCAL_ID)?.toLong()?.plus(1) ?: 0
 
-    fun insertOrUpdateTrack(realm: Realm, src: SkyjamTrack) : Track {
+
+    private fun insertOrUpdateTrack(realm: Realm, src: SkyjamTrack) : Track {
 
         var trackQ = realm.where(Track::class.java)
         var nmo = false
         src.id?.let { trackQ = trackQ.equalTo(Track.TRACK_ID, it); nmo = true }
         src.clientId?.let {
             trackQ = if (nmo) trackQ.or().equalTo(Track.CLIENT_ID, it)
-            else trackQ.equalTo(Track.CLIENT_ID, it)
+            else {
+                nmo = true
+                trackQ.equalTo(Track.CLIENT_ID, it)
+            }
+        }
+        src.storeId?.let {
+            trackQ = if (nmo) trackQ.or().equalTo(Track.STORE_ID, it)
+            else trackQ.equalTo(Track.STORE_ID, it)
         }
 
         return trackQ.findFirst()?.updateWith(src) ?: realm.copyToRealm(Track(nextLocalIdForTrack(realm), src))
+
     }
 
     private fun insertOrUpdatePlaylist(realm: Realm, src: SkyjamPlaylist) : Playlist {

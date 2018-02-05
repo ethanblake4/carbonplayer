@@ -70,7 +70,14 @@ data class SkyjamTrack(
 ) : ITrack {
 
     override fun parcelable() : ParcelableTrack {
-        return MusicLibrary.insertOrUpdateTrack(Realm.getDefaultInstance(), this).parcelable()
+
+        var t: ParcelableTrack? = null
+
+        Realm.getDefaultInstance().executeTransaction { rlm ->
+            t = MusicLibrary.addOneToDatabase(rlm, this).parcelable()
+        }
+
+        return t!!
     }
 
 }

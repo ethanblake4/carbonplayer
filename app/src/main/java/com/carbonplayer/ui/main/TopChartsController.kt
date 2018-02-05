@@ -13,13 +13,18 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
+import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.model.network.Protocol
+import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.topcharts.TopChartsAlbumPage
 import com.carbonplayer.ui.main.topcharts.TopChartsSongPage
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
+import com.squareup.haha.perflib.Main
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.controller_main.*
+import kotlinx.android.synthetic.main.controller_main.view.*
 import kotlinx.android.synthetic.main.controller_topcharts.view.*
 import timber.log.Timber
 
@@ -37,17 +42,27 @@ class TopChartsController : Controller() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-
+                    CarbonPlayerApplication.instance.lastTopChartsGenres = it
                     (activity as MainActivity).callbackWithTopChartsGenres(it.genres, {
                         Timber.d("selected $it")
 
-                        if(it == DEFAULT_CHART) getCharts(context)
+                        view?.topChartsSwipeRefresh?.isRefreshing = true
+
+                        if (it == DEFAULT_CHART) getCharts(context)
                         else applyCachedChart(context, it)
                     })
                 }.addToAutoDispose()
     }
 
-    fun getCharts(context: Context) {
+    private fun refreshCharts(context: MainActivity) {
+
+        if(context.topChartsSpinner?.selectedItemPosition == 0) getCharts(context)
+        else CarbonPlayerApplication.instance.lastTopChartsGenres?.let {
+            getChartsFor(context, it.genres[context.topChartsSpinner.selectedItemPosition - 1].id)
+        }
+    }
+
+    private fun getCharts(context: Context) {
 
         Protocol.getTopCharts(context, 0, CHART_ENTRIES)
                 .subscribeOn(Schedulers.io())
@@ -70,7 +85,7 @@ class TopChartsController : Controller() {
                 }).addToAutoDispose()
     }
 
-    fun applyCachedChart(context: Context, id: String) {
+    private fun applyCachedChart(context: Context, id: String) {
 
         CarbonPlayerApplication.instance.topchartsResponseMap[id]?.let { response ->
             currentSongPage?.let { it.songList = response.chart.tracks }
@@ -87,7 +102,7 @@ class TopChartsController : Controller() {
         getChartsFor(context, id)
     }
 
-    fun getChartsFor(context: Context, id: String) {
+    private fun getChartsFor(context: Context, id: String) {
         Protocol.getTopChartsFor(context, id, 0, CHART_ENTRIES)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -100,6 +115,8 @@ class TopChartsController : Controller() {
                         Glide.with(activity).load(response.header.header_image.url)
                                 .transition(DrawableTransitionOptions.withCrossFade(200))
                                 .into(it.topcharts_header_image)
+                        it.topChartsSwipeRefresh.isRefreshing = false
+
                     }
                 }, { err ->
                     Timber.e(err)
@@ -109,11 +126,24 @@ class TopChartsController : Controller() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
         val v = inflater.inflate(R.layout.controller_topcharts, container, false)
 
+        CarbonPlayerApplication.instance.lastTopChartsGenres?.let {
+            (activity as MainActivity).callbackWithTopChartsGenres(it.genres, {
+                Timber.d("selected $it")
+
+                view?.topChartsSwipeRefresh?.isRefreshing = true
+
+                activity?.let { ctx ->
+                    if (it == DEFAULT_CHART) getCharts(ctx)
+                    else applyCachedChart(ctx, it)
+                }
+            })
+        }
+
         v.topChartsPager.adapter = object : RouterPagerAdapter(this) {
 
             override fun configureRouter(router: Router, position: Int) {
-                if(!router.hasRootController()) {
-                    when(position) {
+                if (!router.hasRootController()) {
+                    when (position) {
                         0 -> {
                             currentSongPage = TopChartsSongPage()
                             CarbonPlayerApplication.instance.topchartsResponseMap[DEFAULT_CHART]?.let {
@@ -147,6 +177,10 @@ class TopChartsController : Controller() {
         v.topcharts_tabs.setupWithViewPager(v.topChartsPager)
 
         v.topChartsSwipeRefresh.isRefreshing = true
+        v.topChartsSwipeRefresh.setOnRefreshListener {
+            if(view != null && activity != null) refreshCharts(activity as MainActivity)
+            else v.topChartsSwipeRefresh.isRefreshing = false
+        }
 
         (v.toolbar2.layoutParams as CollapsingToolbarLayout.LayoutParams).topMargin +=
                 IdentityUtils.getStatusBarHeight(resources)
@@ -163,7 +197,6 @@ class TopChartsController : Controller() {
         const val DEFAULT_CHART = "DEFAULT"
         const val CHART_ENTRIES = 100
     }
-
 
 
 }

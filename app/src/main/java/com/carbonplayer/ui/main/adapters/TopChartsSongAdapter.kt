@@ -16,14 +16,15 @@ import kotlinx.android.synthetic.main.topcharts_song_layout.view.*
  */
 internal class TopChartsSongAdapter(
         private val mDataset: List<SkyjamTrack>,
-        private val clicked: (SongID) -> Unit)
+        private val clicked: (Int) -> Unit)
     : RecyclerView.Adapter<TopChartsSongAdapter.ViewHolder>() {
 
     internal inner class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
-        //dlateinit var id: SongID
 
         init {
-            //v.songLayoutRoot.setOnClickListener { _ -> clicked(id) }
+            v.songLayoutRoot.setOnClickListener { _ ->
+                clicked(adapterPosition)
+            }
         }
     }
 

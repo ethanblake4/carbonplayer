@@ -5,6 +5,7 @@ import com.carbonplayer.model.entity.enums.PlaySource
 import com.carbonplayer.model.entity.enums.StorageType
 import com.carbonplayer.model.entity.enums.StreamQuality
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
+import com.carbonplayer.utils.nullIfEmpty
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.RealmResults
@@ -55,7 +56,7 @@ open class Track(
 ) : RealmObject(), ITrack {
 
     override val artist: String
-        get() = albums?.first()?.artists?.map { it.name }?.reduce { acc, name -> acc + " & " + name } ?: "Error"
+        get() = albums?.first()?.artists?.map { it.name }?.nullIfEmpty()?.reduce { acc, n -> "$acc & $n" } ?: "Error"
 
     override val album: String
         get() = albums?.first()?.name ?: ""

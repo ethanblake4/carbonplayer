@@ -26,6 +26,7 @@ fun JSONObject.maybeGetLong (key: String?): Long? = maybeGet (key, { getLong(key
 fun JSONObject.maybeGetObj (key: String?): JSONObject? = maybeGet (key, { getJSONObject(key) })
 fun JSONObject.maybeGetArray (key: String?): JSONArray? = maybeGet (key, { getJSONArray(key) })
 
+
 inline fun <T> JSONArray.mapArray(
         sGet: JSONArray.(i: Int) -> T
 ): MutableList<T> = (0..length()).mapTo(mutableListOf(), { i-> sGet(i)})
@@ -40,6 +41,10 @@ inline fun <T> JSONObject.maybeGet(
     if(key == null) null else {
         if (has(key)) sGet(this) else null
     }
+
+fun <E> Collection<E>.nullIfEmpty(): Collection<E>? {
+    return if (this.isEmpty()) null else this
+}
 
 fun Disposable.addToAutoDispose() = apply {
     CarbonPlayerApplication.compositeDisposable.add(this)
