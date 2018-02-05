@@ -213,8 +213,8 @@ class NowPlayingHelper(private val activity: Activity) {
 
     }
 
-    fun newQueue(tracks: List<ITrack>, pos: Int) {
-        trackQueue.replace(tracks, pos)
+    fun newQueue(tracks: List<ITrack>, pos: Int, local: Boolean = true) {
+        trackQueue.replace(tracks, pos, false, local)
     }
 
     fun newQueue(tracks: List<ITrack>) {

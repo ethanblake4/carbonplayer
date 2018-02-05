@@ -13,34 +13,11 @@ import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.base.ITrack
 import io.reactivex.disposables.Disposable
+import io.realm.Realm
 import org.json.JSONArray
 import org.json.JSONObject
 import org.parceler.Parcels
 import timber.log.Timber
-
-fun JSONObject.maybeGetInt (key: String?): Int? = maybeGet (key, { getInt(key) })
-fun JSONObject.maybeGetString (key: String?): String? = maybeGet (key, { getString(key) })
-fun JSONObject.maybeGetBool (key: String?): Boolean? = maybeGet (key, { getBoolean(key) })
-fun JSONObject.maybeGetDouble (key: String?): Double? = maybeGet (key, { getDouble(key) })
-fun JSONObject.maybeGetLong (key: String?): Long? = maybeGet (key, { getLong(key) })
-fun JSONObject.maybeGetObj (key: String?): JSONObject? = maybeGet (key, { getJSONObject(key) })
-fun JSONObject.maybeGetArray (key: String?): JSONArray? = maybeGet (key, { getJSONArray(key) })
-
-
-inline fun <T> JSONArray.mapArray(
-        sGet: JSONArray.(i: Int) -> T
-): MutableList<T> = (0..length()).mapTo(mutableListOf(), { i-> sGet(i)})
-
-inline fun <T, R : MutableList<T>> JSONArray.mapArrayTo(
-        to: R, sGet: JSONArray.(i: Int) -> T
-): R = (0..length()).mapTo(to, { i-> sGet(i)})
-
-inline fun <T> JSONObject.maybeGet(
-        key: String?,
-        sGet: JSONObject.() -> T) =
-    if(key == null) null else {
-        if (has(key)) sGet(this) else null
-    }
 
 fun <E> Collection<E>.nullIfEmpty(): Collection<E>? {
     return if (this.isEmpty()) null else this
@@ -57,16 +34,16 @@ fun JSONObject.toByteArray() : ByteArray {
 fun MutableList<ParcelableTrack>.asParcel(): Parcelable =
         Parcels.wrap<MutableList<ParcelableTrack>>(this)
 
-fun List<ITrack>.parcelable(): MutableList<ParcelableTrack> =
-        MutableList(size, { i -> get(i).parcelable() })
+fun List<ITrack>.parcelable(realm: Realm? = null): MutableList<ParcelableTrack> =
+        MutableList(size, { i -> get(i).parcelable(realm) })
 
 inline fun <reified T : Context> Context.newIntent(
         action: String,
-        noinline f: Intent.() -> Unit = {}
+        f: Intent.() -> Unit = {}
 ): Intent = Intent(this, T::class.java).apply(f).apply({ this.action = action })
 
 inline fun <reified T : Context> Context.newIntent(
-        noinline f: Intent.() -> Unit = {}
+        f: Intent.() -> Unit = {}
 ): Intent = Intent(this, T::class.java).apply(f)
 
 fun Context.pendingActivityIntent(

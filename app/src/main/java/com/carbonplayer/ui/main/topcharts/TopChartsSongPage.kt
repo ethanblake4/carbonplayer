@@ -46,8 +46,8 @@ class TopChartsSongPage : Controller() {
         Timber.d("setting adapter")
         v.main_recycler.adapter = TopChartsSongAdapter(songList!!, {
             Timber.d("Track at position $it is " +
-                    (songList as List<SkyjamTrack>)[it].let { it.id + ", " + it.title })
-            musicManager.fromTracks(songList!!, it)
+                    (songList as List<SkyjamTrack>)[it].let { it.storeId + ": " + it.title })
+            musicManager.fromTracks(songList!!, it, false)
         })
     }
 

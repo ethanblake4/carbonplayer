@@ -8,5 +8,6 @@ public enum PlaySource {
     SONGS,
     EXTERNAL,
     RECENTS,
-    RADIO
+    RADIO;
+
 }

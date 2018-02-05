@@ -52,10 +52,10 @@ class CarbonPlayerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        if (LeakCanary.isInAnalyzerProcess(this))
+        /*if (LeakCanary.isInAnalyzerProcess(this))
             return
 
-        LeakCanary.install(this)
+        LeakCanary.install(this)*/
 
         preferences = Preferences()
         preferences.load()

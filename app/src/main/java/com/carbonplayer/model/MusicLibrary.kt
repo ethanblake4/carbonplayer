@@ -56,7 +56,7 @@ object MusicLibrary {
     @SuppressLint("CheckResult")
     @UiThread
     fun getMusicLibrary(context: Activity, onError: Consumer<Throwable>, update: Boolean,
-                           onProgress: Consumer<Pair<Boolean, Int>>, onSuccess: Action) {
+                        onProgress: Consumer<Pair<Boolean, Int>>, onSuccess: Action) {
         val trackObservable = Protocol.listTracks(context)
 
                 .subscribeOn(Schedulers.io())
@@ -74,7 +74,7 @@ object MusicLibrary {
 
 
     private fun addToDatabase(realm: Realm, tracks: List<SkyjamTrack>, update: Boolean = true,
-                      received: AtomicInteger? = null): List<Track> {
+                              received: AtomicInteger? = null): List<Track> {
 
         val outTracks = mutableListOf<Track>()
 
@@ -87,11 +87,12 @@ object MusicLibrary {
         return outTracks
     }
 
-    fun addOneToDatabase(realm: Realm, sjTrack: SkyjamTrack, update: Boolean = true) : Track {
+    fun addOneToDatabase(realm: Realm, sjTrack: SkyjamTrack, update: Boolean = true,
+                         inLibrary: Boolean = true): Track {
         val artistPairs = mutableMapOf<String, String>()
         var treatAsOneArtist = false
 
-        if(sjTrack.artistId != null) {
+        if (sjTrack.artistId != null) {
             val _artists = sjTrack.artist.split(", ").flatMap { it.split(" & ") }
             // For most cases
             if (_artists.size == sjTrack.artistId.size) {
@@ -102,10 +103,10 @@ object MusicLibrary {
                 // Fixes e.g. "Tom Petty & The Heartbreakers"
                 val noTheSize = _artists.size -
                         _artists.count { it.startsWith("the", true) } +
-                        if(_artists[0].startsWith("The")) 1 else 0
-                if ( noTheSize == sjTrack.artistId.size) {
+                        if (_artists[0].startsWith("The")) 1 else 0
+                if (noTheSize == sjTrack.artistId.size) {
                     (0 until noTheSize).forEach {
-                        if(it == 0 || !_artists[it].startsWith("the", true)) {
+                        if (it == 0 || !_artists[it].startsWith("the", true)) {
                             artistPairs[sjTrack.artistId[it]] = _artists[it]
                         }
                     }
@@ -116,11 +117,11 @@ object MusicLibrary {
         val artists = mutableListOf<Artist>()
         val managedArtists = mutableListOf<Artist>()
 
-        if(treatAsOneArtist) {
+        if (treatAsOneArtist) {
             artists.add(realm.where(Artist::class.java)
                     .equalTo(Artist.ID, sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID)
-                    .findFirst()
-                    ?: Artist(sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID, sjTrack.artist))
+                    .findFirst() ?:
+                    Artist(sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID, sjTrack.artist))
         } else {
             artistPairs.forEach { (id, name) ->
                 artists.add(realm.where(Artist::class.java)
@@ -130,7 +131,7 @@ object MusicLibrary {
             }
         }
 
-        sjTrack.inLibrary = false
+        sjTrack.inLibrary = inLibrary
 
         val track = if (update) insertOrUpdateTrack(realm, sjTrack)
         else realm.copyToRealm(Track(nextLocalIdForTrack(realm), sjTrack))
@@ -141,14 +142,20 @@ object MusicLibrary {
                 .equalTo(Album.NAME, sjTrack.album)
                 .contains("artists.name", sjTrack.artist)
                 .endGroup()
-                .findFirst()?.apply { this.tracks.add(track) }
-                ?: realm.copyToRealm(Album(sjTrack, track))
+                .findFirst()?.apply {
+                    this.tracks.add(track)
+                    val s = this.tracks.distinctBy { track ->
+                        track.title + track.trackNumber.toString()
+                    }
+                    this.tracks.clear()
+                    this.tracks.addAll(s)
+                } ?: realm.copyToRealm(Album(sjTrack, track, inLibrary))
 
         artists.forEach {
             if (!it.albums.contains(album)) {
                 it.albums.add(album)
             }
-            managedArtists.add(if(!it.isManaged) realm.copyToRealm(it) else it)
+            managedArtists.add(if (!it.isManaged) realm.copyToRealm(it) else it)
         }
 
         return track
@@ -167,7 +174,7 @@ object MusicLibrary {
     /**
      * Transforms a list of [Album]s into a RealmList of [Album]s
      */
-    fun processAlbums(albums: List<Album>, realm: Realm) : RealmList<Album> {
+    fun processAlbums(albums: List<Album>, realm: Realm): RealmList<Album> {
         val out = RealmList<Album>()
 
         albums.forEach { a ->
@@ -175,10 +182,12 @@ object MusicLibrary {
                     .equalTo(Album.ID, a.albumId)
                     .or().beginGroup()
                     .equalTo(Album.NAME, a.name)
-                    .apply { a.artists?.forEachIndexed { i, artist ->
-                        if (i != 0) or()
-                        contains("artists.name", artist.name)
-                    } }
+                    .apply {
+                        a.artists?.forEachIndexed { i, artist ->
+                            if (i != 0) or()
+                            contains("artists.name", artist.name)
+                        }
+                    }
                     .endGroup()
                     .findFirst()?.updateFrom(a, realm)
                     ?: realm.copyToRealm(a))
@@ -197,8 +206,7 @@ object MusicLibrary {
                     .or().equalTo(Track.CLIENT_ID, it.clientId)
                     .or().equalTo(Track.NAUTILUS_ID, it.nid)
                     .or().equalTo(Track.STORE_ID, it.storeId)
-                    .findFirst() ?:
-            Track(nextLocalIdForTrack(realm), it)
+                    .findFirst() ?: Track(nextLocalIdForTrack(realm), it)
         }
     }
 
@@ -209,7 +217,7 @@ object MusicLibrary {
             realm.where(Playlist::class.java).max(Playlist.LOCAL_ID)?.toLong()?.plus(1) ?: 0
 
 
-    private fun insertOrUpdateTrack(realm: Realm, src: SkyjamTrack) : Track {
+    private fun insertOrUpdateTrack(realm: Realm, src: SkyjamTrack): Track {
 
         var trackQ = realm.where(Track::class.java)
         var nmo = false
@@ -230,7 +238,7 @@ object MusicLibrary {
 
     }
 
-    private fun insertOrUpdatePlaylist(realm: Realm, src: SkyjamPlaylist) : Playlist {
+    private fun insertOrUpdatePlaylist(realm: Realm, src: SkyjamPlaylist): Playlist {
 
         var playlistQ = realm.where(Playlist::class.java)
         var nmo = false
@@ -242,11 +250,11 @@ object MusicLibrary {
 
         val existingPl = playlistQ.findFirst()
 
-        if(existingPl != null) {
+        if (existingPl != null) {
             realm.insertOrUpdate(Playlist(src, existingPl.localId))
         }
 
-        return existingPl ?: realm.copyToRealm(Playlist(src, nextLocalIdForPlaylist(realm) ))
+        return existingPl ?: realm.copyToRealm(Playlist(src, nextLocalIdForPlaylist(realm)))
     }
 
     private fun updatePlaylists(context: Activity, onError: Consumer<Throwable>,
@@ -271,26 +279,28 @@ object MusicLibrary {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
 
-        plentryObservable.subscribe ( Consumer { lis -> Realm.getDefaultInstance().executeTransactionAsync { realm ->
+        plentryObservable.subscribe(Consumer { lis ->
+            Realm.getDefaultInstance().executeTransactionAsync { realm ->
 
-            lis.forEach { sjPlentry ->
+                lis.forEach { sjPlentry ->
 
-                val track = sjPlentry.track?.let {
-                    insertOrUpdateTrack(realm, it)
+                    val track = sjPlentry.track?.let {
+                        insertOrUpdateTrack(realm, it)
+                    }
+
+                    val plentry = PlaylistEntry(sjPlentry, track)
+
+                    val playlist = realm.where(Playlist::class.java)
+                            .equalTo(Playlist.REMOTE_ID, sjPlentry.playlistId)
+                            .findFirst()
+
+                    if (playlist == null) Timber.d("updatePlentries could not find PLID ${sjPlentry.playlistId}")
+
+                    playlist?.entries?.add(realm.copyToRealm(plentry))
                 }
 
-                val plentry = PlaylistEntry(sjPlentry, track)
-
-                val playlist = realm.where(Playlist::class.java)
-                        .equalTo(Playlist.REMOTE_ID, sjPlentry.playlistId)
-                        .findFirst()
-
-                if(playlist == null) Timber.d("updatePlentries could not find PLID ${sjPlentry.playlistId}")
-
-                playlist?.entries?.add(realm.copyToRealm(plentry))
             }
-
-        } } , onError, onSuccess).addToAutoDispose()
+        }, onError, onSuccess).addToAutoDispose()
     }
 
     /**
@@ -322,7 +332,7 @@ object MusicLibrary {
     }
 
     fun getAllAlbumTracks(album: IAlbum): List<ITrack> {
-        return if(album is Album)
+        return if (album is Album)
             album.tracks.sort(Track.TRACK_NUMBER)
         else (album as SkyjamAlbum).tracks?.sortedBy {
             it.trackNumber

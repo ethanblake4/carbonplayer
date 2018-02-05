@@ -3,7 +3,9 @@ package com.carbonplayer.audio
 
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.enums.PlaySource
 import com.carbonplayer.utils.parcelable
+import io.realm.Realm
 
 /**
  * Track queue which mirrors data in [MusicPlayerService]
@@ -13,26 +15,41 @@ class TrackQueue(val callback: TrackQueueCallback) {
     private var queue = mutableListOf<ITrack>()
     var position: Int = 0
 
-    fun replace(tracks: List<ITrack>, pos: Int, noCallback: Boolean = false) {
+    fun replace(tracks: List<ITrack>, pos: Int, noCallback: Boolean = false, local: Boolean = true) {
         queue.clear()
         queue.addAll(tracks)
         position = pos
-        if (!noCallback) callback.replace(parcelable, pos)
+        if (!noCallback) callback.replace(parcelable(local), pos)
     }
 
-    val parcelable: MutableList<ParcelableTrack>
-        get() = MutableList(queue.size, { i -> queue[i].parcelable() })
+    fun parcelable(local: Boolean = true) = mutableListOf<ParcelableTrack>().apply {
+        wrapRealm(local) { realm ->
+            queue.forEach {
+                this.add(it.parcelable(realm))
+            }
+        }
+    }
 
     val size: Int get() = queue.size
 
-    fun insertAtEnd(tracks: List<ITrack>, noCallback: Boolean = false) {
+    fun insertAtEnd(tracks: List<ITrack>, noCallback: Boolean = false, local: Boolean = true) {
         queue.addAll(tracks)
-        if (!noCallback) callback.insertAtEnd(tracks.parcelable())
+        wrapRealm(local) { realm ->
+            if (!noCallback) callback.insertAtEnd(tracks.parcelable(realm))
+        }
     }
 
-    fun insertNext(tracks: List<ITrack>, noCallback: Boolean = false) {
+    fun insertNext(tracks: List<ITrack>, noCallback: Boolean = false, local: Boolean = true) {
         queue.addAll(position, tracks)
-        if (!noCallback) callback.insertNext(tracks.parcelable())
+        wrapRealm(local) { realm ->
+            if (!noCallback) callback.insertNext(tracks.parcelable(realm))
+        }
+    }
+
+    private inline fun wrapRealm(local: Boolean, crossinline block: (realm: Realm?) -> Unit) {
+
+        if (!local) Realm.getDefaultInstance().executeTransaction({ block(it) })
+        else return block(null)
     }
 
     fun reorder(pos: Int, pnew: Int, noCallback: Boolean = false) {

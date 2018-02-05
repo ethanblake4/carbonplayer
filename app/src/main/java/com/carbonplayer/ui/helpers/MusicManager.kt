@@ -6,7 +6,7 @@ import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.ui.main.MainActivity
 
 class MusicManager(
-        val mainActivity: MainActivity
+        private val mainActivity: MainActivity
 ) {
 
     fun fromAlbum(album: IAlbum, pos: Int) {
@@ -16,8 +16,8 @@ class MusicManager(
         )
     }
 
-    fun fromTracks(tracks: List<ITrack>, pos: Int) {
-        mainActivity.npHelper.newQueue(tracks, pos)
+    fun fromTracks(tracks: List<ITrack>, pos: Int, local: Boolean = true) {
+        mainActivity.npHelper.newQueue(tracks, pos, local)
     }
 
     fun artistShuffle(artistId: String) {

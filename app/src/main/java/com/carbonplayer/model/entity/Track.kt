@@ -6,6 +6,7 @@ import com.carbonplayer.model.entity.enums.StorageType
 import com.carbonplayer.model.entity.enums.StreamQuality
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.utils.nullIfEmpty
+import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.RealmResults
@@ -56,16 +57,17 @@ open class Track(
 ) : RealmObject(), ITrack {
 
     override val artist: String
-        get() = albums?.first()?.artists?.map { it.name }?.nullIfEmpty()?.reduce { acc, n -> "$acc & $n" } ?: "Error"
+        get() = albums?.first(null)?.artists?.map { it.name }?.nullIfEmpty()?.reduce { acc, n -> "$acc & $n" }
+                ?: "Error"
 
     override val album: String
-        get() = albums?.first()?.name ?: ""
+        get() = albums?.first(null)?.name ?: ""
 
     override val albumId: String
-        get() = albums?.first()?.albumId ?: ""
+        get() = albums?.first(null)?.albumId ?: ""
 
     override val albumArtist: String
-        get() = albums?.first()?.albumArtist ?: ""
+        get() = albums?.first(null)?.albumArtist ?: ""
 
 
     constructor(localId: Long, source: SkyjamTrack) : this (
@@ -162,7 +164,7 @@ open class Track(
         return cacheImportance
     }
 
-    override fun parcelable(): ParcelableTrack {
+    override fun parcelable(realm: Realm?): ParcelableTrack {
         return ParcelableTrack(this)
     }
 

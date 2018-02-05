@@ -1,6 +1,5 @@
 package com.carbonplayer.model.entity.radio
 
-import com.carbonplayer.utils.maybeGetString
 import org.json.JSONObject
 
 @Suppress("DataClassPrivateConstructor")
@@ -14,17 +13,6 @@ data class RadioSeed private constructor(
         val trackId: String?,
         val trackLockerId: String?
 ) {
-
-    constructor(json: JSONObject) : this (
-            json.maybeGetString("albumId"),
-            json.maybeGetString("artistId"),
-            json.maybeGetString("curatedStationId"),
-            json.maybeGetString("genreId"),
-            json.maybeGetString("playlistShareType"),
-            json.getInt("seedType"),
-            json.maybeGetString("trackId"),
-            json.maybeGetString("trackLockerId")
-    )
 
     fun toJson() = JSONObject().apply {
         put("seedType", seedType)

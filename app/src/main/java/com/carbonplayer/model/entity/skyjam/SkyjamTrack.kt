@@ -69,12 +69,14 @@ data class SkyjamTrack(
         override val playCount: Int?
 ) : ITrack {
 
-    override fun parcelable() : ParcelableTrack {
+    override fun parcelable(realm: Realm?) : ParcelableTrack {
 
         var t: ParcelableTrack? = null
 
-        Realm.getDefaultInstance().executeTransaction { rlm ->
-            t = MusicLibrary.addOneToDatabase(rlm, this).parcelable()
+        if(realm != null) { // Already in a transaction
+            t = MusicLibrary.addOneToDatabase(realm, this, true, false).parcelable()
+        } else Realm.getDefaultInstance().executeTransaction { rlm ->
+            t = MusicLibrary.addOneToDatabase(rlm, this, true, false).parcelable()
         }
 
         return t!!

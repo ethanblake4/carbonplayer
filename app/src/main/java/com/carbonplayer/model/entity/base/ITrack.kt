@@ -1,6 +1,7 @@
 package com.carbonplayer.model.entity.base
 
 import com.carbonplayer.model.entity.ParcelableTrack
+import io.realm.Realm
 
 interface ITrack {
 
@@ -52,5 +53,5 @@ interface ITrack {
 
     val playCount: Int?
 
-    fun parcelable() : ParcelableTrack
+    fun parcelable(realm: Realm? = null) : ParcelableTrack
 }
