@@ -350,6 +350,32 @@ public class AnimUtils {
         return targetHeight;
     }
 
+    public static int expand(final View v, final int targetHeight) {
+
+        // Older versions of android (pre API 21) cancel animations for views with a height of 0.
+        v.getLayoutParams().height = 1;
+        v.setVisibility(View.VISIBLE);
+        Animation a = new Animation()
+        {
+            @Override
+            protected void applyTransformation(float interpolatedTime, Transformation t) {
+                v.getLayoutParams().height = (int)(targetHeight * interpolatedTime);
+                v.requestLayout();
+            }
+
+            @Override
+            public boolean willChangeBounds() {
+                return true;
+            }
+        };
+
+        // 1dp/ms
+        a.setDuration((int)(targetHeight / v.getContext().getResources().getDisplayMetrics().density));
+        a.setInterpolator(new FastOutSlowInInterpolator());
+        v.startAnimation(a);
+        return targetHeight;
+    }
+
     public static void collapse(final View v) {
         final int initialHeight = v.getMeasuredHeight();
 

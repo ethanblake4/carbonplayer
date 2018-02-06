@@ -9,6 +9,7 @@ import android.widget.Scroller
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import timber.log.Timber
+import kotlin.math.max
 
 /**
  * A FrameLayout that can be expanded via swipe to increase its height and
@@ -99,7 +100,9 @@ class NowPlayingFrame : FrameLayout {
                 if(!eventHasMotion && (event.rawY > eventInitialY + 1
                         || event.rawY < eventInitialY - 1)) eventHasMotion = true
                 if(eventHasMotion) {
-                    layoutParams.height = Math.max(layoutParams.height - dy.toInt(), initialHeight)
+                    layoutParams.height = minOf (
+                            maxOf(layoutParams.height - dy.toInt(), initialHeight),
+                            maxHeight)
                     postOnAnimation { requestLayout() }
                     callback?.invoke(((layoutParams.height - initialHeight).toFloat() / (
                             maxHeight - initialHeight).toFloat()))
@@ -108,7 +111,7 @@ class NowPlayingFrame : FrameLayout {
                 lastY = event.rawY
             }
             MotionEvent.ACTION_UP -> {
-                Timber.d("ACTION_MOVE")
+                Timber.d("ACTION_UP")
 
                 /* On an up event:
                 *   - If there was motion, start a fling with the current velocity
@@ -120,10 +123,6 @@ class NowPlayingFrame : FrameLayout {
                 getLocationInWindow(location)
 
                 if(eventHasMotion) {
-
-                    Timber.d("Fling from startY: %d, velocity: %d, endY: %d",
-                            measuredHeight, (last2Y - lastY).toInt(),
-                            IdentityUtils.displayHeight2(context))
 
                     val velocity = (last2Y - lastY).toInt()
                     val curHeight = measuredHeight
@@ -148,17 +147,22 @@ class NowPlayingFrame : FrameLayout {
                         }
                     }
 
+                    Timber.d("Fling from startY: $curHeight," +
+                            " velocity: $velocity, endY: ${scroller.finalY}")
+
                     scroller.extendDuration(500)
 
                     scrollHasControl = true
                     eventHasMotion = false
 
-                } else if( scroller.isFinished ){
+                } else if( scroller.isFinished ) {
                     activePointerId = MotionEvent.INVALID_POINTER_ID
 
                     if (measuredHeight <= initialHeight + 12) {
                         scroller.startScroll(0, initialHeight, 0, maxHeight
                                 - initialHeight, 500)
+                        Timber.d("Scroll from startY: $initialHeight," +
+                                "dy: ${ maxHeight - initialHeight }")
                         scrollHasControl = true
                     }
                 }

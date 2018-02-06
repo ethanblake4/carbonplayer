@@ -103,8 +103,8 @@ class MusicPlaybackImpl(
     fun newQueue(queue: List<ParcelableTrack>, track: Int = 0, initFirst: Boolean = true) {
         Timber.d("newQueue, initFirst: $initFirst")
         trackNum = track
-        val i = 0; while (i < dynamicSource.size) {
-            dynamicSource.removeMediaSource(i)
+        while (0 < dynamicSource.size) {
+            dynamicSource.removeMediaSource(0)
         }
         mirroredQueue.clear()
         mirroredContentQueue.clear()

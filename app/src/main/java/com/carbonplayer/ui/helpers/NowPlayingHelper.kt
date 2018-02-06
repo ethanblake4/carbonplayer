@@ -46,7 +46,7 @@ class NowPlayingHelper(private val activity: Activity) {
     private val dispW = IdentityUtils.displayWidth2(activity)
     private val dispH = IdentityUtils.displayHeight2(activity)
     private val controlsScalar = (dispH.toFloat() / dispW.toFloat()) * 2.4f
-    private val dp56 = MathUtils.dpToPx2(activity.resources, 56).toInt()
+    private val dp56 = MathUtils.dpToPx2(activity.resources, 56)
     private val buttonHalfWidth = MathUtils.dpToPx2(activity.resources, 16)
     private val prevInitialX = dispW - MathUtils.dpToPx2(activity.resources, 132)
     private val playPauseInitialX = dispW - MathUtils.dpToPx2(activity.resources, 90)
@@ -205,7 +205,7 @@ class NowPlayingHelper(private val activity: Activity) {
     private var serviceStarted = false
     private var requestMgr = Glide.with(activity)
 
-    fun repostQueueSwipe() {
+    private fun repostQueueSwipe() {
         activity.npui_recycler.postOnAnimation(queueSwipeRunnable)
     }
 
@@ -274,9 +274,10 @@ class NowPlayingHelper(private val activity: Activity) {
     }
 
     private fun revealPlayerUI() {
-        AnimUtils.expand(activity.bottomNavContainer.nowplaying_frame)
-        activity.nowplaying_frame.initialHeight= MathUtils.dpToPx2(activity.resources, 56)
-                .toInt()
+
+        AnimUtils.expand(activity.bottomNavContainer.nowplaying_frame, dp56)
+        activity.nowplaying_frame.initialHeight= dp56
+
     }
 
     private fun newIntent(): Intent = Intent(activity, MusicPlayerService::class.java)
