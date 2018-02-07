@@ -6,7 +6,7 @@ Carbon Player is a WIP fully-featured drop-in replacement for the Google Play Mu
 Currently supported features include: 
 - Logging in and retrieving your music library (Artists, albums, and playlists so far)
 - Viewing the Top Charts page and the Home/Listen Now page
-- Viewing and playing music from albums
+- Viewing and playing music from albums and Top Charts
 
 ## Enhancements
 Carbon Player is intended to improve upon the original Google Play Music application in a number of ways:
