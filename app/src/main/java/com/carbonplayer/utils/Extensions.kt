@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.os.Bundle
 import android.os.Parcelable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
@@ -19,8 +20,154 @@ import org.json.JSONObject
 import org.parceler.Parcels
 import timber.log.Timber
 
+fun JSONObject.maybeGetInt (key: String?): Int? = maybeGet (key, { getInt(key) })
+fun JSONObject.maybeGetString (key: String?): String? = maybeGet (key, { getString(key) })
+fun JSONObject.maybeGetBool (key: String?): Boolean? = maybeGet (key, { getBoolean(key) })
+fun JSONObject.maybeGetDouble (key: String?): Double? = maybeGet (key, { getDouble(key) })
+fun JSONObject.maybeGetLong (key: String?): Long? = maybeGet (key, { getLong(key) })
+fun JSONObject.maybeGetObj (key: String?): JSONObject? = maybeGet (key, { getJSONObject(key) })
+fun JSONObject.maybeGetArray (key: String?): JSONArray? = maybeGet (key, { getJSONArray(key) })
+
+inline fun <T> JSONObject.maybeGet(
+        key: String?,
+        getter: JSONObject.() -> T
+) = if(key == null) null else {
+        if (has(key)) getter(this) else null
+    }
+
+inline fun <reified T, R> JSONArray.map(transform: (T?) -> R): MutableList<R?> =
+        mapTo(mutableListOf(), transform)
+
+inline fun <reified T, R> JSONArray.mapTo(to: MutableList<R?>, transform: (T?) -> R): MutableList<R?> =
+        (0..length()).mapTo(to, { i -> transform(get(i) as? T) })
+
+inline fun <reified T, R> JSONArray.mapNotNull(transform: (T) -> R): MutableList<R> =
+        mapNotNullTo(mutableListOf(), transform)
+
+inline fun <reified T, R> JSONArray.mapNotNullTo(to: MutableList<R>, transform: (T) -> R): MutableList<R> =
+        to.apply {
+            (0..length()).forEach { i -> (get(i) as? T)?.let { add(transform(it)) } }
+        }
+
+inline fun <reified T, R> JSONArray.mapIndexed(transform: (index: Int, T?) -> R): MutableList<R?> =
+        mapIndexedTo(mutableListOf(), transform)
+
+inline fun <reified T, R> JSONArray.mapIndexedTo(
+        to: MutableList<R?>,
+        transform: (index: Int, T?) -> R?
+): MutableList<R?> =
+        (0..length()).mapTo(to, { i ->  transform(i, get(i) as? T) }  )
+
+inline fun <reified T, R> JSONArray.mapIndexedNotNull(transform: (index: Int, T) -> R): MutableList<R> =
+        mapIndexedNotNullTo(mutableListOf(), transform)
+
+inline fun <reified T, R> JSONArray.mapIndexedNotNullTo(
+        to: MutableList<R>,
+        transform: (index: Int, T) -> R
+): MutableList<R> =
+        to.apply {
+            (0..length()).forEach { i -> (get(i) as? T)?.let { add(transform(i, it)) } }
+        }
+
+inline fun <reified T> JSONArray.toList() = List(length(), { i -> get(i) as? T })
+
+inline fun <reified T> JSONArray.toMutableList() = MutableList(length(), { i -> get(i) as? T })
+
+inline fun <reified T> JSONArray.all(predicate: (T?) -> Boolean) =
+        map<T, Boolean> { q -> predicate(q) }.all { it == true }
+
+
+inline fun <reified T> JSONArray.any(predicate: (T?) -> Boolean) =
+        map<T, Boolean> { q -> predicate(q) }.any { it == true }
+
+inline fun <reified T, R> JSONArray.fold(initial: R, operation: (acc: R, T?) -> R) =
+        toList<T>().fold(initial, operation)
+
+inline fun <reified T, R> JSONArray.foldIndexed(initial: R, operation: (index:Int, acc: R, T?) -> R) =
+        toList<T>().foldIndexed(initial, operation)
+
+inline fun <reified T> JSONArray.forEach(action: (T?) -> Unit) {
+    (0..length()).forEach { action(get(it) as? T) }
+}
+
+inline fun <reified T> JSONArray.forEachIndexed(action: (index: Int, T?) -> Unit) {
+    (0..length()).forEach { action(it, get(it) as? T) }
+}
+
+inline fun <reified T> JSONArray.forEachNotNull(action: (T) -> Unit) {
+    (0..length()).forEach { action(get(it) as T) }
+}
+
+inline fun <reified T: Comparable<T>> JSONArray.max() =
+        toList<T>().filterNotNull().max()
+
+inline fun <reified T: Comparable<T>> JSONArray.min() =
+        toList<T>().filterNotNull().min()
+
+operator fun JSONArray.plus(other: Any?) : JSONArray {
+    return JSONArray(toList<Any?>()).apply { plusAssign(other) }
+}
+
+operator fun JSONArray.plusAssign(other: Any?) {
+    put(other)
+}
+
+operator fun JSONArray.set(index: Int, other: Any?) {
+    put(index, other)
+}
+
+operator fun JSONArray.iterator() = object: Iterator<Any?> {
+
+    var position = 0
+
+
+
+    override fun hasNext(): Boolean = (position < this@iterator.length() -1)
+
+    override fun next(): Any = get(position++)
+}
+
+operator fun JSONArray.contains(other: Any?) = any { it: Any? -> it == other }
+
+
 fun <E> Collection<E>.nullIfEmpty(): Collection<E>? {
+
+    val array = JSONArray()
+    val obj = JSONObject()
+
+    // -------
+
+    (0..array.length()).mapNotNull { i ->
+        array.get(i) as? Int
+    }.max()
+
+    array.max<Int>()
+
+    array += "hi"
+
+    array[9] = "hi"
+
+    // -------
+
+    (0..array.length()).map { i ->
+        array.getJSONObject(i).let {
+            if (it.has("people"))
+                return@map it.getString("people")
+            else
+                return@map null
+        }
+    }
+
+    array.map { it: JSONObject? -> it?.maybeGetString("people") }
+
+    // -------
+
+    obj.let { if(it.has("people")) it.getString("people") else null }
+
+    obj.maybeGetString("people")
+
     return if (this.isEmpty()) null else this
+
 }
 
 fun Disposable.addToAutoDispose() = apply {

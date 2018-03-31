@@ -11,6 +11,7 @@ public final class Constants {
         String STOP_SERVICE = "STOP_SERVICE";
 
         String NEW_QUEUE = "NEW_QUEUE";
+        String RADIO_FEED = "RADIO_FEED";
         String INSERT_AT_END = "INSERT_AT_END";
         String INSERT_NEXT = "INSERT_NEXT";
         String REORDER = "REORDER";
@@ -44,6 +45,8 @@ public final class Constants {
     public interface KEY {
         // Constant keys for key-value pairs
         String TRACKS = "TRACKS";
+        String RADIO_SEED = "RADIO_SEED";
+        String RADIO_FEED_REASON = "RADIO_FEED_REASON";
         String POSITION = "POSITION";
         String REORDER_FROM = "REORDER_FROM";
         String REORDER_TO = "REORDER_TO";

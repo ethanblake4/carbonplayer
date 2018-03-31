@@ -69,6 +69,9 @@ data class SkyjamTrack(
         override val playCount: Int?
 ) : ITrack {
 
+    override val albumArtURL: String?
+        get() = albumArtRef?.first()?.url
+
     override fun parcelable(realm: Realm?) : ParcelableTrack {
 
         var t: ParcelableTrack? = null

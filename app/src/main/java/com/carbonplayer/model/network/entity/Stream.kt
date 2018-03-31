@@ -3,8 +3,12 @@ package com.carbonplayer.model.network.entity
 import android.content.Context
 import android.os.SystemClock
 import com.carbonplayer.CarbonPlayerApplication
+import com.carbonplayer.model.MusicLibrary
+import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.SongID
+import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.TrackCache
+import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.enums.StorageType
 import com.carbonplayer.model.entity.enums.StreamQuality
 import com.carbonplayer.model.entity.exception.ServerRejectionException
@@ -16,6 +20,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.exceptions.Exceptions
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import io.realm.Realm
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.Okio
@@ -27,12 +32,11 @@ import java.util.*
 
 class Stream (
         val context: Context,
-        val id: SongID,
-        trackTitle: String,
+        var track: ITrack,
         private val quality: StreamQuality,
         doDownload: Boolean = true
 ) {
-
+    private val id = SongID(track)
     private val downloadProgress = BehaviorSubject.create<Long>()
     var downloadInitialized = false
     private var completed: Long = 0
@@ -40,7 +44,7 @@ class Stream (
     private val downloadRequest: DownloadRequest?
     private val extraChunkSize: Long = 2048
     private var filepath: String? = null
-    var waitAllowed = true
+    private var waitAllowed = true
     @Volatile var startReadPoint: Long = 0
     @get:Synchronized
     @set:Synchronized
@@ -65,14 +69,19 @@ class Stream (
 
     init {
 
-        if (!TrackCache.has(context, id, quality)) {
+        if (id.localId == -1L || !TrackCache.has(context, id, quality)) {
+            if(track is ParcelableTrack) createInDb()
+
             Timber.i("Creating new DownloadRequest")
-            downloadRequest = DownloadRequest(id, trackTitle, 100,
+            downloadRequest = DownloadRequest(id, track.title, 100,
                     0, FileLocation(StorageType.CACHE,
                     TrackCache.getTrackFile(context, id, quality)),
                     true, quality, StreamQuality.UNDEFINED)
-            this.filepath = TrackCache.getTrackFile(context, id, quality).absolutePath
-            if (doDownload) initDownload()
+
+            if (doDownload) {
+                this.filepath = TrackCache.getTrackFile(context, id, quality).absolutePath
+                initDownload()
+            }
         } else {
             Timber.i("File already exists")
             val file = TrackCache.getTrackFile(context, id, quality)
@@ -84,24 +93,29 @@ class Stream (
 
     }
 
+    @Synchronized
+    private fun createInDb() {
+        Realm.getDefaultInstance().executeTransaction { rlm ->
+            (track as ParcelableTrack).let {
+                track = MusicLibrary.addOneToDatabase(rlm, it, true, track.inLibrary)
+            }
+        }
+    }
+
     fun initDownload() {
         downloadInitialized = true
         Timber.i("InitDownload for $this")
         if (downloadRequest == null) return
 
-
         val protocols = ArrayList<okhttp3.Protocol>()
+
         protocols.add(okhttp3.Protocol.HTTP_1_1)
+
         val client = CarbonPlayerApplication.instance.getOkHttpClient(OkHttpClient.Builder()
                 .protocols(protocols)
-                .addNetworkInterceptor { chain ->
-                    val originalResponse = chain.proceed(chain.request())
-                    originalResponse.newBuilder()
-                            .body(ProgressResponseBody(originalResponse.body(), { bytes, len, _ ->
-                                downloadProgress.onNext(bytes)
-                            }))
-                            .build()
-                })
+                .addNetworkInterceptor { chain -> ProgressResponseBody.intercept(chain, { bytes, _, _ ->
+                    downloadProgress.onNext(bytes)
+                }) })
 
 
         Protocol.getStreamURL(context, id.id ?: id.storeId!!)
@@ -128,7 +142,7 @@ class Stream (
                             val source = response.body()!!.source()
 
                             len = response.body()!!.contentLength()
-                            var writ: Long = 0
+                            var writ = 0L
 
                             Timber.d("len is $len")
 
@@ -145,7 +159,7 @@ class Stream (
                                 }
                             else /* What causes this? Very annoying... */
                                 try {
-                                    while (true) {
+                                    while (true /* wait for exception */) {
                                         sink.write(source, 2048)
                                         writ += 2048
                                         completed = writ
@@ -156,7 +170,6 @@ class Stream (
                                 } catch (e: Exception) { // Expected
                                     Timber.d("-1-indexed source completed")
                                 }
-
 
                             sink.close()
 
@@ -181,13 +194,9 @@ class Stream (
                 }.addToAutoDispose()
     }
 
-    override fun toString(): String {
-        return "Stream: { seekMs: $seekMs, completed: $completed, DownloadRequest: $downloadRequest }"
-    }
+    override fun toString()= "Stream: { seekMs: $seekMs, completed: $completed, DownloadRequest: $downloadRequest }"
 
-    fun progressMonitor(): Observable<Float> {
-        return downloadProgress.map { it.toFloat() / len.toFloat() }
-    }
+    fun progressMonitor(): Observable<Float> = downloadProgress.map { it.toFloat() / len.toFloat() }
 
     @Synchronized
     @Throws(InterruptedException::class)

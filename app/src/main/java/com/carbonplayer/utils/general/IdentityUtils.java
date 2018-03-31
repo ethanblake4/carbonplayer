@@ -120,6 +120,7 @@ public final class IdentityUtils {
         return Duration.newBuilder()
                 .setSeconds(TimeUnit.MILLISECONDS.toSeconds(TimeZone.getDefault().getOffset(new Date().getTime())))
                 .build();
+
     }
 
     public static String localeCode(){

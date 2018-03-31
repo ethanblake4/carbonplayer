@@ -1,6 +1,9 @@
 package com.carbonplayer.model.entity
 
+import android.annotation.SuppressLint
+import android.os.Parcelable
 import io.realm.RealmObject
+import kotlinx.android.parcel.Parcelize
 
 /**
  * Skyjam and Realm

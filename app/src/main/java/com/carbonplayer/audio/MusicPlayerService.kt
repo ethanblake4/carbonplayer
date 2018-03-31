@@ -17,6 +17,8 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.Track
+import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.utils.*
 import com.google.common.collect.Queues
@@ -55,7 +57,8 @@ class MusicPlayerService : Service(), MusicFocusable {
     private lateinit var playback: MusicPlayback
 
     private var lastBitmap: Bitmap? = null
-    private var lastNotifiedTrack: ParcelableTrack? = null
+    private var lastNotifiedTrack: ITrack? = null
+    private var bufferedPosition: Long = 0
 
     var clients = ArrayList<Messenger>()
     private var messageQueue = Queues.newLinkedBlockingQueue<Pair<Int, Any?>>()
@@ -219,8 +222,14 @@ class MusicPlayerService : Service(), MusicFocusable {
                                 PlaybackStateCompat.STATE_PAUSED,
                                     playback.getCurrentPosition(), 1.0f).build())
 
-                    emit(if (playback.isUnpaused()) Constants.EVENT.Playing else
-                        Constants.EVENT.Paused)
+                    emit(if (playback.isUnpaused()) Constants.EVENT.Playing else Constants.EVENT.Paused)
+                }
+                MusicPlayback.PlayState.CONTINUE -> { // From position change
+                    mediaSession.setPlaybackState(stateBuilder.setState(if (playback.isUnpaused())
+                        PlaybackStateCompat.STATE_PLAYING else
+                        PlaybackStateCompat.STATE_PAUSED,
+                            playback.getCurrentPosition(), 1.0f)
+                            .setBufferedPosition(bufferedPosition).build())
                 }
             }
             lastNotifiedTrack?.let {
@@ -230,6 +239,7 @@ class MusicPlayerService : Service(), MusicFocusable {
             emit(Constants.EVENT.TrackPlaying, track)
             loadImageAndDoUpdates(track)
         }, { bufferProgress ->
+            bufferedPosition = (lastNotifiedTrack?.durationMillis?.toFloat())?.times(bufferProgress)?.toLong() ?: 0
             emit(Constants.EVENT.BufferProgress, bufferProgress)
         }, { error ->
             emit(Constants.EVENT.Error, error)
@@ -277,19 +287,20 @@ class MusicPlayerService : Service(), MusicFocusable {
         playback.play()
     }
 
-    private fun loadImageAndDoUpdates(track: ParcelableTrack) {
+    private fun loadImageAndDoUpdates(track: ITrack) {
 
-        val metadata = track.mediaMetadata
+        val metadata = (track as? ParcelableTrack)?.mediaMetadata ?:
+            (track as? Track)?.mediaMetadata
 
         Timber.i("loadImageBitmap")
 
-        loadImageBitmap(track.albumArtURL) { img ->
+        loadImageBitmap(track.albumArtURL ?: "") { img ->
             if (img == null) {
-                mediaSession.setMetadata(metadata)
+                if(metadata != null) mediaSession.setMetadata(metadata)
                 updateNotification(track)
             } else {
                 updateNotification(track, bitmap = img)
-                mediaSession.setMetadata(MediaMetadataCompat.Builder(metadata)
+                if(metadata !=  null) mediaSession.setMetadata(MediaMetadataCompat.Builder(metadata)
                         .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, img)
                         .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, img)
                         .build())
@@ -299,7 +310,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         mediaSession.isActive = true
     }
 
-    private fun updateNotification(track: ParcelableTrack, bitmap: Bitmap? = null) {
+    private fun updateNotification(track: ITrack, bitmap: Bitmap? = null) {
 
         lastNotifiedTrack = track
         lastBitmap = bitmap
@@ -339,7 +350,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 .setShowWhen(false)
                 .apply { bitmap?.let { setLargeIcon(it) } }
 
-        if (!initialized) {
+        if (!initialized && playback.isUnpaused()) {
             startForeground(Constants.ID.MUSIC_PLAYER_SERVICE,
                     builder.build())
             initialized = true
@@ -433,86 +444,18 @@ class MusicPlayerService : Service(), MusicFocusable {
         }
     }
 
-    internal var mediaSessionCallback: MediaSessionCompat.Callback = object : MediaSessionCompat.Callback() {
-        override fun onCommand(command: String, args: Bundle?,
-                               cb: ResultReceiver?) {
-            super.onCommand(command, args, cb)
-        }
+    private var mediaSessionCallback = object : MediaSessionCompat.Callback() {
 
-        override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
-            return super.onMediaButtonEvent(mediaButtonIntent)
-        }
+        override fun onPlay() = playback.play()
 
-        override fun onPrepare() {
-            super.onPrepare()
-        }
+        override fun onPause() = playback.pause()
 
-        override fun onPrepareFromMediaId(mediaId: String?, extras: Bundle?) {
-            super.onPrepareFromMediaId(mediaId, extras)
-        }
+        override fun onSkipToNext() = playback.nextTrack()
 
-        override fun onPrepareFromSearch(query: String?, extras: Bundle?) {
-            super.onPrepareFromSearch(query, extras)
-        }
+        override fun onSkipToPrevious() = playback.prevTrack()
 
-        override fun onPrepareFromUri(uri: Uri?, extras: Bundle?) {
-            super.onPrepareFromUri(uri, extras)
-        }
+        override fun onSeekTo(pos: Long) = playback.seekTo(pos)
 
-        override fun onPlay() {
-            playback.play()
-        }
-
-        override fun onPlayFromSearch(query: String?, extras: Bundle?) {
-            super.onPlayFromSearch(query, extras)
-        }
-
-        override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
-            super.onPlayFromMediaId(mediaId, extras)
-        }
-
-        override fun onPlayFromUri(uri: Uri?, extras: Bundle?) {
-            super.onPlayFromUri(uri, extras)
-        }
-
-        override fun onSkipToQueueItem(id: Long) {
-            super.onSkipToQueueItem(id)
-        }
-
-        override fun onPause() {
-            playback.pause()
-        }
-
-        override fun onSkipToNext() {
-            playback.nextTrack()
-            super.onSkipToNext()
-        }
-
-        override fun onSkipToPrevious() {
-            playback.prevTrack()
-            super.onSkipToPrevious()
-        }
-
-        override fun onFastForward() {
-            super.onFastForward()
-        }
-
-        override fun onRewind() {
-            super.onRewind()
-        }
-
-        override fun onStop() {
-            super.onStop()
-        }
-
-        override fun onSeekTo(pos: Long) {
-            playback.seekTo(pos)
-            super.onSeekTo(pos)
-        }
-
-        override fun onCustomAction(action: String, extras: Bundle?) {
-            super.onCustomAction(action, extras)
-        }
     }
 
     companion object {

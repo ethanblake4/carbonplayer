@@ -7,8 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.ParcelableTrack
-import com.carbonplayer.model.entity.SongID
+import com.carbonplayer.model.entity.base.ITrack
 
 /**
  * Created by ethanelshyeb on 11/12/17.
@@ -18,18 +17,17 @@ import com.carbonplayer.model.entity.SongID
  * Album / playlist adapter
  */
 internal class NowPlayingQueueAdapter(
-        private val mDataset: List<ParcelableTrack>,
-        private val clicked: (Pair<SongID, Int>) -> Unit)
+        var dataset: List<ITrack>,
+        private val clicked: (Pair<ITrack, Int>) -> Unit)
     : RecyclerView.Adapter<NowPlayingQueueAdapter.ViewHolder>() {
 
     internal inner class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         var trackName: TextView = v.findViewById<View>(R.id.trackName) as TextView
         var trackNumber: TextView = v.findViewById<View>(R.id.trackNumber) as TextView
-        lateinit var id: SongID
         var pos: Int = 0
 
         init {
-            v.findViewById<View>(R.id.songLayoutRoot).setOnClickListener { _ -> clicked(Pair(id, pos)) }
+            v.findViewById<View>(R.id.songLayoutRoot).setOnClickListener { _ -> clicked(Pair(dataset[pos], pos)) }
         }
     }
 
@@ -43,13 +41,12 @@ internal class NowPlayingQueueAdapter(
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val t = mDataset[position]
+        val t = dataset[position]
         holder.trackName.text = t.title
-        if (t.trackNumber != null) holder.trackNumber.text = t.trackNumber!!.toString()
-        holder.id = SongID(t)
+        holder.trackNumber.text = position.toString()
         holder.pos = position
 
     }
 
-    override fun getItemCount(): Int = mDataset.size
+    override fun getItemCount(): Int = dataset.size
 }

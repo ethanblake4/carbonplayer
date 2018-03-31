@@ -3,8 +3,11 @@ package com.carbonplayer.audio
 import android.app.Service
 import android.net.Uri
 import android.os.Handler
+import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.SongID
+import com.carbonplayer.model.entity.Track
+import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.exception.PlaybackException
 import com.carbonplayer.model.network.StreamManager
 import com.carbonplayer.model.network.entity.ExoPlayerDataSource
@@ -20,6 +23,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultAllocator
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import io.reactivex.disposables.Disposable
+import io.realm.Realm
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -27,7 +31,7 @@ class MusicPlaybackImpl(
         val service: Service,
         val playback: MusicPlayback,
         val callback: (MusicPlayback.PlayState) -> Unit,
-        val ontrackchanged: (Int, ParcelableTrack) -> Unit,
+        val ontrackchanged: (Int, ITrack) -> Unit,
         val onbuffer: (Float) -> Unit,
         val onerror: (PlaybackException) -> Unit
 ) : Player.EventListener {
@@ -175,7 +179,9 @@ class MusicPlaybackImpl(
     @Synchronized
     fun add(tracks: List<ParcelableTrack>, track: Int = 0, downloadFirst: Boolean = false) {
         Timber.d("add tracks, downloadFirst: $downloadFirst")
+
         mirroredQueue.addAll(tracks)
+
         val sources = MutableList(tracks.size, { z ->
             val sourcePair = sourceFromTrack(tracks[z])
             if (z == track && downloadFirst && !sourcePair.first.isDownloaded) {
@@ -190,8 +196,38 @@ class MusicPlaybackImpl(
 
         dynamicSource.addMediaSources(sources)
 
+        subscription?.dispose()
+        subscription = mirroredContentQueue[trackNum].progressMonitor()
+                .subscribe({ b -> onbuffer(b) })
+
+        /*(maxOf(0, trackNum-1)..minOf(trackNum+2, mirroredQueue.size-1)).forEach {
+            directAdd(mirroredQueue[it])
+        }*/
+
         if (!loop.isAlive) loop.start()
     }
+
+    /*private fun directAdd(track: ParcelableTrack) {
+        var xtrack: Track? = null
+
+        if(track.localId == null)
+            Realm.getDefaultInstance().executeTransaction{ rlm ->
+                xtrack = MusicLibrary.addOneToDatabase(rlm, track, true, track.inLibrary)
+            }
+        else {
+            xtrack = Realm.getDefaultInstance().where(Track::class.java)
+                    .equalTo(Track.LOCAL_ID, track.localId)
+                    .findFirst()
+        }
+
+        if(xtrack != null) { // Should always be true
+            val sourcePair = sourceFromTrack(xtrack!!)
+            mirroredContentQueue.add(sourcePair.first)
+            dynamicSource.addMediaSource(sourcePair.second)
+        } else {
+            Timber.e("directAdd(): Local track ${track.localId} MUST exist")
+        }
+    }*/
 
     fun addNext(tracks: List<ParcelableTrack>) {
         mirroredQueue.addAll(trackNum + 1, tracks)
@@ -244,6 +280,8 @@ class MusicPlaybackImpl(
                     Timber.d("Position: %s", exoPlayer.currentPosition)
                 }
 
+                if(inc % 5 == 0) callback(MusicPlayback.PlayState.CONTINUE)
+
                 if (exoPlayer.currentPosition > DELAY_ADD_ITEM &&
                         mirroredQueue.size > trackNum + 1
                         && !mirroredContentQueue[trackNum + 1].downloadInitialized) {
@@ -254,17 +292,12 @@ class MusicPlaybackImpl(
         }
     }
 
-    private fun sourceFromTrack(track: ParcelableTrack): Pair<Stream, MediaSource> {
+    private fun sourceFromTrack(track: ITrack): Pair<Stream, MediaSource> {
         Timber.d("sourceFromTrack $track")
-        val stream = StreamManager.getStream(service, SongID(track), track.title, false)
+        val stream = StreamManager.getStream(service, track, false)
+
         return Pair(stream, sourceFromStream(stream))
     }
-
-    /*private fun prepareTrack(track: ParcelableTrack) {
-        preparingTrack = false
-        dynamicSource.addMediaSource(sourceFromTrack(track))
-        if(!playerIsPrepared) exoPlayer.prepare(dynamicSource, true, false)
-    }*/
 
     private fun sourceFromStream(stream: Stream): MediaSource {
         Timber.d("sourceFromStream $stream")
@@ -322,6 +355,7 @@ class MusicPlaybackImpl(
                 subscription = mirroredContentQueue[trackNum].progressMonitor()
                         .subscribe({ b -> onbuffer(b) })
             }
+            callback(MusicPlayback.PlayState.CONTINUE)
         }
 
         if (disallowNextAutoInc) disallowNextAutoInc = false

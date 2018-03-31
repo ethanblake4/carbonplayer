@@ -21,6 +21,7 @@ interface ITrack {
     val album: String
     val albumId: String
     val albumArtist: String
+    val albumArtURL: String?
 
     val trackNumber: Int
     val totalTrackCount: Int?

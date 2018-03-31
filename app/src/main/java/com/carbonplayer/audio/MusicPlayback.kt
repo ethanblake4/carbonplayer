@@ -2,12 +2,13 @@ package com.carbonplayer.audio
 
 import android.app.Service
 import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.exception.PlaybackException
 
 class MusicPlayback(
         service: Service,
         callback: (PlayState) -> Unit,
-        trackCb: (Int, ParcelableTrack) -> Unit,
+        trackCb: (Int, ITrack) -> Unit,
         bufferCb: (Float) -> Unit,
         error: (PlaybackException) -> Unit
 ) {
@@ -16,7 +17,8 @@ class MusicPlayback(
         NOT_PLAYING,
         STARTING,
         BUFFERING,
-        PLAYING
+        PLAYING,
+        CONTINUE
     }
 
     var wasPausedFromFocusLoss = false

@@ -46,6 +46,14 @@ open class Album (
             source.albumArtRef?.first()?.url ?: "",
             null, RealmList(track))
 
+    constructor(source: ParcelableTrack, track: Track, inLibrary: Boolean = true) : this(
+            "sj#album", inLibrary,
+            source.albumId, source.recentTimestamp,
+            if(source.album.isBlank()) "Unknown Album" else source.album,
+            source.albumArtist, source.composer ?: "", source.year, source.genre ?: "",
+            source.albumArtURL ?: "",
+            null, RealmList(track))
+
     constructor(source: SkyjamAlbum) : this (
             source.kind,
             source.inLibrary ?: false,
@@ -97,5 +105,6 @@ open class Album (
     companion object {
         const val ID = "albumId"
         const val NAME = "name"
+        const val TRACKS = "tracks"
     }
 }

@@ -36,7 +36,16 @@ import timber.log.Timber
 
 
 /**
- * Manages now playing UI and sends commands to [com.carbonplayer.audio.MusicPlayerService]
+ * Manages now playing UI and sends commands to [MusicPlayerService]
+ *
+ * The structure of this class is a bit confusing. When the queue is modified locally, this class
+ * typically will notify its [TrackQueue] of the change, which will then callback to this class's
+ * [TrackQueue.TrackQueueCallback], which will finally alert the [MusicPlayerService] of the change.
+ *
+ * For remote operations like starting a radio station, this class will directly message the
+ * [MusicPlayerService], as in this case the service has full control over modification of the queue.
+ *
+ * When
  */
 class NowPlayingHelper(private val activity: Activity) {
 
@@ -72,6 +81,9 @@ class NowPlayingHelper(private val activity: Activity) {
             messenger = Messenger(service)
 
             try {
+                /**
+                 * Register an [IncomingHandler] so we recieve messages from the service
+                 */
                 Timber.d("Registering bound client")
                 val msg = Message.obtain(null, Constants.MESSAGE.REGISTER_CLIENT)
                 replyMessenger = Messenger(IncomingHandler())
@@ -119,12 +131,15 @@ class NowPlayingHelper(private val activity: Activity) {
             ContextCompat.startForegroundService(activity, intent)
         }
 
+        /**
+         * If the service is already running, the app was killed due to memory pressure
+         * but we probably have active state. Tell the service to send us its state.
+         */
         if (isServiceRunning()) {
             val intent = newIntent().apply {
                 action = Constants.ACTION.SEND_STATE
                 maybeBind(this)
             }
-
             ContextCompat.startForegroundService(activity, intent)
         } else {
             activity.nowplaying_frame.visibility = View.GONE
@@ -211,6 +226,19 @@ class NowPlayingHelper(private val activity: Activity) {
 
     fun newRadioFeed(radioFeedReason: RadioFeedReason, seed: String?) {
 
+        val intent = newIntent().apply {
+
+            action = if (serviceStarted || isServiceRunning()) Constants.ACTION.RADIO_FEED
+            else Constants.ACTION.START_SERVICE
+
+            putExtra(Constants.KEY.RADIO_SEED, seed)
+            putExtra(Constants.KEY.RADIO_FEED_REASON, radioFeedReason.ordinal)
+
+            maybeBind(this)
+        }
+
+        ContextCompat.startForegroundService(activity, intent)
+
     }
 
     fun newQueue(tracks: List<ITrack>, pos: Int, local: Boolean = true) {
@@ -254,6 +282,9 @@ class NowPlayingHelper(private val activity: Activity) {
         }
     }
 
+    /**
+     * TODO we should also update the UI here instead of waiting for the system to notify us
+     */
     fun handleVolumeEvent(event: Int): Boolean {
         if (event == KeyEvent.KEYCODE_VOLUME_DOWN || event == KeyEvent.KEYCODE_VOLUME_UP) {
             if (activity.nowplaying_frame.isUp) {
@@ -282,6 +313,9 @@ class NowPlayingHelper(private val activity: Activity) {
 
     private fun newIntent(): Intent = Intent(activity, MusicPlayerService::class.java)
 
+    /**
+     * When something in the queue changes, alert the service of the change
+     */
     private val trackQueueCallback = object : TrackQueue.TrackQueueCallback {
         override fun replace(tracks: MutableList<ParcelableTrack>, pos: Int) {
             val intent = newIntent().apply {
@@ -294,12 +328,6 @@ class NowPlayingHelper(private val activity: Activity) {
 
                 maybeBind(this)
             }
-
-            activity.npui_recycler.layoutManager = LinearLayoutManager(activity)
-
-            activity.npui_recycler.adapter = NowPlayingQueueAdapter(tracks, { i ->
-
-            })
 
             ContextCompat.startForegroundService(activity, intent)
         }
@@ -326,6 +354,8 @@ class NowPlayingHelper(private val activity: Activity) {
             }
 
             ContextCompat.startForegroundService(activity, intent)
+
+            updateRecycler(trackQueue.parcelable())
         }
 
         override fun reorder(pos: Int, pnew: Int) {
@@ -344,6 +374,9 @@ class NowPlayingHelper(private val activity: Activity) {
 
     val trackQueue: TrackQueue = TrackQueue(trackQueueCallback)
 
+    /**
+     * Receives messages from the [MusicPlayerService]
+     */
     @SuppressLint("HandlerLeak")
     private inner class IncomingHandler : Handler() {
         override fun handleMessage(msg: Message) {
@@ -353,6 +386,7 @@ class NowPlayingHelper(private val activity: Activity) {
                     //Timber.d("Received bufferProgress %f", msg.obj as Float)
                 }
                 Constants.EVENT.TrackPlaying -> {
+                    // TODO This should probably be changed to act immediately upon UI signal
                     if (activity.nowplaying_frame.visibility != View.VISIBLE) {
                         revealPlayerUI()
                     }
@@ -373,10 +407,58 @@ class NowPlayingHelper(private val activity: Activity) {
                             .setImageDrawable(activity.getDrawable(R.drawable.ic_play))
                 }
 
+                Constants.EVENT.SendQueue -> {
+
+                    revealPlayerUI()
+
+                    updateRecycler(msg.obj as List<ParcelableTrack>)
+                }
+
                 else -> super.handleMessage(msg)
             }
         }
     }
+
+    private fun updateRecycler(tracks: List<ParcelableTrack>) {
+        if(activity.npui_recycler.layoutManager == null)
+            activity.npui_recycler.layoutManager = LinearLayoutManager(activity)
+        if (activity.npui_recycler.adapter == null)
+            activity.npui_recycler.adapter = NowPlayingQueueAdapter(tracks, { i ->
+
+            })
+        else (activity.npui_recycler.adapter as NowPlayingQueueAdapter).apply {
+            dataset = tracks
+            notifyDataSetChanged()
+        }
+    }
+
+    private fun addNextToRecycler(tracks: List<ParcelableTrack>) {
+        if(activity.npui_recycler.layoutManager == null)
+            activity.npui_recycler.layoutManager = LinearLayoutManager(activity)
+        if (activity.npui_recycler.adapter == null)
+            activity.npui_recycler.adapter = NowPlayingQueueAdapter(tracks, { i ->
+
+            })
+        else (activity.npui_recycler.adapter as NowPlayingQueueAdapter).apply {
+            dataset = tracks
+            notifyItemRangeInserted(trackQueue.position, tracks.size)
+        }
+    }
+
+    private fun addAtEndToRecycler(tracks: List<ParcelableTrack>, added: List<ParcelableTrack>) {
+        if(activity.npui_recycler.layoutManager == null)
+            activity.npui_recycler.layoutManager = LinearLayoutManager(activity)
+        if (activity.npui_recycler.adapter == null)
+            activity.npui_recycler.adapter = NowPlayingQueueAdapter(tracks, { i ->
+
+            })
+        else (activity.npui_recycler.adapter as NowPlayingQueueAdapter).apply {
+            dataset = tracks
+            notifyItemRangeInserted(dataset.size - added.size, tracks.size)
+        }
+    }
+
+
 
     fun onDestroy() {
         messenger?.send(Message.obtain(null, Constants.MESSAGE.UNREGISTER_CLIENT).apply {
@@ -385,6 +467,11 @@ class NowPlayingHelper(private val activity: Activity) {
         if(isServiceRunning()) activity.unbindService(connection)
     }
 
+
+    /**
+     * Although this method is deprecated, it is the only way to tell if an application's own
+     * Service is running. It is very unlikely that it will be removed.
+     */
     @Suppress("DEPRECATION")
     private fun isServiceRunning(): Boolean {
         val manager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager

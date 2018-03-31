@@ -4,18 +4,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/media_route_menu_item"
-        android:iconTint="#fff"
-        android:title="Cast"
-        app:actionProviderClass="android.support.v7.app.MediaRouteActionProvider"
-        app:showAsAction="always"
-        tools:icon="@drawable/mr_button_light" />
-    <item
-        android:id="@+id/app_bar_search"
-        android:icon="@drawable/ic_search_white_24dp"
-        android:title="Search"
-        app:showAsAction="always" />
-    <item
         android:id="@+id/menu_item_settings"
         android:title="Settings" />
 

@@ -115,7 +115,9 @@ class HomeController : Controller() {
                                         it == FullBleedSection.ContentCase.SQUAREPLAYABLECARDLIST
                             }
                         },
-                        { mod: FullBleedModuleV1Proto.FullBleedModule -> Timber.d(mod.toString()) },
+                        { mod: FullBleedModuleV1Proto.FullBleedModule ->
+                            Timber.d(mod.toString())
+                        },
                         requestManager, view!!.main_recycler).apply { currentScrollCallback = this.scrollCallback }
 
                 view?.swipeRefreshLayout?.isRefreshing = false
@@ -124,6 +126,14 @@ class HomeController : Controller() {
                 view?.adaptiveHomeCoordinator?.let {
                     Snackbar.make(it, "Error processing server response", Snackbar.LENGTH_SHORT)
                 }
+            }
+        }
+    }
+
+    fun playSingleSection(singleSection: FullBleedSection) {
+        when (singleSection.contentCase) {
+            FullBleedSection.ContentCase.SQUAREPLAYABLECARDLIST -> {
+                //singleSection.squarePlayableCardList.cardsList[0].
             }
         }
     }

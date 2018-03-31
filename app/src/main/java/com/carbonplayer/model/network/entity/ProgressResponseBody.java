@@ -2,7 +2,9 @@ package com.carbonplayer.model.network.entity;
 
 import java.io.IOException;
 
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
+import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okio.Buffer;
 import okio.BufferedSource;
@@ -19,6 +21,12 @@ public class ProgressResponseBody extends ResponseBody {
     public ProgressResponseBody(ResponseBody responseBody, ProgressListener progressListener) {
         this.responseBody = responseBody;
         this.progressListener = progressListener;
+    }
+
+    public static Response intercept(Interceptor.Chain chain, ProgressListener listener) throws IOException {
+        Response original = chain.proceed(chain.request());
+        return original.newBuilder()
+                .body(new ProgressResponseBody(original.body(), listener)).build();
     }
 
     @Override

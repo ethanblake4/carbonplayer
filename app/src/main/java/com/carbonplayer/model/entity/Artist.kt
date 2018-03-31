@@ -14,6 +14,7 @@ open class Artist(
         var name: String = "",
         var artistArtRef: String? = null,
         var artistArtRefs: RealmList<Image> = RealmList(),
+        var artistTracks: RealmList<Track> = RealmList(),
         var artistBio: String? = null,
         var albums: RealmList<Album> = RealmList(),
         var topTracks: RealmList<Track> = RealmList(),
@@ -36,6 +37,7 @@ open class Artist(
             src.name,
             src.artistArtRef,
             RealmList<Image>().apply { addAll(src.artistArtRefs) },
+            RealmList(),
             src.artistBio,
             MusicLibrary.processAlbums(src.albums.map {Album(it)}, realm),
             RealmList<Track>().apply { addAll(MusicLibrary.processTracks(src.topTracks, realm)) },
@@ -58,8 +60,9 @@ open class Artist(
     }
 
     companion object {
-        val ID = "artistId"
-        val NAME = "name"
+        const val ID = "artistId"
+        const val NAME = "name"
+        const val TRACKS = "artistTracks"
     }
 
 }

@@ -1,6 +1,7 @@
 package com.carbonplayer.ui.main
 
 import android.content.Context
+import android.os.Bundle
 import android.support.design.widget.CollapsingToolbarLayout
 import android.view.LayoutInflater
 import android.view.View
@@ -32,6 +33,8 @@ class TopChartsController : Controller() {
 
     var currentSongPage: TopChartsSongPage? = null
     var currentAlbumPage: TopChartsAlbumPage? = null
+
+    var currentChart = DEFAULT_CHART
 
     override fun onContextAvailable(context: Context) {
         super.onContextAvailable(context)
@@ -87,6 +90,8 @@ class TopChartsController : Controller() {
 
     private fun applyCachedChart(context: Context, id: String) {
 
+        currentChart = id
+
         CarbonPlayerApplication.instance.topchartsResponseMap[id]?.let { response ->
             currentSongPage?.let { it.songList = response.chart.tracks }
             currentAlbumPage?.let { it.albumList = response.chart.albums }
@@ -123,6 +128,11 @@ class TopChartsController : Controller() {
                 }).addToAutoDispose()
     }
 
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        currentChart = savedInstanceState.getString("currentChart", DEFAULT_CHART)
+        super.onRestoreInstanceState(savedInstanceState)
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
         val v = inflater.inflate(R.layout.controller_topcharts, container, false)
 
@@ -146,14 +156,14 @@ class TopChartsController : Controller() {
                     when (position) {
                         0 -> {
                             currentSongPage = TopChartsSongPage()
-                            CarbonPlayerApplication.instance.topchartsResponseMap[DEFAULT_CHART]?.let {
+                            CarbonPlayerApplication.instance.topchartsResponseMap[currentChart]?.let {
                                 currentSongPage!!.songList = it.chart.tracks
                             }
                             router.setRoot(RouterTransaction.with(currentSongPage!!))
                         }
                         1 -> {
                             currentAlbumPage = TopChartsAlbumPage()
-                            CarbonPlayerApplication.instance.topchartsResponseMap[DEFAULT_CHART]?.let {
+                            CarbonPlayerApplication.instance.topchartsResponseMap[currentChart]?.let {
                                 currentAlbumPage!!.albumList = it.chart.albums
                             }
                             router.setRoot(RouterTransaction.with(currentAlbumPage!!))
@@ -191,6 +201,11 @@ class TopChartsController : Controller() {
         }
 
         return v
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("currentChart", currentChart)
+        super.onSaveInstanceState(outState)
     }
 
     companion object {

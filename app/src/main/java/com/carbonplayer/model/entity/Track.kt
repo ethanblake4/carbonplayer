@@ -1,5 +1,6 @@
 package com.carbonplayer.model.entity
 
+import android.support.v4.media.MediaMetadataCompat
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.enums.PlaySource
 import com.carbonplayer.model.entity.enums.StorageType
@@ -29,7 +30,9 @@ open class Track(
         override var isDeleted: Boolean = false,
         override var title: String = "",
         override var composer: String? = null,
-        @LinkingObjects("tracks") val albums: RealmResults<Album>? = null,
+        @LinkingObjects(Album.TRACKS) val albums: RealmResults<Album>? = null,
+        @LinkingObjects("artistTracks") val artists: RealmResults<Artist>? = null,
+        override var artist: String = "",
         override var year: Int = 0,
         override var comment: String? = null,
         override var trackNumber: Int = 0,
@@ -56,9 +59,10 @@ open class Track(
 
 ) : RealmObject(), ITrack {
 
-    override val artist: String
-        get() = albums?.first(null)?.artists?.map { it.name }?.nullIfEmpty()?.reduce { acc, n -> "$acc & $n" }
-                ?: "Error"
+    val calculatedArtistName: String
+        get() = artists?.map { it.name }?.nullIfEmpty()?.run { reduceIndexed {
+            i, acc, n -> if(i==this.size) "$acc & $n" else "$acc, $n"
+        } } ?: "Error"
 
     override val album: String
         get() = albums?.first(null)?.name ?: ""
@@ -68,6 +72,20 @@ open class Track(
 
     override val albumArtist: String
         get() = albums?.first(null)?.albumArtist ?: ""
+
+    override val albumArtURL: String?
+        get() = albums?.first(null)?.albumArtRef
+
+    val mediaMetadata: MediaMetadataCompat
+        get() = MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, id)
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, durationMillis.toLong())
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, albumArtURL)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+                .putLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER, trackNumber.toLong())
+                .build()
 
 
     constructor(localId: Long, source: SkyjamTrack) : this (
@@ -83,6 +101,8 @@ open class Track(
             source.title,
             source.composer,
             null,
+            null,
+            source.artist,
             source.year,
             source.comment,
             source.trackNumber,
@@ -103,10 +123,46 @@ open class Track(
             source.estimatedSize
     )
 
-    fun updateWith(source: SkyjamTrack) : Track {
+    constructor(localId: Long, source: ParcelableTrack) : this (
+            localId,
+            source.inLibrary,
+            source.id,
+            source.clientId,
+            source.nid,
+            source.storeId,
+            source.audioAd,
+            source.recentTimestamp,
+            source.isDeleted,
+            source.title,
+            source.composer,
+            null,
+            null,
+            source.artist,
+            source.year,
+            source.comment,
+            source.trackNumber,
+            source.genre,
+            source.durationMillis,
+            source.beatsPerMinute,
+            source.discNumber,
+            source.explicitType,
+            source.creationTimestamp,
+            source.trackAvailableForPurchase,
+            source.trackAvailableForSubscription,
+            source.totalDiscCount,
+            source.totalTrackCount,
+            source.trackType,
+            source.lastRatingChangeTimestamp,
+            source.playCount ?: 0,
+            source.rating,
+            source.estimatedSize
+    )
+
+    fun updateWith(source: ITrack) : Track {
         this.inLibrary = source.inLibrary
         this.id = source.id ?: this.id
         this.trackNumber = source.trackNumber
+        this.artist = source.artist
         this.clientId = source.clientId ?: this.clientId
         this.nid = source.nid ?: this.nid
         this.beatsPerMinute = source.beatsPerMinute ?: this.beatsPerMinute
