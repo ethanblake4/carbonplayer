@@ -27,6 +27,9 @@ import io.realm.Realm
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
+/***
+ * This class is what directly handles music playback through ExoPlayer.
+ */
 class MusicPlaybackImpl(
         val service: Service,
         val playback: MusicPlayback,
@@ -70,6 +73,8 @@ class MusicPlaybackImpl(
                 .newSimpleInstance(renderersFactory, trackSelector, loadControl)
 
         exoPlayer.addListener(this)
+
+        // This is probably not a good idea
         loop = Thread(Runnable {
             Timber.i("Thread created")
 
@@ -102,6 +107,7 @@ class MusicPlaybackImpl(
         if (!loop.isAlive) loop.start()
         if (!exoPlayer.playWhenReady) exoPlayer.playWhenReady = true
     }
+
 
     @Synchronized
     fun newQueue(queue: List<ParcelableTrack>, track: Int = 0, initFirst: Boolean = true) {
@@ -142,10 +148,15 @@ class MusicPlaybackImpl(
 
     fun nextTrack() {
         if (mirroredQueue.size > trackNum + 1) {
+
+            // Initialize download for the next track
             if (!mirroredContentQueue[trackNum + 1].downloadInitialized) {
                 mirroredContentQueue[trackNum + 1].initDownload()
             }
+
+            // This is not an automatic next track event
             disallowNextAutoInc = true
+
             exoPlayer.seekTo(trackNum + 1, 0L)
             trackNum++
 
@@ -154,9 +165,12 @@ class MusicPlaybackImpl(
     }
 
     fun prevTrack(alwaysSkip: Boolean = false) {
+        // If we are greater than SKIP_ON_PREVIOUS milliseconds into the current track,
+        // we want to restart from the beginning of the current track
         if (!alwaysSkip && exoPlayer.currentPosition > SKIP_ON_PREVIOUS) {
             exoPlayer.seekTo(0L)
         } else if (trackNum > 0) {
+            // Otherwise we want to move to the previous track
             if (!mirroredContentQueue[trackNum - 1].downloadInitialized) {
                 mirroredContentQueue[trackNum - 1].initDownload()
             }
@@ -165,6 +179,7 @@ class MusicPlaybackImpl(
             trackNum--
             ontrackchanged(trackNum, mirroredQueue[trackNum])
 
+            // This is not an automatic track change
             disallowNextAutoInc = true
         }
 
@@ -344,6 +359,7 @@ class MusicPlaybackImpl(
 
     override fun onPositionDiscontinuity(@Player.DiscontinuityReason reason: Int) {
         Timber.d("Position Discontinuity: $reason")
+
         if (exoPlayer.currentWindowIndex == lastKnownWindowIndex + 1 && !disallowNextAutoInc) {
             trackNum++
             Timber.i("Discontinuity -> Next Track")
@@ -388,8 +404,11 @@ class MusicPlaybackImpl(
 
     companion object {
         val bandwidthMeter = DefaultBandwidthMeter()
+
+        //Start downloading the next track 15 seconds into the current one
         val DELAY_ADD_ITEM = TimeUnit.SECONDS.toMillis(15)
-        val SKIP_ON_PREVIOUS = TimeUnit.SECONDS.toMillis(3)
+
+        val SKIP_ON_PREVIOUS = TimeUnit.SECONDS.toMillis(3) // 4 or 3?
     }
 
 }

@@ -49,33 +49,43 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
+        // If this is the first-time start of the app,
+        // launch the IntroActivity
         if (CarbonPlayerApplication.instance.preferences.firstStart) {
             val i = Intent(this@MainActivity, IntroActivity::class.java)
             startActivity(i)
-            Timber.d("Started activity")
+            Timber.d("Started IntroActivity")
         }
 
+        // Setup view
         setContentView(R.layout.controller_main)
 
+        // Setup now playing view
         npHelper = NowPlayingHelper(this)
 
+        /** Observe system volume changes and update UI **/
         volumeObserver = VolumeObserver({ npHelper.maybeHandleVolumeEvent() })
-
         applicationContext.contentResolver.registerContentObserver(
                 android.provider.Settings.System.CONTENT_URI, true,
                 volumeObserver)
 
+        // Adjusting volume should adjust media volume
         volumeControlStream = AudioManager.STREAM_MUSIC
 
+        // We don't want shadows be drawn under the overlay appbar
         functionalAppbar.outlineProvider = null
 
+        // Since carbon uses translucent window decoration, we need to add padding for
+        // the toolbar so it doesn't get drawn under the system status bar
         foregroundToolbar.setPadding(foregroundToolbar.paddingLeft,
                 foregroundToolbar.paddingTop + IdentityUtils.getStatusBarHeight(resources),
                     foregroundToolbar.paddingRight, foregroundToolbar.paddingBottom)
 
 
+        // Setup Conductor
         router = Conductor.attachRouter(this, main_controller_container, savedInstanceState)
 
+        // Again: add padding for nav bar to bottom nav because of translucent window decor
         bottomNavContainer.setPadding(0, 0, 0,
                 IdentityUtils.getNavbarHeight(resources))
         bottom_nav.selectedItemId = R.id.action_home
@@ -91,6 +101,7 @@ class MainActivity : AppCompatActivity() {
 
              when (item.itemId) {
                 R.id.action_topcharts -> {
+                    // If top charts is selected, enable the genre spinner
                     main_actionbar_text.visibility = View.GONE
                     topChartsSpinner.visibility = View.VISIBLE
                     topChartsSpinner.adapter = ArrayAdapter(
@@ -118,8 +129,7 @@ class MainActivity : AppCompatActivity() {
 
             lastAppbarText = main_actionbar_text.text.toString()
 
-            //initialFrag.exitTransition = Fade()
-
+            // Animate the controller container out
             main_controller_container.animate().alpha(0.0f).setDuration(100).start()
 
             Timber.d("Will add new fragment")
@@ -128,9 +138,11 @@ class MainActivity : AppCompatActivity() {
 
                 Timber.d("Adding new fragment")
 
+                // Replace content of the controller container with the new controller
                 router.setRoot(RouterTransaction.with(initialFrag))
                 router.popToRoot()
 
+                // Animate the controller container back in
                 main_controller_container.translationY = 100.0f
                 main_controller_container.animate().translationY(0.0f)
                         .alpha(1.0f).setDuration(200).start()
@@ -138,6 +150,7 @@ class MainActivity : AppCompatActivity() {
 
             true
         }
+
 
         main_actionbar_more.setOnClickListener {
             PopupMenu(this, main_actionbar_more).apply{
@@ -162,6 +175,7 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
+    // When the genre list is retrieved from the network
     fun callbackWithTopChartsGenres(genres: List<TopChartsGenres.Genre>, callback: (String) -> Unit) {
         topChartsSpinner.adapter = ArrayAdapter(
                 this,
@@ -171,16 +185,19 @@ class MainActivity : AppCompatActivity() {
 
         topChartsSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Should not happen
                 Timber.d("Nothing selected")
             }
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                // Callback to the TopChartsController so it can update its content
                 if(position == 0) callback(TopChartsController.DEFAULT_CHART)
                 else callback(genres[position - 1].id)
             }
         }
     }
 
+    // When an album is selected
     fun gotoAlbum(album: IAlbum, swatchPair: PaletteUtil.SwatchPair) {
 
         val frag = AlbumController(album, swatchPair)
@@ -194,6 +211,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    // When an artist is selected
     fun gotoArtist(artist: Artist, swatchPair: PaletteUtil.SwatchPair) {
         val frag = ArtistController(artist, swatchPair)
 
@@ -213,6 +231,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** When an album's menu button is selected **/
     fun showAlbumPopup(view: View, album: IAlbum) {
 
         val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
@@ -262,7 +281,7 @@ class MainActivity : AppCompatActivity() {
         } else this.finish()
 
         if(router.backstackSize == 1) {
-            //foregroundToolbar.navigationIcon = null
+
             main_actionbar_text.text = lastAppbarText
         }
 

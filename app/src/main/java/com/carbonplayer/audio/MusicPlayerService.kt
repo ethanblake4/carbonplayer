@@ -27,7 +27,7 @@ import timber.log.Timber
 import java.util.*
 
 /**
- * Music player background service
+ * Music player foreground service
  */
 @SuppressLint("WakelockTimeout")
 class MusicPlayerService : Service(), MusicFocusable {
@@ -67,6 +67,7 @@ class MusicPlayerService : Service(), MusicFocusable {
     internal val messenger = Messenger(IncomingHandler())
 
 
+    /** This is called any time we receive a command from the app **/
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         when (intent.action) {
             Constants.ACTION.START_SERVICE -> initService(intent)
@@ -236,6 +237,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 updateNotification(it, lastBitmap)
             }
         }, { num, track ->
+            // When the track is changed
             emit(Constants.EVENT.TrackPlaying, track)
             loadImageAndDoUpdates(track)
         }, { bufferProgress ->
