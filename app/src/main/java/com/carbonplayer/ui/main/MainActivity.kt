@@ -248,6 +248,14 @@ class MainActivity : AppCompatActivity() {
                 R.id.menu_add_to_queue -> {
                     npHelper.insertAtEnd(trackList)
                 }
+                R.id.menu_share -> {
+                    val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
+                    sharingIntent.type = "text/plain";
+                    val shareBody = "https://play.google.com/music/m/${album.albumId}?signup_if_needed=1"
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+                    startActivity(Intent.createChooser(sharingIntent, "Share via"));
+                    
+                }
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",
                             Toast.LENGTH_SHORT).show()

@@ -68,6 +68,7 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
             ButterKnife.bind(this, v);
 
 
+
             layoutRoot.setOnClickListener(view -> {
 
                 thumb.setTransitionName(album.getAlbumId() + "i");
