@@ -2,8 +2,6 @@ package com.carbonplayer.model
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.os.Parcel
-import android.os.Parcelable
 import android.support.annotation.UiThread
 import android.util.Pair
 import com.carbonplayer.model.entity.*
@@ -86,6 +84,19 @@ object MusicLibrary {
         return outTracks
     }
 
+    private fun extractFeaturing(track: ITrack): List<String> {
+
+        return track.title.substringAfter(" (feat. ", "!")
+                .takeIf { it != "!" }?.substringBefore(")")
+                ?.split(", ")?.flatMap { it.split(" & ") }
+                ?.flatMap { it.split(" and" ) } ?:
+
+        track.title.substringAfter(" with ", "!")
+                .takeIf { it != "!" }
+                ?.split(", ")?.flatMap { it.split(" & ") }
+                ?.flatMap { it.split(" and ") } ?: listOf()
+    }
+
     fun addOneToDatabase(realm: Realm, sjTrack: SkyjamTrack, update: Boolean = true,
                          inLibrary: Boolean = true): Track {
         val artistPairs = mutableMapOf<String, String>()
@@ -93,37 +104,39 @@ object MusicLibrary {
 
         if (sjTrack.artistId != null) {
 
-            val featuring = sjTrack.title.substringAfter(" (feat. ", "!")
-                    .takeIf { it != "!" }?.substringBefore(")")
-                    ?.split(", ")?.flatMap { it.split(" & ") }
-                    ?.flatMap { it.split(" and" ) } ?:
-
-                    sjTrack.title.substringAfter(" with ", "!")
-                        .takeIf { it != "!" }
-                        ?.split(", ")?.flatMap { it.split(" & ") }
-                        ?.flatMap { it.split(" and ") } ?: listOf()
-
+            val featuring = extractFeaturing(sjTrack)
 
             val _artists = sjTrack.artist.split(", ").flatMap { it.split(" & ") }
+
+            val combinedArtists = mutableListOf<String>().apply {
+                addAll(_artists)
+                addAll(featuring)
+            }
+
             // For most cases
-            if (_artists.size == sjTrack.artistId.size) {
-                (0 until _artists.size).forEach {
-                    artistPairs[sjTrack.artistId[it]] = _artists[it]
+            if (combinedArtists.size == sjTrack.artistId.size) {
+                (0 until combinedArtists.size).forEach {
+                    artistPairs[sjTrack.artistId[it]] = combinedArtists[it]
                 }
-            } else if (_artists.size > sjTrack.artistId.size) {
+            } else if (combinedArtists.size > sjTrack.artistId.size) {
                 // Fixes e.g. "Tom Petty & The Heartbreakers"
-                val noTheSize = _artists.size -
-                        _artists.count { it.startsWith("the", true) } +
-                        if (_artists[0].startsWith("The")) 1 else 0
+                val noTheSize = combinedArtists.size -
+                        combinedArtists.count { it.startsWith("the", true) } +
+                        if (combinedArtists[0].startsWith("The")) 1 else 0
                 if (noTheSize == sjTrack.artistId.size) {
-                    (0 until noTheSize).forEach {
-                        if (it == 0 || !_artists[it].startsWith("the", true)) {
-                            artistPairs[sjTrack.artistId[it]] = _artists[it]
+                    (0 until combinedArtists.size).forEach {
+                        if (it == 0 || !combinedArtists[it].startsWith("the", true)) {
+                            artistPairs[sjTrack.artistId[it]] = combinedArtists[it]
+                        } else {
+                            val carp = artistPairs[sjTrack.artistId[it-1]]
+                            artistPairs[sjTrack.artistId[it-1]] = carp + " & " + combinedArtists[it]
                         }
                     }
                 } else treatAsOneArtist = true  // Fallback: treat as a single artist
-            }
+            } else treatAsOneArtist = true
         }
+
+        Timber.d(artistPairs.toList().joinToString())
 
         val artists = mutableListOf<Artist>()
         val managedArtists = mutableListOf<Artist>()
@@ -166,6 +179,9 @@ object MusicLibrary {
             if (!it.albums.contains(album)) {
                 it.albums.add(album)
             }
+            if(!it.artistTracks.contains(track)) {
+                it.artistTracks.add(track)
+            }
             managedArtists.add(if (!it.isManaged) realm.copyToRealm(it) else it)
         }
 
@@ -179,15 +195,7 @@ object MusicLibrary {
 
         if (pTrack.artistId != null) {
 
-            val featuring = pTrack.title.substringAfter(" (feat. ", "!")
-                    .takeIf { it != "!" }?.substringBefore(")")
-                    ?.split(", ")?.flatMap { it.split(" & ") }
-                    ?.flatMap { it.split(" and" ) }
-                    ?: pTrack.title.substringAfter(" with ", "!")
-                    .takeIf { it != "!" }
-                    ?.split(", ")?.flatMap { it.split(" & ") }
-                    ?.flatMap { it.split(" and ") } ?: listOf()
-
+            val featuring = extractFeaturing(pTrack)
 
             val _artists = pTrack.artist.split(", ").flatMap { it.split(" & ") }
 
@@ -197,24 +205,26 @@ object MusicLibrary {
             }
 
             // For most cases
-            if (_artists.size == pTrack.artistId.size) {
-                (0 until _artists.size).forEach {
-                    artistPairs[pTrack.artistId[it]] = _artists[it]
+            if (combinedArtists.size == pTrack.artistId.size) {
+                (0 until combinedArtists.size).forEach {
+                    artistPairs[pTrack.artistId[it]] = combinedArtists[it]
                 }
-            } else if (_artists.size > pTrack.artistId.size) {
+            } else if (combinedArtists.size > pTrack.artistId.size) {
                 // Fixes e.g. "Tom Petty & The Heartbreakers"
-                val noTheSize = _artists.size -
-                        _artists.count { it.startsWith("the", true) } +
-                        if (_artists[0].startsWith("The")) 1 else 0
+                val noTheSize = combinedArtists.size -
+                        combinedArtists.count { it.startsWith("the", true) } +
+                        if (combinedArtists[0].startsWith("The")) 1 else 0
                 if (noTheSize == pTrack.artistId.size) {
-                    (0 until noTheSize).forEach {
+                    (0 until combinedArtists.size).forEach {
                         if (it == 0 || !_artists[it].startsWith("the", true)) {
                             artistPairs[pTrack.artistId[it]] = _artists[it]
-                        }
+                        } else artistPairs[pTrack.artistId[it-1]] += " & " + combinedArtists[it]
                     }
                 } else treatAsOneArtist = true  // Fallback: treat as a single artist
-            }
+            } else treatAsOneArtist = true
         }
+
+        Timber.d(artistPairs.toList().joinToString())
 
         val artists = mutableListOf<Artist>()
         val managedArtists = mutableListOf<Artist>()
@@ -258,6 +268,9 @@ object MusicLibrary {
         artists.forEach {
             if (!it.albums.contains(album)) {
                 it.albums.add(album)
+            }
+            if(!it.artistTracks.contains(track)) {
+                it.artistTracks.add(track)
             }
             managedArtists.add(if (!it.isManaged) realm.copyToRealm(it) else it)
         }

@@ -221,9 +221,9 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
     }
 
     void endSuccessfully() {
-        SharedPreferences getPrefs = PreferenceManager
-                .getDefaultSharedPreferences(getBaseContext());
-        getPrefs.edit().putBoolean("firstStart", false).apply();
+        Timber.d("End IntroActivity successfully");
+        CarbonPlayerApplication.Companion.getInstance().getPreferences().firstStart = false;
+        CarbonPlayerApplication.Companion.getInstance().getPreferences().save();
         this.finish();
     }
 

@@ -137,7 +137,13 @@ class Stream (
 
                             downloadRequest.state = DownloadRequest.State.DOWNLOADING
 
-                            val sink = Okio.buffer(Okio.sink(File(filepath!!)))
+                            val location: File = if (filepath != null) {
+                                File(this.filepath!!)
+                            } else {
+                                downloadRequest.fileLocation.fullPath
+                            }
+
+                            val sink = Okio.buffer(Okio.sink(location))
 
                             val source = response.body()!!.source()
 
