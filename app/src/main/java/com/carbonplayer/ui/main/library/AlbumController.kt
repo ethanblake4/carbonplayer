@@ -273,7 +273,7 @@ class AlbumController(
         tracks = MusicLibrary.getAllAlbumTracks(album)
 
         val params = root.songgroup_recycler.layoutParams
-        params.height = (tracks.size * MathUtils.dpToPx2(resources, 59)) +
+        params.height = (tracks.size * MathUtils.dpToPx2(resources, 60)) +
                 IdentityUtils.getNavbarHeight(resources) +
                 MathUtils.dpToPx2(resources,
                         if((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
