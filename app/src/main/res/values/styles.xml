@@ -48,4 +48,14 @@
         <item name="android:background">?attr/selectableItemBackground</item>
     </style>
 
+    <style name="GoogleText" parent="Theme.AppCompat.Light.Dialog">
+        <!-- Hint color and label color in FALSE state -->
+        <item name="android:textColorHint">#888</item>
+        <item name="android:textSize">14sp</item>
+        <!-- Label color in TRUE state and bar color FALSE and TRUE State -->
+        <item name="colorAccent">#4285f4</item>
+        <item name="colorControlNormal">#888</item>
+        <item name="colorControlActivated">#4285f4</item>
+    </style>
+
 </resources>
