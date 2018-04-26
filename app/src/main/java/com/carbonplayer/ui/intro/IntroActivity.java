@@ -3,11 +3,10 @@ package com.carbonplayer.ui.intro;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.support.annotation.StringRes;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -76,6 +75,12 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
         mPager = findViewById(R.id.introPager);
         nextButton = findViewById(R.id.next);
+
+        ConstraintLayout.LayoutParams lp =
+                ((ConstraintLayout.LayoutParams)nextButton.getLayoutParams());
+        lp.bottomMargin = lp.bottomMargin + IdentityUtils.getNavbarHeight(getResources());
+
+        nextButton.setLayoutParams(lp);
 
         // Instantiate a ViewPager and a PagerAdapter.
         PagerAdapter mPagerAdapter = new IntroAdapter(getSupportFragmentManager());
