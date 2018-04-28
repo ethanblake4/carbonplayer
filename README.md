@@ -16,7 +16,6 @@ Carbon Player is intended to improve upon the original Google Play Music applica
 
 ## Roadmap
 There are many things that remain to be added. In loose order of priority, here are the major ones:
-- Search
 - Radio stations
 - "Songs" tab in Library page
 - Shuffle and Repeat modes
