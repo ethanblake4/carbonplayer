@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.SongID
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import kotlinx.android.synthetic.main.topcharts_song_layout.view.*
 
@@ -49,9 +48,6 @@ internal class TopChartsSongAdapter(
                     .load(it)
                     .into(holder.itemView.trackThumb)
         }
-
-
-
     }
 
     override fun getItemCount(): Int = mDataset.size

@@ -13,9 +13,6 @@ import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;
@@ -44,19 +41,15 @@ class IntroPresenter {
         this.authDialog = authDialog;
     }
 
-    void callbackWithJson(String json) {
-        try {
-            JSONObject j = new JSONObject(json);
-            String candidateType = j.getString("candidateType");
-            if (candidateType.equals("field")) {
-                String fieldId = j.getString("fieldId");
-                if (fieldId.equals("Email")) username = j.getString("value");
-                if (fieldId.equals("Passwd")) password = j.getString("value");
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
+    void callbackWithUsername(String u) {
+        username = u;
+        if (username != null && password != null) {
+            tryLogin(username, password);
         }
+    }
 
+    void callbackWithPassword(String p) {
+        password = p;
         if (username != null && password != null) {
             tryLogin(username, password);
         }

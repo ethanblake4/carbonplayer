@@ -1,5 +1,9 @@
 package com.carbonplayer.model.entity
 
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamArtist
+import com.carbonplayer.model.entity.skyjam.SkyjamPlaylist
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 
 data class SearchResponse (
         val kind: String,
@@ -19,20 +23,27 @@ data class SearchResponse (
             val playable: Boolean?,
             val subtitle: String?,
 
-            val album: Album?,
-            val artist: Artist?,
+            val album: SkyjamAlbum?,
+            val artist: SkyjamArtist?,
            /* val genre: MusicGenreJson? = null*/
 
-            val playlist: Playlist?,
+            val playlist: SkyjamPlaylist?,
     /*var podcastSeries: PodcastSeries? = null*/
             val searchEntryContext: String?,
             /*var situation: SituationJson? = null*/
             /*val station: SkyjamStation? = null*/
 
-            val track: Track?
+            val track: SkyjamTrack?
 
             /*var video: YoutubeVideoJson? = null*/
-    )
+    ) {
+        val title: String? get() {
+            return album?.name ?:
+                artist?.name ?:
+                playlist?.name ?:
+                track?.title
+        }
+    }
 
     data class Cluster (
             val category: Int?,

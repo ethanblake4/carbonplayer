@@ -60,6 +60,8 @@ class HomeController : Controller() {
 
         view.main_recycler.recycledViewPool.setMaxRecycledViews(0, 2)
 
+        view.main_recycler.setPadding(0, 0, 0, IdentityUtils.getNavbarHeight(resources))
+
         view.swipeRefreshLayout.setOnRefreshListener {
             Timber.d("Will refresh")
             refresh()

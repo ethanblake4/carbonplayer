@@ -105,8 +105,6 @@ class ArtistController(
         super.onSaveInstanceState(outState)
     }
 
-
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
         root = inflater.inflate(R.layout.activity_songgroup, container, false)
@@ -154,7 +152,6 @@ class ArtistController(
                                     animate().alpha(1f).setDuration(250).start()
                                 }
                             }
-
 
                         }
 

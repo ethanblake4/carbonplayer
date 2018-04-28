@@ -33,6 +33,7 @@ import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
+import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.utils.addToAutoDispose
@@ -70,6 +71,8 @@ class AlbumController(
 
     private var expanded = false
     private var ogHeight = 0
+
+    private var dp56: Int = 0
 
     private var mAdapter: RecyclerView.Adapter<*>? = null
     private var mLayoutManager: RecyclerView.LayoutManager? = null
@@ -119,6 +122,12 @@ class AlbumController(
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
         root = inflater.inflate(R.layout.activity_songgroup, container, false)
+
+        dp56 = MathUtils.dpToPx(activity, 56)
+
+        root.underlayAppbar.background = ColorDrawable(mainColor)
+
+        root.underlayAppbar.setPadding(0, IdentityUtils.getStatusBarHeight(resources), 0, 0)
 
         if(album.description == null && album is Album) {
 
@@ -277,7 +286,7 @@ class AlbumController(
                 IdentityUtils.getNavbarHeight(resources) +
                 MathUtils.dpToPx2(resources,
                         if((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
-                            56 else 0)
+                            NowPlayingHelper.HEIGHT_DP else 0)
 
         mAdapter = SongListAdapter(tracks) { (_, pos) ->
             manager.fromAlbum(album, pos)
@@ -290,7 +299,7 @@ class AlbumController(
 
         root.expandDescriptionChevron.setOnClickListener {
 
-            ogHeight = root.constraintLayout6.measuredHeight
+            if(!expanded) ogHeight = root.constraintLayout6.measuredHeight
 
             val anim = ValueAnimator.ofInt(
                     root.constraintLayout6.measuredHeight,
@@ -320,6 +329,21 @@ class AlbumController(
 
     private val layoutListener = ViewTreeObserver.OnGlobalLayoutListener {
         root.play_fab.y = (root.main_backdrop.height - fabOffset).toFloat()
+
+        if(root.main_backdrop.height <= dp56 && root.underlayAppbar.visibility == View.GONE) {
+            root.underlayAppbar.visibility = View.VISIBLE
+            root.underlayAppbar.alpha = 0.0f
+            root.underlayAppbar.animate()
+                    .alpha(1.0f).setDuration(300)
+                    .start()
+        } else if(root.main_backdrop.height > dp56
+                && root.underlayAppbar.visibility == View.VISIBLE) {
+            root.underlayAppbar.animate()
+                    .alpha(0.0f).setDuration(300).withEndAction {
+                        root.underlayAppbar.visibility = View.GONE
+                    }
+                    .start()
+        }
     }
 
     override fun onDestroyView(view: View) {

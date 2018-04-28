@@ -22,7 +22,6 @@ import com.facebook.stetho.Stetho
 import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.Util
-import com.squareup.leakcanary.LeakCanary
 import com.squareup.moshi.KotlinJsonAdapterFactory
 import com.squareup.moshi.Moshi
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider
@@ -117,7 +116,7 @@ class CarbonPlayerApplication : Application() {
     val googleUserAgent = "Android-Music/" + googleBuildNumber + " (" + Build.PRODUCT + " " + Build.ID + "); gzip"
     val useWebAuthDialog = false
     val useOkHttpForLogin = true
-    val useSearchClustering = false
+    val useSearchClustering = true
 
     val darkCSL = ColorStateList.valueOf(Color.DKGRAY)
 

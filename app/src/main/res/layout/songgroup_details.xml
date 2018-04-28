@@ -63,6 +63,7 @@
                 android:layout_marginEnd="42dp"
                 android:layout_marginTop="16dp"
                 android:alpha="0.8"
+                android:fontFamily="sans-serif"
                 android:text="Here lies a short_description of the man who once a time called himself the FORCE of nature."
                 android:textAlignment="viewStart"
                 android:visibility="invisible"

@@ -1,7 +1,6 @@
 package com.carbonplayer.utils.general;
 
 import android.content.Context;
-import android.util.Base64;
 import android.webkit.WebView;
 
 import java.io.IOException;
@@ -26,15 +25,18 @@ public class JavascriptUtils {
             input.read(buffer);
             input.close();
 
-            String encoded = Base64.encodeToString(buffer, Base64.NO_WRAP);
+            String injex = new String(buffer);
 
-            injectJavascript(webview,
+            //String encoded = Base64.encodeToString(buffer, Base64.NO_WRAP);
+
+            /*injectJavascript(webview,
                     "(function() {var parent=document.getElementsByTagName('head').item(0);" +
                     "var script = document.createElement('script');" +
                     "script.type='text/javascript';" +
                     "script.innerHTML = window.atob('" + encoded + "');" +
                     "parent.appendChild(script)" +
-                    "})()");
+                    "})()");*/
+            injectJavascript(webview, injex);
 
         } catch (IOException e) {
             e.printStackTrace();

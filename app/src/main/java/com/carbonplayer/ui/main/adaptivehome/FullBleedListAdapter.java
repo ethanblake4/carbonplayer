@@ -1,7 +1,6 @@
 package com.carbonplayer.ui.main.adaptivehome;
 
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
@@ -17,8 +16,6 @@ import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.transition.DrawableCrossFadeFactory;
-import com.bumptech.glide.request.transition.Transition;
-import com.bumptech.glide.request.transition.TransitionFactory;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.proto.innerjam.elements.TitleSectionV1Proto;
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.FullBleedModule;

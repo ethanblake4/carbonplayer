@@ -15,7 +15,7 @@ data class SkyjamPlaylist (
         var shareToken: String = "",
         var ownerProfilePhotoUrl: String?,
         var ownerName: String?,
-        var accessControlled: Boolean,
+        var accessControlled: Boolean = false,
         var shareState: String?,
         var creationTimestamp: Long?,
         var albumArtRef: List<Image>?,

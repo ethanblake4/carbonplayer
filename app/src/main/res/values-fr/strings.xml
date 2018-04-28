@@ -56,7 +56,6 @@
     <string name="top_charts">Top Charts</string>
     <string name="home">Home</string>
     <string name="library">Library</string>
-    <string name="my_library">My Library</string>
 
     <string name="play_button_default_desc">Play Button</string>
 
@@ -103,20 +102,8 @@
     <string name="related_artists">Related Artists</string>
     <string name="albums">Albums</string>
 
-    <string name="search_header">Results for \"%1$s\"</string>
+    <string name="search_header">Results for %1$s</string>
     <string name="search_bar_placeholder">Search music</string>
+    <string name="my_library">My Library</string>
     <string name="error_search">Error loading search results.</string>
-
-    <string name="media_type_song">Song</string>
-    <string name="media_type_artist">Artist</string>
-    <string name="media_type_album">Album</string>
-    <string name="media_type_playlist">Playlist</string>
-    <string name="media_type_genre">Genre</string>
-    <string name="media_type_station">Radio station</string>
-    <string name="media_type_situation">Situation</string>
-    <string name="media_type_video">Video</string>
-    <string name="media_type_podcast">Podcast</string>
-    <string name="media_type_unknown">Unknown</string>
-
-
 </resources>

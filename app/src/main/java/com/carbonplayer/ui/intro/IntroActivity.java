@@ -3,6 +3,7 @@ package com.carbonplayer.ui.intro;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.StringRes;
@@ -76,11 +77,14 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         mPager = findViewById(R.id.introPager);
         nextButton = findViewById(R.id.next);
 
-        ConstraintLayout.LayoutParams lp =
-                ((ConstraintLayout.LayoutParams)nextButton.getLayoutParams());
-        lp.bottomMargin = lp.bottomMargin + IdentityUtils.getNavbarHeight(getResources());
+        if((Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !isInMultiWindowMode()) ||
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            ConstraintLayout.LayoutParams lp =
+                    ((ConstraintLayout.LayoutParams) nextButton.getLayoutParams());
+            lp.bottomMargin = lp.bottomMargin + IdentityUtils.getNavbarHeight(getResources());
 
-        nextButton.setLayoutParams(lp);
+            nextButton.setLayoutParams(lp);
+        }
 
         // Instantiate a ViewPager and a PagerAdapter.
         PagerAdapter mPagerAdapter = new IntroAdapter(getSupportFragmentManager());
@@ -162,12 +166,12 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
             web.setWebViewClient(new WebViewClient() {
                 @Override
                 public void onPageFinished(WebView view, String url) {
+                    Timber.d("Page finished");
                     super.onPageFinished(view, url);
                     Handler handler = new Handler();
                     handler.postDelayed(() -> {
                         JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/jquery.js");
                         JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/setUp.js");
-                        JavascriptUtils.injectJavascript(web, "armForNoAccount()");
                     }, 5);
                 }
             });
@@ -187,9 +191,6 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         authDialog.setCancelable(true);
     }
 
-    public void callbackWithJson(String json) {
-        presenter.callbackWithJson(json);
-    }
 
     private static class IntroAdapter extends FragmentStatePagerAdapter {
 
@@ -214,6 +215,13 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         presenter.onActivityResult(requestCode, resultCode, data);
+    }
+
+    public void callbackWithUsername(String username) {
+        presenter.callbackWithUsername(username);
+    }
+    public void callbackWithPassword(String password) {
+        presenter.callbackWithPassword(password);
     }
 
     void makeLibraryError(@StringRes int desc) {

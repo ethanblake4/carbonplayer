@@ -7,6 +7,8 @@ import android.net.http.AndroidHttpClient
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.model.entity.ConfigEntry
 import com.carbonplayer.model.entity.SearchResponse
+import com.carbonplayer.model.entity.SuggestRequest
+import com.carbonplayer.model.entity.SuggestResponse
 import com.carbonplayer.model.entity.enums.NetworkType
 import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.entity.enums.StreamQuality
@@ -51,8 +53,8 @@ import java.util.*
  */
 object Protocol {
 
-    private const val SJ_URL = "https://mclients.googleapis.com/sj/v2.5/"
-    private const val PA_URL = "https://music-pa.googleapis.com/v1/ij/"
+    private const val SJ_URL = "https://mclients.googleapis.com/sj/v2.5/" // JSON URL
+    private const val PA_URL = "https://music-pa.googleapis.com/v1/ij/" // Protobuf URL
     private const val STREAM_URL = "https://android.clients.google.com/music/mplay"
     private val TYPE_JSON = MediaType.parse("application/json; charset=utf-8")!!
     private const val MAX_RESULTS = 250
@@ -365,29 +367,31 @@ object Protocol {
         }
     }
 
-    fun getSearch(context: Context, query: String, continuation: String) = Observable.fromCallable {
+    fun search(context: Context, query: String, startToken: String = "") = Observable.fromCallable {
         val client = CarbonPlayerApplication.instance.okHttpClient
         val adapter = CarbonPlayerApplication.moshi.adapter(SearchResponse::class.java)
 
         val getParams = Uri.Builder()
+                .appendQueryParameter("alt", "json")
                 .appendDefaults()
                 .appendQueryParameter("q", query)
                 .appendQueryParameter("query-type", "1")
                 .apply {
                     if (CarbonPlayerApplication.instance.useSearchClustering)
                         appendQueryParameter("ic", "true")
-                    if (continuation.isNotEmpty())
-                        appendQueryParameter("start-token", continuation)
+                    if (startToken.isNotEmpty())
+                        appendQueryParameter("start-token", startToken)
                 }
                 .appendQueryParameter("max-results", "100")
 
-                /* 1: Song, 2: Artist, 3: Album, 4: Playlist, 6: Station, 7: Situation,
+                /* 1: Song, 2: Artist, 3: Album, 4: Playlist, 5: Genre
+                6: Station, 7: Situation,
                  * TODO 8: Video, 9: Podcast */
                 .appendQueryParameter("ct", "1,2,3,4,6,7")
 
                 .build()
 
-        val request = defaultBuilder(context)
+        val request = playBuilder(context)
                 .url(SJ_URL + "query?" + getParams)
                 .header("Content-Type", "application/json")
                 .build()
@@ -399,7 +403,51 @@ object Protocol {
             }
         }
         if (response.code() in 400..499) {
-            throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
+            Timber.e(response.body()?.string() ?: "No body")
+            GoogleLogin.retryPlayOAuthSync(context)
+            throw ServerRejectionException(
+                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
+            )
+        }
+        throw ResponseCodeException(response.body()!!.string())
+    }
+
+    fun suggest(context: Context, query: String): Observable<SuggestResponse> = Observable.fromCallable {
+
+        val client = CarbonPlayerApplication.instance.okHttpClient
+        val requestAdapter = CarbonPlayerApplication.moshi.adapter(SuggestRequest::class.java)
+        val adapter = CarbonPlayerApplication.moshi.adapter(SuggestResponse::class.java)
+
+        val getParams = Uri.Builder()
+                .appendQueryParameter("alt", "json")
+                .appendDefaults().build()
+
+        val suggestRequest = SuggestRequest(
+                SuggestRequest.SuggestCapabilities(listOf(
+                        1, 2, 3, 4
+                ), true), query)
+
+        val qs = SJ_URL + "querysuggestion?" + getParams
+        Timber.d(qs)
+
+        val request = playBuilder(context)
+                .url(qs)
+                .header("Content-Type", "application/json")
+                .post(RequestBody.create(TYPE_JSON, requestAdapter.toJson(suggestRequest)))
+                .build()
+
+        val response = client.newCall(request).execute()
+        if (response.isSuccessful && response.code() in 200..299) {
+            response.body()?.source()?.let {
+                return@fromCallable adapter.fromJson(it)
+            }
+        }
+        if (response.code() in 400..499) {
+            Timber.d(response.body()?.string() ?: "No body")
+            GoogleLogin.retryPlayOAuthSync(context)
+            throw ServerRejectionException(
+                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
+            )
         }
         throw ResponseCodeException(response.body()!!.string())
     }
@@ -693,6 +741,19 @@ object Protocol {
                 .header("User-Agent", CarbonPlayerApplication.instance.googleUserAgent)
                 .header("Authorization", "Bearer " +
                         CarbonPlayerApplication.instance.preferences.BearerAuth)
+
+                .header("X-Device-ID", IdentityUtils.getGservicesId(context, true))
+                .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context))
+    }
+
+    private fun playBuilder(context: Context): Request.Builder {
+        Timber.d("Bearer token: %s", CarbonPlayerApplication.instance.preferences.BearerAuth)
+        Timber.d("DeviceID: ${IdentityUtils.getGservicesId(context, true)}")
+        Timber.d("UserAgent: ${CarbonPlayerApplication.instance.googleUserAgent}")
+        return Request.Builder()
+                .header("User-Agent", CarbonPlayerApplication.instance.googleUserAgent)
+                .header("Authorization", "Bearer " +
+                        CarbonPlayerApplication.instance.preferences.PlayMusicOAuth)
 
                 .header("X-Device-ID", IdentityUtils.getGservicesId(context, true))
                 .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context))

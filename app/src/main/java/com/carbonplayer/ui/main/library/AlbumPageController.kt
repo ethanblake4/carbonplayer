@@ -1,6 +1,5 @@
 package com.carbonplayer.ui.main.library
 
-//import kotlinx.android.synthetic.main.activity_main.view.*
 import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
@@ -27,9 +26,9 @@ class AlbumPageController : Controller() {
     private var adapter: RecyclerView.Adapter<*>? = null
     lateinit var layoutManager: RecyclerView.LayoutManager
     lateinit var requestManager: RequestManager
-    var recyclerState: Parcelable? = null
+    private var recyclerState: Parcelable? = null
 
-    var subscribed = false
+    private var subscribed = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
@@ -39,6 +38,7 @@ class AlbumPageController : Controller() {
         view.main_recycler.hasFixedSize()
 
         layoutManager = GridLayoutManager(activity, 2)
+
 
         view.main_recycler.layoutManager = layoutManager
 
@@ -61,13 +61,14 @@ class AlbumPageController : Controller() {
 
     override fun onRestoreViewState(view: View, savedViewState: Bundle) {
 
-        Timber.d("onRestoreViewState, view: $view, viewCtx: ${view.context}, activity: $activity")
-
         super.onRestoreViewState(view, savedViewState)
+
+        Timber.d("onRestoreViewState, view: $view, " +
+                "viewCtx: ${view.context}, activity: $activity")
 
         recyclerState = savedViewState.getParcelable("recycler") ?: recyclerState
 
-        if(activity != null && !subscribed) resubscribe(view)
+        if (activity != null && !subscribed) resubscribe(view)
     }
 
     /*override fun onPause() {
@@ -88,7 +89,7 @@ class AlbumPageController : Controller() {
 
     }
 
-    fun resubscribe(view: View) {
+    private fun resubscribe(view: View) {
         Timber.d("Resubscribe")
         albumSubscription?.dispose()
         albumSubscription = MusicLibrary.loadAlbums()
@@ -106,7 +107,6 @@ class AlbumPageController : Controller() {
     /*override fun onResume() {
         //view.main_recycler.adapter.notifyDataSetChanged()
         super.onResume()
-
     }*/
 
     /*override fun onSaveInstanceState(outState: Bundle) {

@@ -53,6 +53,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_marginStart="16dp"
+                    android:fontFeatureSettings="smcp"
                     android:gravity="center_vertical"
                     android:text="Home"
                     android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title" />
@@ -71,12 +72,21 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_gravity="end"
-                android:layout_marginRight="8dp">
+                android:layout_marginEnd="8dp">
+
+                <ImageButton
+                    android:id="@+id/main_actionbar_search"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="8dp"
+                    android:background="?android:selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_searchback_search" />
 
                 <ImageButton
                     android:id="@+id/main_actionbar_more"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:layout_gravity="center_vertical"
                     android:background="?android:selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_more" />
@@ -118,5 +128,74 @@
             app:menu="@menu/bottomnav_menu" />
 
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/searchToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#f444"
+        android:elevation="8dp"
+        android:paddingBottom="14dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:paddingTop="10dp"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/searchQuery"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="8dp"
+            android:background="@android:color/transparent"
+            android:ems="10"
+            android:hint="@string/search_bar_placeholder"
+            android:inputType="text"
+            android:imeOptions="actionGo"/>
+
+        <LinearLayout
+            android:id="@+id/searchContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|top"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/searchControls"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="end|top"
+                android:layout_marginEnd="8dp">
+
+                <ImageButton
+                    android:id="@+id/proxy_actionbar_search"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="top"
+                    android:layout_marginEnd="8dp"
+                    android:background="?android:selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_searchback_search" />
+
+                <ImageButton
+                    android:id="@+id/proxy_actionbar_more"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="?android:selectableItemBackgroundBorderless" />
+
+            </LinearLayout>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/suggestionsRecycler"
+                android:layout_marginTop="4dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            </android.support.v7.widget.RecyclerView>
+
+
+        </LinearLayout>
+    </FrameLayout>
 
 </android.support.design.widget.CoordinatorLayout>

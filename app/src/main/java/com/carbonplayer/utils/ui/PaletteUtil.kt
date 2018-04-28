@@ -6,16 +6,17 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.TransitionDrawable
-import android.os.Parcelable
 import android.support.v7.graphics.Palette
 import android.view.View
 import android.widget.TextView
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.model.entity.enums.PaletteMode
-import kotlinx.android.parcel.Parcelize
 
 
 object PaletteUtil {
+
+    val DEFAULT_SWATCH_PAIR = SwatchPair(Palette.Swatch(Color.GRAY, 32),
+            Palette.Swatch(Color.GRAY, 32))
 
     data class SwatchPair (
             val primary: Palette.Swatch,
@@ -185,6 +186,7 @@ object PaletteUtil {
         return SwatchPair(primary, secondary!!)
 
     }
+
 
 
 

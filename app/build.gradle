@@ -104,9 +104,7 @@ if(new File("carbonplayer.properties").exists()) {
 
 repositories {
     maven {url "https://clojars.org/repo/"}
-    maven {
-        url 'https://github.com/uPhyca/stetho-realm/raw/master/maven-repo'
-    }
+    maven { url 'https://github.com/WickeDev/stetho-realm/raw/master/maven-repo' }
     mavenCentral()
     google()
 }
@@ -132,7 +130,7 @@ dependencies {
 
     implementation 'com.facebook.stetho:stetho:1.5.0'
     implementation 'com.facebook.stetho:stetho-okhttp3:1.5.0'
-    implementation 'com.uphyca:stetho_realm:2.0.0'
+    implementation 'com.uphyca:stetho_realm:2.2.2'
 
 
     implementation 'com.google.android.exoplayer:exoplayer:2.6.1'
@@ -178,6 +176,8 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
 
     implementation 'com.github.vicpinm:krealmextensions:2.1.0'
+
+    implementation 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:2.1.0'
 
     implementation 'org.parceler:parceler-api:1.1.5'
     kapt 'org.parceler:parceler:1.1.5'

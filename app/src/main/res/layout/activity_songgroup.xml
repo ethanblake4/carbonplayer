@@ -35,5 +35,14 @@
 
     </com.github.ksoichiro.android.observablescrollview.ObservableScrollView>
 
+    <FrameLayout
+        android:id="@+id/underlayAppbar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="#000"
+        android:visibility="gone">
+
+    </FrameLayout>
+
 
 </FrameLayout>

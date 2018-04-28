@@ -61,7 +61,7 @@ public class TrackCache {
         File cacheDir = context.getCacheDir();
         File[] fileList = cacheDir.listFiles();
 
-       LongSparseArray<LinkedList<File>> fileMap = new LongSparseArray<>();
+        LongSparseArray<LinkedList<File>> fileMap = new LongSparseArray<>();
         for (File f : fileList) {
             Long id = Long.parseLong(f.getName().split("--")[0]);
             if (!(fileMap.get(id) == null)) {

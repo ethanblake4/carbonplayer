@@ -1,14 +1,18 @@
 package com.carbonplayer.ui.main
 
+import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.PopupMenu
-import android.view.ContextThemeWrapper
-import android.view.KeyEvent
-import android.view.View
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.*
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
@@ -21,20 +25,29 @@ import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.skyjam.TopChartsGenres
+import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
+import com.carbonplayer.ui.main.adapters.SuggestionsAdapter
 import com.carbonplayer.ui.main.library.AlbumController
 import com.carbonplayer.ui.main.library.ArtistController
 import com.carbonplayer.ui.main.library.LibraryController
 import com.carbonplayer.ui.settings.Settings
 import com.carbonplayer.ui.transition.SimpleScaleTransition
+import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.newIntent
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.carbonplayer.utils.ui.VolumeObserver
 import icepick.Icepick
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.controller_main.*
+import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,6 +57,10 @@ class MainActivity : AppCompatActivity() {
 
     private var curAppbarOffset = 0
     private var lastAppbarText = ""
+    private lateinit var suggestionsAdapter: SuggestionsAdapter
+
+    /* Publishes new search text */
+    private val suggestSubject = PublishSubject.create<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -81,9 +98,13 @@ class MainActivity : AppCompatActivity() {
                 foregroundToolbar.paddingTop + IdentityUtils.getStatusBarHeight(resources),
                     foregroundToolbar.paddingRight, foregroundToolbar.paddingBottom)
 
+        searchToolbar.setPadding(searchToolbar.paddingLeft,
+                searchToolbar.paddingTop + IdentityUtils.getStatusBarHeight(resources),
+                searchToolbar.paddingRight, searchToolbar.paddingBottom)
 
         // Setup Conductor
-        router = Conductor.attachRouter(this, main_controller_container, savedInstanceState)
+        router = Conductor.attachRouter(
+                this, main_controller_container, savedInstanceState)
 
         // Again: add padding for nav bar to bottom nav because of translucent window decor
         bottomNavContainer.setPadding(0, 0, 0,
@@ -107,23 +128,23 @@ class MainActivity : AppCompatActivity() {
                     topChartsSpinner.adapter = ArrayAdapter(
                             this,
                             R.layout.topcharts_spinner_item,
-                            listOf("Top Charts")
+                            listOf(getString(R.string.top_charts))
                     )
                 }
                 R.id.action_home -> {
                     main_actionbar_text.visibility = View.VISIBLE
                     topChartsSpinner.visibility = View.GONE
-                    main_actionbar_text.text ="Home"
+                    main_actionbar_text.setText(R.string.home)
                 }
                 R.id.action_library -> {
                     main_actionbar_text.visibility = View.VISIBLE
                     topChartsSpinner.visibility = View.GONE
-                    main_actionbar_text.text ="My Library"
+                    main_actionbar_text.setText(R.string.my_library)
                 }
                 else -> {
                     main_actionbar_text.visibility = View.VISIBLE
                     topChartsSpinner.visibility = View.GONE
-                    main_actionbar_text.text = "Carbon Player"
+                    main_actionbar_text.setText(R.string.app_name)
                 }
             }
 
@@ -147,26 +168,95 @@ class MainActivity : AppCompatActivity() {
                 main_controller_container.animate().translationY(0.0f)
                         .alpha(1.0f).setDuration(200).start()
             }, 100)
-
             true
         }
-
 
         main_actionbar_more.setOnClickListener {
             PopupMenu(this, main_actionbar_more).apply{
                 inflate(R.menu.menu_main)
+                gravity = Gravity.TOP
                 show()
                 setOnMenuItemClickListener {
                     if(it.itemId == R.id.menu_item_settings)
                         startActivity(newIntent<Settings>())
-
                     true
                 }
             }
         }
 
+        main_actionbar_search.setOnClickListener {
+
+            // get the center for the clipping circle
+            val pos = IntArray(2).apply {
+                main_actionbar_search.getLocationInWindow(this)
+            }
+
+            val cx = pos[0] + main_actionbar_search.width / 2
+            val cy = pos[1] + main_actionbar_search.height / 2
+
+            // get the final radius for the clipping circle
+            val finalRadius = (IdentityUtils.displayWidth2(this)).toFloat()
+
+            // create the animator for this view (the start radius is zero)
+            val anim = ViewAnimationUtils
+                    .createCircularReveal(searchToolbar, cx, cy, 0f, finalRadius)
+
+
+            // make the view visible and start the animation
+            searchToolbar.visibility = View.VISIBLE
+            anim.duration = 300
+            anim.start()
+
+            Handler().postDelayed({
+                searchQuery.requestFocus()
+
+                val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE)
+                        as InputMethodManager
+                inputMethodManager.toggleSoftInputFromWindow(
+                        searchQuery.applicationWindowToken,
+                        InputMethodManager.SHOW_FORCED, 0)
+            }, 300)
+
+        }
+
+        suggestionsRecycler.layoutManager = LinearLayoutManager(this)
+
+        searchQuery.addTextChangedListener(object: TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                suggestSubject.onNext(s.toString())
+            }
+        })
+
+        searchQuery.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_GO) {
+                val frag = SearchController(searchQuery.text.toString())
+
+                router.pushController(RouterTransaction.with(frag)
+                        .pushChangeHandler(SimpleScaleTransition(this))
+                        .popChangeHandler(SimpleScaleTransition(this)))
+
+                lastAppbarText = main_actionbar_text.text.toString()
+                main_actionbar_text.text = ""
+
+                closeSearch()
+            }
+            true
+        }
+
         Timber.d("Adding HomeController")
         router.setRoot(RouterTransaction.with(HomeController()))
+
+        KeyboardVisibilityEvent.registerEventListener(this, { isOpen ->
+            if(!isOpen) closeSearch()
+        })
+
+        sub()
+
+        suggestSubject.onNext("")
 
     }
 
@@ -175,12 +265,34 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
+    private fun sub() {
+        suggestSubject.debounce(300, TimeUnit.MILLISECONDS)
+                .distinctUntilChanged()
+                .flatMap({ query ->
+                    Protocol.suggest(this, query)
+                })
+                .map({ response -> response.suggested_queries })
+                .retry(2)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ suggestions ->
+                    suggestionsRecycler.adapter = SuggestionsAdapter(suggestions.take(6)) { itm ->
+                        if(itm.entity?.album != null) gotoAlbum(itm.entity.album,
+                                PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    }
+                }, { err ->
+                    Timber.e(err)
+                    sub()
+                }).addToAutoDispose()
+    }
+
     // When the genre list is retrieved from the network
     fun callbackWithTopChartsGenres(genres: List<TopChartsGenres.Genre>, callback: (String) -> Unit) {
         topChartsSpinner.adapter = ArrayAdapter(
                 this,
                 R.layout.topcharts_spinner_item,
-                mutableListOf("Top Charts").apply { addAll(genres.map { it.title }) }
+                mutableListOf(getString(R.string.top_charts))
+                        .apply { addAll(genres.map { it.title }) }
         )
 
         topChartsSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
@@ -250,11 +362,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.menu_share -> {
                     val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
-                    sharingIntent.type = "text/plain";
+                    sharingIntent.type = "text/plain"
                     val shareBody = "https://play.google.com/music/m/${album.albumId}?signup_if_needed=1"
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-                    startActivity(Intent.createChooser(sharingIntent, "Share via"));
-                    
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
+                    startActivity(Intent.createChooser(sharingIntent, "Share via"))
                 }
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",
@@ -281,8 +392,35 @@ class MainActivity : AppCompatActivity() {
         applicationContext.contentResolver.unregisterContentObserver(volumeObserver)
     }
 
+    private fun closeSearch() {
+        val pos = IntArray(2).apply {
+            main_actionbar_search.getLocationInWindow(this)
+        }
+        val cx = pos[0] + main_actionbar_search.width / 2
+        val cy = pos[1] + main_actionbar_search.height / 2
+
+        // get the final radius for the clipping circle
+        val finalRadius = (IdentityUtils.displayWidth2(this)).toFloat()
+
+        // create the animator for this view (the start radius is zero)
+        val anim = ViewAnimationUtils
+                .createCircularReveal(searchToolbar, cx, cy, finalRadius, 0f)
+
+        anim.duration = 400
+        anim.start()
+
+        Handler().postDelayed({
+            searchToolbar.visibility = View.GONE
+        }, 360)
+    }
+
     override fun onBackPressed() {
         Timber.d("backStackEntry count %d", fragmentManager.backStackEntryCount)
+
+        if(searchToolbar.visibility == View.VISIBLE) {
+            closeSearch()
+            return
+        }
 
         if(router.backstackSize > 0){
             router.popCurrentController()
@@ -292,6 +430,5 @@ class MainActivity : AppCompatActivity() {
 
             main_actionbar_text.text = lastAppbarText
         }
-
     }
 }

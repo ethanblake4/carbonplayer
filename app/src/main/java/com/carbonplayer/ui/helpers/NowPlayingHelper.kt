@@ -47,7 +47,9 @@ import timber.log.Timber
  *
  * When
  */
+
 class NowPlayingHelper(private val activity: Activity) {
+
 
     var bottomNavHeight: Int = 0
     lateinit var replyMessenger: Messenger
@@ -55,7 +57,7 @@ class NowPlayingHelper(private val activity: Activity) {
     private val dispW = IdentityUtils.displayWidth2(activity)
     private val dispH = IdentityUtils.displayHeight2(activity)
     private val controlsScalar = (dispH.toFloat() / dispW.toFloat()) * 2.4f
-    private val dp56 = MathUtils.dpToPx2(activity.resources, 56)
+    private val heightPx = MathUtils.dpToPx2(activity.resources, HEIGHT_DP)
     private val buttonHalfWidth = MathUtils.dpToPx2(activity.resources, 16)
     private val prevInitialX = dispW - MathUtils.dpToPx2(activity.resources, 132)
     private val playPauseInitialX = dispW - MathUtils.dpToPx2(activity.resources, 90)
@@ -146,18 +148,18 @@ class NowPlayingHelper(private val activity: Activity) {
         }
 
         activity.nowplaying_frame.npui_volumebar_background
-                .layoutParams.width = (dispW / 2f).toInt() - dp56
+                .layoutParams.width = (dispW / 2f).toInt() - heightPx
 
         activity.npui_recycler.translationY = dispW * 1.5f
         activity.npui_recycler.isNestedScrollingEnabled = false
 
         activity.nowplaying_frame.npui_volumebar_background.translationY =
-                (dispW * 1.3f) + (dp56 /4)
+                (dispW * 1.3f) + (heightPx /4)
 
 
         activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.3f
         activity.nowplaying_frame.npui_volumeHi.translationY = dispW * 1.3f
-        activity.nowplaying_frame.volume_fab.translationY = (dispW * 1.3f ) + (dp56 / 6f)
+        activity.nowplaying_frame.volume_fab.translationY = (dispW * 1.3f ) + (heightPx / 6f)
         activity.nowplaying_frame.npui_volumeLow.x = dispW / 4f - buttonHalfWidth
         activity.nowplaying_frame.npui_volumeHi.x = dispW - (dispW / 4f) - buttonHalfWidth
         activity.nowplaying_frame.volume_fab.x = ((1f - volumePercent()) * dispW / 4f) +
@@ -168,7 +170,7 @@ class NowPlayingHelper(private val activity: Activity) {
             activity.nowplaying_frame.npui_thumb.run {
                 postOnAnimation {
                     layoutParams.width =
-                            (up.times(dispW - dp56)).toInt() + dp56
+                            (up.times(dispW - heightPx)).toInt() + heightPx
                     invalidate()
                 }
             }
@@ -188,7 +190,7 @@ class NowPlayingHelper(private val activity: Activity) {
             try {
                 activity.bottom_nav.run {
                     postOnAnimation {
-                        layoutParams.height = (dp56 * (1f - up)).toInt()
+                        layoutParams.height = (heightPx * (1f - up)).toInt()
                     }
                 }
                 activity.nowplaying_frame.npui_fastrewind.run {
@@ -306,8 +308,8 @@ class NowPlayingHelper(private val activity: Activity) {
 
     private fun revealPlayerUI() {
 
-        AnimUtils.expand(activity.bottomNavContainer.nowplaying_frame, dp56)
-        activity.nowplaying_frame.initialHeight= dp56
+        AnimUtils.expand(activity.bottomNavContainer.nowplaying_frame, heightPx)
+        activity.nowplaying_frame.initialHeight= heightPx
 
     }
 
@@ -478,5 +480,9 @@ class NowPlayingHelper(private val activity: Activity) {
         return manager.getRunningServices(Integer.MAX_VALUE).any {
             MusicPlayerService::class.java.name == it.service.className
         }
+    }
+
+    companion object {
+        const val HEIGHT_DP = 56
     }
 }
