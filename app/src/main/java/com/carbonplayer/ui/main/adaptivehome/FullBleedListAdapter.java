@@ -1,5 +1,6 @@
 package com.carbonplayer.ui.main.adaptivehome;
 
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.support.v7.widget.RecyclerView;
@@ -19,6 +20,7 @@ import com.bumptech.glide.request.transition.DrawableCrossFadeFactory;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.proto.innerjam.elements.TitleSectionV1Proto;
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.FullBleedModule;
+import com.carbonplayer.model.entity.proto.innerjam.visuals.AttributedTextV1Proto;
 import com.carbonplayer.ui.widget.ParallaxScrimageViewSz;
 import com.carbonplayer.utils.protocol.ProtoUtils;
 import com.carbonplayer.utils.ui.ColorUtils;
@@ -65,6 +67,7 @@ public final class FullBleedListAdapter
         @BindView(R.id.full_bleed_card_grad) View gradient;
         @BindView(R.id.itemText) TextView itemText;
         @BindView(R.id.playButtonSpinner) ProgressBar playButtonSpinner;
+        @BindView(R.id.moduleTitleUnderline) View underline;
 
         ViewHolder(View v) {
             super(v);
@@ -87,12 +90,18 @@ public final class FullBleedListAdapter
                         titleText.length() + subText.length() + 2, SPAN_INCLUSIVE_INCLUSIVE);
                 title.setSpan(new RelativeSizeSpan(0.5f), titleText.length() + 2,
                         titleText.length() + subText.length() + 2, SPAN_INCLUSIVE_INCLUSIVE);
-                cardTitle.setTextColor(ProtoUtils.colorFrom(module.getModuleTitle().getColor()));
                 cardTitle.setText(title);
-
             }
 
+            //Timber.d(module.getModuleTitle().getColor().toString());
+            cardTitle.setTextColor(ProtoUtils.colorFrom(module.getModuleTitle().getColor()));
+
+            underline.setBackgroundColor(ProtoUtils.colorFrom(
+                    module.getModuleTitleUnderlineColor()));
+
             SpannableString itemTitle = new SpannableString("");
+
+            int itemColor = Color.WHITE;
 
             switch (module.getSingleSection().getContentCase()) {
                 case SQUAREPLAYABLECARDLIST:
@@ -101,20 +110,25 @@ public final class FullBleedListAdapter
 
                     itemTitle = new SpannableString(ts.getTitle().getText() + "\n" +
                             ts.getSubtitle().getText());
+                    itemColor = ProtoUtils.colorFrom(ts.getTitle().getColor());
                     break;
                 case WIDEPLAYABLECARDLIST:
-                    itemTitle = new SpannableString(module.getSingleSection()
-                            .getWidePlayableCardList().getCards(0).getTitle().getText());
+                    AttributedTextV1Proto.AttributedText at = module.getSingleSection()
+                            .getWidePlayableCardList().getCards(0).getTitle();
+                    itemTitle = new SpannableString(at.getText());
+                    itemColor = ProtoUtils.colorFrom(at.getColor());
                     break;
                 case TALLPLAYABLECARDLIST:
                     TitleSectionV1Proto.TitleSection ts2 = module.getSingleSection()
                             .getTallPlayableCardList().getCards(0).getTitleSection();
-
+                    itemColor = ProtoUtils.colorFrom(ts2.getTitle().getColor());
                     itemTitle = new SpannableString(ts2.getTitle().getText() + "\n" +
                             ts2.getSubtitle().getText());
             }
 
             itemText.setText(itemTitle);
+
+            itemText.setTextColor(ProtoUtils.colorFrom(module.getModuleTitle().getColor()));
 
             gradient.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                     new int[]{

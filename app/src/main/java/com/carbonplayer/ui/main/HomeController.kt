@@ -32,7 +32,7 @@ class HomeController : Controller() {
     lateinit var adapter: FullBleedListAdapter
     lateinit var layoutManager: RecyclerView.LayoutManager
     lateinit var requestManager: RequestManager
-    var currentScrollCallback: Action? = null
+    private var currentScrollCallback: Action? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
@@ -60,27 +60,32 @@ class HomeController : Controller() {
 
         view.main_recycler.recycledViewPool.setMaxRecycledViews(0, 2)
 
-        view.main_recycler.setPadding(0, 0, 0, IdentityUtils.getNavbarHeight(resources))
+        view.main_recycler.setPadding(
+                0, 0, 0, IdentityUtils.getNavbarHeight(resources))
 
         view.swipeRefreshLayout.setOnRefreshListener {
             Timber.d("Will refresh")
             refresh()
         }
 
-        CarbonPlayerApplication.instance.homeLastResponse?.let {
-            processHomeRequest(it)
-        }
-
         requestManager = Glide.with(activity)
-        refresh()
+
+        CarbonPlayerApplication.instance.homeLastResponse?.let {
+            Timber.d("Has cached gethomeresponse")
+            processHomeRequest(it, view)
+            it
+        } ?: refresh(view)
 
         return view
     }
 
-    fun refresh() {
+    private fun refresh(v: View = view!!) {
+
+        v.swipeRefreshLayout.isRefreshing = true
+
         Protocol.listenNow(activity!!, CarbonPlayerApplication.instance.homePdContextToken)
                 .retry({ tries, err ->
-                    if (err !is ServerRejectionException) return@retry false
+                    if (err !is ServerRejectionException) return@retry tries < 2
                     if (err.rejectionReason !=
                             ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED)
                         return@retry false
@@ -89,11 +94,15 @@ class HomeController : Controller() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ home ->
-                    CarbonPlayerApplication.instance.homeLastResponse = home
-                    processHomeRequest(home)
+                    if(home.previousContentState !=
+                            GetHomeResponse.PreviousContentState.ALL_CONTENT_UP_TO_DATE) {
+                        CarbonPlayerApplication.instance.homeLastResponse = home
+                        processHomeRequest(home)
+                    }
+                    v.swipeRefreshLayout.isRefreshing = false
                 }, { err ->
                     Timber.e(err)
-                    view?.adaptiveHomeCoordinator?.let {
+                    v.adaptiveHomeCoordinator?.let {
                         Snackbar.make(it, "Error " +
                                 "", Snackbar.LENGTH_SHORT)
                     }
@@ -101,7 +110,7 @@ class HomeController : Controller() {
 
     }
 
-    fun processHomeRequest(home: GetHomeResponse) {
+    private fun processHomeRequest(home: GetHomeResponse, v: View = view!!) {
         CarbonPlayerApplication.instance.homePdContextToken = home.distilledContextToken
 
         val homeContentPage = home.homeContentPage
@@ -109,7 +118,7 @@ class HomeController : Controller() {
             PageTypeCase.HOMEPAGE -> {
                 val homePage = homeContentPage.homePage
 
-                view?.main_recycler?.adapter = FullBleedListAdapter(
+                v.main_recycler.adapter = FullBleedListAdapter(
                         homePage.fullBleedModuleList.modulesList.filter { m ->
                             m.singleSection.contentCase.let {
                                 it == FullBleedSection.ContentCase.TALLPLAYABLECARDLIST ||
@@ -119,13 +128,13 @@ class HomeController : Controller() {
                         },
                         { mod: FullBleedModuleV1Proto.FullBleedModule ->
                             Timber.d(mod.toString())
-                        },
-                        requestManager, view!!.main_recycler).apply { currentScrollCallback = this.scrollCallback }
-
-                view?.swipeRefreshLayout?.isRefreshing = false
+                        }, requestManager, v.main_recycler)
+                        .apply {
+                            currentScrollCallback = this.scrollCallback
+                        }
             }
             else -> {
-                view?.adaptiveHomeCoordinator?.let {
+                v.adaptiveHomeCoordinator.let {
                     Snackbar.make(it, "Error processing server response", Snackbar.LENGTH_SHORT)
                 }
             }

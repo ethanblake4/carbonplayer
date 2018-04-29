@@ -13,6 +13,7 @@ import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
 import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.model.entity.skyjam.TopChartsResponse
 import com.carbonplayer.model.network.utils.RealmListJsonAdapterFactory
+import com.carbonplayer.ui.main.TopChartsController
 import com.carbonplayer.utils.CrashReportingTree
 import com.carbonplayer.utils.Preferences
 import com.carbonplayer.utils.jobs.CacheEvictionJob
@@ -125,6 +126,7 @@ class CarbonPlayerApplication : Application() {
 
     var topchartsResponseMap: MutableMap<String, TopChartsResponse> = mutableMapOf()
     var lastTopChartsGenres: TopChartsGenres? = null
+    var topChartsCurrentChart = TopChartsController.DEFAULT_CHART
 
     lateinit var okHttpClient: OkHttpClient
     lateinit var androidHttpClient: AndroidHttpClient

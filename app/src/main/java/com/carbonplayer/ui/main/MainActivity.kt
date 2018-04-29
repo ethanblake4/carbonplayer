@@ -59,6 +59,8 @@ class MainActivity : AppCompatActivity() {
     private var lastAppbarText = ""
     private lateinit var suggestionsAdapter: SuggestionsAdapter
 
+    private var setupSpinner = false
+
     /* Publishes new search text */
     private val suggestSubject = PublishSubject.create<String>()
 
@@ -125,11 +127,14 @@ class MainActivity : AppCompatActivity() {
                     // If top charts is selected, enable the genre spinner
                     main_actionbar_text.visibility = View.GONE
                     topChartsSpinner.visibility = View.VISIBLE
-                    topChartsSpinner.adapter = ArrayAdapter(
-                            this,
-                            R.layout.topcharts_spinner_item,
-                            listOf(getString(R.string.top_charts))
-                    )
+                    if(!setupSpinner) {
+                        topChartsSpinner.adapter = ArrayAdapter(
+                                this,
+                                R.layout.topcharts_spinner_item,
+                                listOf(getString(R.string.top_charts))
+                        )
+                        setupSpinner = true
+                    }
                 }
                 R.id.action_home -> {
                     main_actionbar_text.visibility = View.VISIBLE
@@ -288,14 +293,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     // When the genre list is retrieved from the network
-    fun callbackWithTopChartsGenres(genres: List<TopChartsGenres.Genre>, callback: (String) -> Unit) {
+    fun callbackWithTopChartsGenres(genres: List<TopChartsGenres.Genre>) {
         topChartsSpinner.adapter = ArrayAdapter(
                 this,
                 R.layout.topcharts_spinner_item,
                 mutableListOf(getString(R.string.top_charts))
                         .apply { addAll(genres.map { it.title }) }
         )
+    }
 
+    fun registerSpinnerCallback(genres: List<TopChartsGenres.Genre>, callback: (String) -> Unit) {
         topChartsSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 // Should not happen
