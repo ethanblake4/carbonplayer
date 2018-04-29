@@ -15,7 +15,7 @@ data class SkyjamAlbum (
         override val recentTimestamp: Long?,
         override val name: String = "",
         override val albumArtist: String,
-        override val albumArtRef: String,
+        override val albumArtRef: String = "",
         val artist: String,
         override val artistId: List<String>,
         override val composer: String?,

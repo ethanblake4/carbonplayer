@@ -16,10 +16,12 @@ import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
+import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.utils.general.MathUtils;
+import com.carbonplayer.utils.ui.ColorUtils;
 import com.carbonplayer.utils.ui.PaletteUtil;
 import com.github.florent37.glidepalette.GlidePalette;
 
@@ -148,6 +150,11 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
                                     PaletteUtil.crossfadeBackground(holder.contentRoot, pair.getPrimary());
                                     PaletteUtil.crossfadeTitle(holder.titleText, pair.getPrimary());
                                     PaletteUtil.crossfadeSubtitle(holder.detailText, pair.getPrimary());
+
+                                    if(ColorUtils.isDark(holder.swatchPair.getPrimary().getBodyTextColor())) {
+                                        holder.menuButton.setImageTintList(
+                                                CarbonPlayerApplication.instance.getDarkCSL());
+                                    }
                                 }
                             })
                     )

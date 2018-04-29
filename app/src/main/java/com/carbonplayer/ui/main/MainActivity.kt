@@ -195,7 +195,8 @@ class MainActivity : AppCompatActivity() {
             val cy = pos[1] + main_actionbar_search.height / 2
 
             // get the final radius for the clipping circle
-            val finalRadius = (IdentityUtils.displayWidth2(this)).toFloat()
+            val finalRadius = Math.hypot(IdentityUtils.displayWidth2(this).toDouble(),
+                    searchToolbar.height.toDouble()).toFloat()
 
             // create the animator for this view (the start radius is zero)
             val anim = ViewAnimationUtils
@@ -312,6 +313,8 @@ class MainActivity : AppCompatActivity() {
     // When an album is selected
     fun gotoAlbum(album: IAlbum, swatchPair: PaletteUtil.SwatchPair) {
 
+        scrollCb(0)
+
         val frag = AlbumController(album, swatchPair)
 
         router.pushController(RouterTransaction.with(frag)
@@ -326,6 +329,7 @@ class MainActivity : AppCompatActivity() {
     // When an artist is selected
     fun gotoArtist(artist: Artist, swatchPair: PaletteUtil.SwatchPair) {
         val frag = ArtistController(artist, swatchPair)
+        scrollCb(0)
 
         router.pushController(RouterTransaction.with(frag)
                 .pushChangeHandler(SimpleScaleTransition(this))

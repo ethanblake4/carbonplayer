@@ -33,14 +33,14 @@ object PaletteUtil {
 
     @JvmStatic fun crossfadeTitle(target: TextView, swatch: Palette.Swatch) {
         val colorAnim = ObjectAnimator.ofInt(target, "textColor",
-                target.currentTextColor, swatch.titleTextColor)
+                target.currentTextColor, swatch.bodyTextColor)
         colorAnim.setEvaluator(ArgbEvaluator())
         colorAnim.start()
     }
 
     @JvmStatic fun crossfadeSubtitle(target: TextView, swatch: Palette.Swatch) {
         val colorAnim = ObjectAnimator.ofInt(target, "textColor",
-                target.currentTextColor, swatch.bodyTextColor)
+                target.currentTextColor, swatch.titleTextColor)
         colorAnim.setEvaluator(ArgbEvaluator())
         colorAnim.start()
     }

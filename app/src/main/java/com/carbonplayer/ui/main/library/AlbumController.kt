@@ -30,6 +30,7 @@ import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
@@ -235,8 +236,7 @@ class AlbumController(
         requestMgr = Glide.with(activity as Activity)
 
         requestMgr.load(album.albumArtRef)
-                .apply(
-                        RequestOptions.overrideOf(preImageWidth, preImageWidth)
+                .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
                 .into(root.main_backdrop)
 
@@ -269,7 +269,8 @@ class AlbumController(
         }, 600)
 
 
-        root.secondaryText.text = if (album is Album) (album as Album).artists?.first()?.name ?: album.albumArtist else album.albumArtist
+        root.secondaryText.text = if (album is Album) (album as Album).artists?.first()?.name ?:
+                album.albumArtist else album.albumArtist
         root.primaryText.text = album.name
 
         root.songgroup_recycler.isNestedScrollingEnabled = false
@@ -281,21 +282,37 @@ class AlbumController(
 
         tracks = MusicLibrary.getAllAlbumTracks(album)
 
-        val params = root.songgroup_recycler.layoutParams
-        params.height = (tracks.size * MathUtils.dpToPx2(resources, 60)) +
-                IdentityUtils.getNavbarHeight(resources) +
-                MathUtils.dpToPx2(resources,
-                        if((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
-                            NowPlayingHelper.HEIGHT_DP else 0)
+        val setupRecycler = {
+            val params = root.songgroup_recycler.layoutParams
+            params.height = (tracks.size * MathUtils.dpToPx2(resources, 60)) +
+                    IdentityUtils.getNavbarHeight(resources) +
+                    MathUtils.dpToPx2(resources,
+                            if ((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
+                                NowPlayingHelper.HEIGHT_DP else 0)
 
-        mAdapter = SongListAdapter(tracks) { (_, pos) ->
-            manager.fromAlbum(album, pos)
+
+            mAdapter = SongListAdapter(tracks) { (_, pos) ->
+                if(album is Album) manager.fromAlbum(album, pos)
+                else manager.fromTracks(tracks, pos, false)
+            }
+
+            root.songgroup_recycler.adapter = mAdapter
         }
+
+        if(album is SkyjamAlbum && tracks.isEmpty()) {
+            Protocol.getNautilusAlbum(root.context, album.albumId)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.from(this.activity!!.mainLooper))
+                    .subscribe({ a -> a.tracks?.let {
+                            tracks = it
+                            setupRecycler()
+                        }})
+        } else setupRecycler()
 
         root.play_fab.setOnClickListener {
             manager.fromAlbum(album, 0)
         }
-        root.songgroup_recycler.adapter = mAdapter
+
 
         root.expandDescriptionChevron.setOnClickListener {
 

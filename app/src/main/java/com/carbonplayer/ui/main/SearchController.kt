@@ -15,6 +15,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.entity.SearchResponse
 import com.carbonplayer.model.entity.utils.MediaTypeUtil
 import com.carbonplayer.model.network.Protocol
+import com.carbonplayer.ui.main.adapters.LinearArtistAdapter
 import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
 import com.carbonplayer.ui.main.adapters.TopChartsSongAdapter
 import com.carbonplayer.utils.general.IdentityUtils
@@ -51,7 +52,13 @@ class SearchController(
 
         requestManager = Glide.with(view)
 
-        Protocol.search(activity!!, searchTerm)
+        runSearch(view, searchTerm)
+
+        return view
+    }
+
+    fun runSearch(view: View, term: String) {
+        Protocol.search(activity!!, term)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe ({ results ->
@@ -64,18 +71,15 @@ class SearchController(
                     if(results.suggestedQuery != null) {
                         view.suggestedContainer.visibility = View.VISIBLE
                         view.suggestedQueryText.text = results.suggestedQuery
+                        view.suggestedQueryText.setOnClickListener {
+                            runSearch(view, results.suggestedQuery)
+                        }
                     }
-
-                    var bestMatch: SearchResponse.ClusterDetail? = null
 
                     val pr = results.clusterDetail?.filter {
                         it.entries != null && it.entries.isNotEmpty()
                     }?.mapNotNull { dt ->
                         dt.cluster?.let {
-                            if(it.category == 2) {
-                                bestMatch = dt
-                                return@mapNotNull null
-                            }
                             it.type to dt
                         }
                     }?.toMap() ?: mapOf()
@@ -85,9 +89,12 @@ class SearchController(
                     val buildView = { cDetail: SearchResponse.ClusterDetail ->
                         val v = activity!!.layoutInflater.inflate(R.layout.search_cluster,
                                 view.searchResults, false)
-                        v.clusterTitle.text = cDetail.displayName ?: cDetail.cluster?.type?.let {
-                            MediaTypeUtil.getMediaTypeString(view.resources, it) + "s"
-                        } ?: resources?.getString(R.string.media_type_unknown) ?: "Unknown"
+                        v.clusterTitle.text =
+                                if(cDetail.cluster?.category == 2)
+                                    view.resources.getString(R.string.media_type_best_match) else
+                                    cDetail.displayName ?: cDetail.cluster?.type?.let {
+                                        MediaTypeUtil.getMediaTypeString(view.resources, it) + "s"
+                                    } ?: resources?.getString(R.string.media_type_unknown) ?: "Unknown"
                         v.clusterEntries.layoutManager = when(cDetail.cluster?.type) {
                             MediaTypeUtil.TYPE_SONG -> LinearLayoutManager(activity)
                             MediaTypeUtil.TYPE_ALBUM -> GridLayoutManager(activity, 2)
@@ -110,13 +117,15 @@ class SearchController(
                                         activity as MainActivity,
                                         requestManager
                                 )
+                                MediaTypeUtil.TYPE_ARTIST -> LinearArtistAdapter(
+                                        entries.mapNotNull { it.artist }.take(5),
+                                        {}
+                                )
                                 else -> null
                             }
                         }
                         view.searchResults.addView(v)
                     }
-
-                    bestMatch?.let(buildView)
 
                     results.clusterOrder?.mapNotNull { pr[it] }?.forEach (buildView) ?:
                             pr.forEach { buildView(it.value) }
@@ -127,10 +136,7 @@ class SearchController(
                     err()
                     view.searchLoader.visibility = View.GONE
                 })
-
-        return view
     }
-
     fun err() {
         Toast.makeText(activity, R.string.error_search, Toast.LENGTH_LONG).show()
     }
