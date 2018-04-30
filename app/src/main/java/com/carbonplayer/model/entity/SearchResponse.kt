@@ -1,5 +1,6 @@
 package com.carbonplayer.model.entity
 
+import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import com.carbonplayer.model.entity.skyjam.SkyjamPlaylist
@@ -31,7 +32,7 @@ data class SearchResponse (
     /*var podcastSeries: PodcastSeries? = null*/
             val searchEntryContext: String?,
             /*var situation: SituationJson? = null*/
-            /*val station: SkyjamStation? = null*/
+            val station: SkyjamStation? = null,
 
             val track: SkyjamTrack?
 

@@ -474,8 +474,6 @@ class NowPlayingHelper(private val activity: Activity) {
         }
     }
 
-
-
     fun onDestroy() {
         messenger?.send(Message.obtain(null, Constants.MESSAGE.UNREGISTER_CLIENT).apply {
             replyTo = replyMessenger

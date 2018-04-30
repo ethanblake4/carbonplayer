@@ -26,6 +26,7 @@ import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.IArtist
 import com.carbonplayer.model.entity.radio.RadioSeed
+import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.NowPlayingHelper
@@ -34,6 +35,7 @@ import com.carbonplayer.ui.main.adapters.SuggestionsAdapter
 import com.carbonplayer.ui.main.library.AlbumController
 import com.carbonplayer.ui.main.library.ArtistController
 import com.carbonplayer.ui.main.library.LibraryController
+import com.carbonplayer.ui.main.library.StationController
 import com.carbonplayer.ui.settings.Settings
 import com.carbonplayer.ui.transition.SimpleScaleTransition
 import com.carbonplayer.utils.addToAutoDispose
@@ -333,6 +335,19 @@ class MainActivity : AppCompatActivity() {
         lastAppbarText = main_actionbar_text.text.toString()
         main_actionbar_text.text = ""
 
+    }
+
+    fun gotoStation(station: SkyjamStation, swatchPair: PaletteUtil.SwatchPair) {
+        scrollCb(0)
+
+        val frag = StationController(station, swatchPair)
+
+        router.pushController(RouterTransaction.with(frag)
+                .pushChangeHandler(SimpleScaleTransition(this))
+                .popChangeHandler(SimpleScaleTransition(this)))
+
+        lastAppbarText = main_actionbar_text.text.toString()
+        main_actionbar_text.text = ""
     }
 
     // When an artist is selected

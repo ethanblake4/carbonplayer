@@ -15,6 +15,7 @@ import com.carbonplayer.model.entity.SearchResponse
 import com.carbonplayer.model.entity.utils.MediaTypeUtil
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adapters.LinearArtistAdapter
+import com.carbonplayer.ui.main.adapters.SkyjamStationAdapter
 import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
 import com.carbonplayer.ui.main.adapters.TopChartsSongAdapter
 import com.carbonplayer.utils.general.IdentityUtils
@@ -122,6 +123,11 @@ class SearchController(
                                 MediaTypeUtil.TYPE_ARTIST -> LinearArtistAdapter(
                                         entries.mapNotNull { it.artist }.take(5),
                                         {}
+                                )
+                                MediaTypeUtil.TYPE_STATION -> SkyjamStationAdapter(
+                                        entries.mapNotNull { it.station }.take(4),
+                                        activity as MainActivity,
+                                        requestManager
                                 )
                                 else -> null
                             }
