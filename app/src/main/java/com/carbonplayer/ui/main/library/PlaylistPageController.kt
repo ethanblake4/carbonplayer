@@ -14,6 +14,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.PlaylistAdapter
+import com.carbonplayer.utils.general.IdentityUtils
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.single_recycler_layout.view.*
 
@@ -34,6 +35,11 @@ class PlaylistPageController : Controller() {
         view.main_recycler.hasFixedSize()
 
         layoutManager = GridLayoutManager(activity, 2)
+
+        resources?.let {
+            view.main_recycler.setPadding(0, 0, 0,
+                    IdentityUtils.getNavbarHeight(it))
+        }
 
         view.main_recycler.layoutManager = layoutManager
         //attachToHandle?.setRecyclerView(view.main_recycler)

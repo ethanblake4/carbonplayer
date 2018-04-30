@@ -14,6 +14,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.ArtistAdapter
+import com.carbonplayer.utils.general.IdentityUtils
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.single_recycler_layout.view.*
 
@@ -34,6 +35,11 @@ class ArtistsPageController : Controller() {
 
         val view = inflater.inflate(R.layout.single_recycler_layout, container, false)
         view.main_recycler.hasFixedSize()
+
+        resources?.let {
+            view.main_recycler.setPadding(0, 0, 0,
+                    IdentityUtils.getNavbarHeight(it))
+        }
 
         layoutManager = GridLayoutManager(activity, 2)
 
