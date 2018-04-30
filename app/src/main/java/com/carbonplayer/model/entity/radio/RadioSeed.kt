@@ -1,7 +1,5 @@
 package com.carbonplayer.model.entity.radio
 
-import org.json.JSONObject
-
 @Suppress("DataClassPrivateConstructor")
 data class RadioSeed private constructor(
         val albumId: String?,
@@ -14,18 +12,15 @@ data class RadioSeed private constructor(
         val trackLockerId: String?
 ) {
 
-    fun toJson() = JSONObject().apply {
-        put("seedType", seedType)
-        if(albumId != null) put("albumId", albumId)
-        if(artistId != null) put("artistId", artistId)
-        if(curatedStationId != null) put("curatedStationId", curatedStationId)
-        if(genreId != null) put("genreId", genreId)
-        if(playlistShareToken != null) put("playlistShareToken", playlistShareToken)
-        if(trackId != null) put("trackId", trackId)
-        if(trackLockerId != null) put("trackLockerId", trackLockerId)
-    }
-
     companion object {
+
+        const val TYPE_LIBRARY_TRACK = 1
+        const val TYPE_SJ_TRACK = 2
+        const val TYPE_ARTIST = 3 // and 7
+        const val TYPE_ALBUM = 4
+        const val TYPE_GENRE = 5
+        const val TYPE_PLAYLIST = 6 // and 8
+        const val TYPE_CURATED_STATION = 9
 
         fun create(sourceId: String, seedType: Int) : RadioSeed {
 

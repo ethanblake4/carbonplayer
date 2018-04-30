@@ -8,6 +8,7 @@ import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -46,6 +47,8 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
         @BindView(R.id.imgthumb) ImageView thumb;
         @BindView(R.id.primaryText) TextView titleText;
         @BindView(R.id.detailText) TextView detailText;
+        @BindView(R.id.imageButton) ImageButton menuButton;
+
         Artist artist;
         int size;
         PaletteUtil.SwatchPair swatchPair;
@@ -66,6 +69,8 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.ViewHolder
 
                 //context.gotoAlbum(album, thumb, contentRoot, titleText.getCurrentTextColor(), mainColor, titleText, detailText);
             });
+
+            menuButton.setOnClickListener(view -> context.showArtistPopup(view, artist));
 
             /*ViewTreeObserver vto = thumb.getViewTreeObserver();
             vto.addOnPreDrawListener(() -> {

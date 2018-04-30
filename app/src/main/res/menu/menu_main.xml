@@ -6,5 +6,8 @@
     <item
         android:id="@+id/menu_item_settings"
         android:title="Settings" />
+    <item
+        android:id="@+id/menu_item_ifl"
+        android:title="I'm feeling lucky" />
 
 </menu>

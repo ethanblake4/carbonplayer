@@ -1,28 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/albumLayoutRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="#fff"
     android:focusableInTouchMode="true"
-    android:background="@android:color/transparent"
     tools:context=".ui.main.AlbumActivity">
 
     <com.carbonplayer.ui.widget.ParallaxScrimageView
         android:id="@+id/main_backdrop"
-        android:transitionName="imgthumb"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:src="@drawable/unknown_music_track"
         android:stateListAnimator="@animator/app_bar_pin"
-        app:scrimAlpha="0"
+        android:transitionName="imgthumb"
         app:maxScrimAlpha="0"
         app:parallaxFactor="-0.5"
-        />
+        app:scrimAlpha="0" />
 
     <com.github.ksoichiro.android.observablescrollview.ObservableScrollView
         android:id="@+id/songgroup_scrollview"

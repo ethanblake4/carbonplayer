@@ -4,8 +4,12 @@ import com.carbonplayer.model.entity.radio.RadioConstraints
 import com.carbonplayer.model.entity.radio.SkyjamStation
 
 data class RadioFeedResponse(
-        val currentTimestampMillis: Long,
-        val endOfFeed: Boolean,
-        val radioConstraints: RadioConstraints,
+        val data: RadioFeed
+)
+
+data class RadioFeed(
+        val currentTimestampMillis: Long = 0,
+        val endOfFeed: Boolean = false,
+        val radioConstraints: RadioConstraints = RadioConstraints(),
         val stations: List<SkyjamStation>
 )

@@ -24,6 +24,8 @@ import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.base.IArtist
+import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.NowPlayingHelper
@@ -377,6 +379,38 @@ class MainActivity : AppCompatActivity() {
                     val shareBody = "https://play.google.com/music/m/${album.albumId}?signup_if_needed=1"
                     sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
                     startActivity(Intent.createChooser(sharingIntent, "Share via"))
+                }
+                R.id.menu_start_radio -> {
+                    npHelper.startRadio(RadioSeed.TYPE_ALBUM, album.albumId)
+                }
+                else -> {
+                    Toast.makeText(this, "This action is not supported yet",
+                            Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            return@setOnMenuItemClickListener true
+        }
+        pop.show()
+    }
+
+    fun showArtistPopup(view: View, artist: IArtist) {
+
+        val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
+        pop.inflate(R.menu.artist_popup)
+
+        pop.setOnMenuItemClickListener { item ->
+
+            when (item.itemId) {
+                R.id.menu_share -> {
+                    val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
+                    sharingIntent.type = "text/plain"
+                    val shareBody = "https://play.google.com/music/m/${artist.artistId}?signup_if_needed=1"
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
+                    startActivity(Intent.createChooser(sharingIntent, "Share via"))
+                }
+                R.id.menu_start_radio -> {
+                    npHelper.startRadio(RadioSeed.TYPE_ARTIST, artist.artistId)
                 }
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",

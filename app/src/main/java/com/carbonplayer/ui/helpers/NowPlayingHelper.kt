@@ -23,12 +23,15 @@ import com.carbonplayer.audio.TrackQueue
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.enums.RadioFeedReason
+import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adapters.NowPlayingQueueAdapter
 import com.carbonplayer.utils.Constants
 import com.carbonplayer.utils.asParcel
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.AnimUtils
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.controller_main.*
 import kotlinx.android.synthetic.main.nowplaying.*
 import kotlinx.android.synthetic.main.nowplaying.view.*
@@ -49,7 +52,6 @@ import timber.log.Timber
  */
 
 class NowPlayingHelper(private val activity: Activity) {
-
 
     var bottomNavHeight: Int = 0
     lateinit var replyMessenger: Messenger
@@ -245,6 +247,18 @@ class NowPlayingHelper(private val activity: Activity) {
 
     fun newQueue(tracks: List<ITrack>, pos: Int, local: Boolean = true) {
         trackQueue.replace(tracks, pos, false, local)
+    }
+
+    fun startRadio(seedType: Int, seed: String) {
+        Protocol.radioFeed(activity, seed, 25, RadioFeedReason.INSTANT_MIX,
+                seedType, null)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe ({ r ->
+                    newQueue(r.data.stations[0].tracks, 0, false)
+                }, { err ->
+                    Timber.d(err)
+                })
     }
 
     fun newQueue(tracks: List<ITrack>) {

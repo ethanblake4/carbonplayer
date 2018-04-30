@@ -118,6 +118,7 @@
     <string name="media_type_podcast">Podcast</string>
     <string name="media_type_unknown">Unknown</string>
     <string name="media_type_best_match">Best match</string>
+    <string name="action_shuffle_artist">Shuffle artist</string>
 
 
 </resources>

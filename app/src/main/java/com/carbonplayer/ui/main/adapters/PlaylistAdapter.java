@@ -177,7 +177,6 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
                 if(t.getAlbumArtURL() == null) continue;
                 if(!artUrls.contains(t.getAlbumArtURL())) artUrls.add(t.getAlbumArtURL());
                 if(artUrls.size() == 4) break;
-
             }
 
             int numArts = Math.min(4, artUrls.size());

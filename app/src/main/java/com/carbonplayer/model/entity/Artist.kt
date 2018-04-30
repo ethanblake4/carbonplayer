@@ -1,6 +1,7 @@
 package com.carbonplayer.model.entity
 
 import com.carbonplayer.model.MusicLibrary
+import com.carbonplayer.model.entity.base.IArtist
 import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import io.realm.Realm
 import io.realm.RealmList
@@ -9,20 +10,20 @@ import io.realm.annotations.PrimaryKey
 
 open class Artist(
 
-        @PrimaryKey var artistId: String = "",
-        var kind: String = "",
-        var name: String = "",
-        var artistArtRef: String? = null,
+        @PrimaryKey override var artistId: String = "",
+        override var kind: String = "",
+        override var name: String = "",
+        override var artistArtRef: String? = null,
         var artistArtRefs: RealmList<Image> = RealmList(),
         var artistTracks: RealmList<Track> = RealmList(),
-        var artistBio: String? = null,
+        override var artistBio: String? = null,
         var albums: RealmList<Album> = RealmList(),
         var topTracks: RealmList<Track> = RealmList(),
         var totalAlbums: Int = -1,
         var artistBioAttribution: Attribution? = null,
         var related_artists: RealmList<Artist> = RealmList()
 
-) : RealmObject() {
+) : RealmObject(), IArtist {
 
     constructor(artistId: String, name: String) : this(artistId, "sj#artist", name)
 

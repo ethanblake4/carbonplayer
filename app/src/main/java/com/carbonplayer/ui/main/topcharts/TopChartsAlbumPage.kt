@@ -35,7 +35,6 @@ class TopChartsAlbumPage : Controller() {
 
     private fun setAdapter(v: View) {
         Timber.d("setting adapter")
-        Timber.d(albumList!!.toString())
         v.main_recycler.adapter = TopChartsAlbumAdapter(albumList!!, activity as MainActivity,
                 Glide.with(activity as MainActivity))
     }

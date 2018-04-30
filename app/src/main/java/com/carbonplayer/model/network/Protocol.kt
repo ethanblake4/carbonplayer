@@ -25,7 +25,6 @@ import com.carbonplayer.model.network.utils.ClientContextFactory
 import com.carbonplayer.model.network.utils.IOUtils
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.protocol.URLSigning
-import com.carbonplayer.utils.toByteArray
 import com.squareup.moshi.JsonAdapter
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -101,12 +100,11 @@ object Protocol {
         val adapter = CarbonPlayerApplication.moshi.adapter(RadioFeedResponse::class.java)
         return Single.fromCallable {
 
-
             val client = CarbonPlayerApplication.instance.okHttpClient
 
             val radioRQ = RadioFeedRequest(
                     CarbonPlayerApplication.instance.preferences.contentFilterAsInt,
-                    RadioFeedRequest.MixRequest(4, 25),
+                    null,
                     listOf(RadioFeedRequest.RadioStationRequest(
                             false,
                             maxEntries,
@@ -124,25 +122,32 @@ object Protocol {
                     .appendQueryParameter("rz", reason.toApiValue())
                     .build()
 
-            val request = defaultBuilder(context)
+            val rqAdapter = CarbonPlayerApplication.moshi.adapter(RadioFeedRequest::class.java)
+
+            val request = playBuilder(context)
                     .url(SJ_URL + "radio/stationfeed?" + getParams)
                     .header("Content-Type", "application/json")
-                    .post(RequestBody.create(TYPE_JSON, radioRQ.toJson().toByteArray()))
+                    .post(RequestBody.create(TYPE_JSON, rqAdapter.toJson(radioRQ).toByteArray()))
                     .build()
 
             val response = client.newCall(request).execute()
 
             if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-                response.body()?.source()?.let {
+                response.body()?.string()?.let {
+                    Timber.d(it)
                     return@fromCallable adapter.fromJson(it)
                 }
             }
-            if (response.code() in 400..499) {
-                throw handle400(context, response.code(),
-                        response.header("X-Rejection-Reason"))
-            }
-            throw ResponseCodeException(response.body()!!.string())
 
+            if (response.code() in 400..499) {
+                Timber.d(response.body()?.string())
+                GoogleLogin.retryPlayOAuthSync(context)
+                throw ServerRejectionException(
+                        ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
+                )
+            }
+
+            throw ResponseCodeException(response.body()!!.string())
         }
     }
 
@@ -452,63 +457,6 @@ object Protocol {
         throw ResponseCodeException(response.body()!!.string())
     }
 
-
-    private fun pagedJSONFeed(context: Context, urlPart: String): Observable<LinkedList<JSONObject>> {
-
-        val client = CarbonPlayerApplication
-                .instance.okHttpClient
-        val getParams = Uri.Builder()
-                .appendQueryParameter("alt", "json")
-                .appendDefaults()
-
-        return Observable.create<LinkedList<JSONObject>> { subscriber ->
-            var startToken: String? = ""
-            while (startToken != null) {
-                Timber.d("startToken: %s", startToken)
-                val requestJson = JSONObject()
-                try {
-                    requestJson.put("max-results", MAX_RESULTS)
-                    if ("" != startToken) requestJson.put("start-token", startToken)
-                } catch (e: JSONException) {
-                    subscriber.onError(e)
-                }
-
-                startToken = null
-
-                val request = defaultBuilder(context)
-                        .url(SJ_URL + urlPart + "?" + getParams.build().encodedQuery)
-                        .header("Content-Type", "application/json")
-                        .post(RequestBody.create(TYPE_JSON, requestJson.toString()))
-                        .build()
-                try {
-                    val r = client.newCall(request).execute()
-                    if (!r.isSuccessful) subscriber.onError(ResponseCodeException())
-                    val response = r.body()!!.string()
-
-                    val j = JSONObject(response)
-                    //Timber.d(response);
-
-                    if (j.has("nextPageToken")) startToken = j.getString("nextPageToken")
-
-                    val itemArray = j.getJSONObject("data").getJSONArray("items")
-                    val list = (0 until itemArray.length())
-                            .mapTo(LinkedList<JSONObject>()) {
-                                itemArray.getJSONObject(it)
-                            }
-
-                    subscriber.onNext(list)
-
-                } catch (e: IOException) {
-                    subscriber.onError(e)
-                } catch (e: JSONException) {
-                    subscriber.onError(e)
-                }
-
-            }
-            subscriber.onComplete()
-        }
-    }
-
     private fun <R, T : PagedJsonResponse<R>> rawPagedFeed(context: Context, urlPart: String,
                                                      adapter: JsonAdapter<T>): Observable<R> {
 
@@ -570,7 +518,9 @@ object Protocol {
     fun listPlaylists(context: Activity): Observable<List<SkyjamPlaylist>> {
         val adapter = CarbonPlayerApplication.moshi.adapter(PagedPlaylistResponse::class.java)
         return rawPagedFeed(context, "playlistfeed", adapter)
-                .map<List<SkyjamPlaylist>> { response -> response.items }
+                .map<List<SkyjamPlaylist>> { response ->
+                    response.items
+                }
     }
 
     @JvmStatic

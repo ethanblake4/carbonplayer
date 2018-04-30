@@ -1,6 +1,5 @@
 package com.carbonplayer.ui.main
 
-import android.content.Context
 import android.support.annotation.Keep
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
@@ -57,7 +56,7 @@ class SearchController(
         return view
     }
 
-    fun runSearch(view: View, term: String) {
+    private fun runSearch(view: View, term: String) {
         Protocol.search(activity!!, term)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -68,10 +67,13 @@ class SearchController(
                         Timber.d("Null results")
                         return@subscribe
                     }
+
                     if(results.suggestedQuery != null) {
                         view.suggestedContainer.visibility = View.VISIBLE
                         view.suggestedQueryText.text = results.suggestedQuery
                         view.suggestedQueryText.setOnClickListener {
+                            clearForNext(view)
+                            view.searchLoader.visibility = View.VISIBLE
                             runSearch(view, results.suggestedQuery)
                         }
                     }
@@ -137,25 +139,18 @@ class SearchController(
                     view.searchLoader.visibility = View.GONE
                 })
     }
+
+    fun clearForNext(view: View) {
+        (0..view.searchResults.childCount).map { i ->
+            view.searchResults.getChildAt(i)?.let {
+                if(it.id != R.id.searchHeader && it.id != R.id.suggestedContainer) {
+                    view.searchResults.removeViewAt(i)
+                }
+            }
+        }
+    }
+
     fun err() {
         Toast.makeText(activity, R.string.error_search, Toast.LENGTH_LONG).show()
     }
-
-
-
-    override fun onContextAvailable(context: Context) {
-        super.onContextAvailable(context)
-
-    }
-
-    /*override fun onResume() {
-        view.main_recycler.adapter.notifyDataSetChanged()
-        super.onResume()
-
-    }*/
-
-    /*override fun onSaveInstanceState(outState: Bundle) {
-        outState.putParcelable("recycler", view.main_recycler.layoutManager.onSaveInstanceState())
-        super.onSaveInstanceState(outState)
-    }*/
 }

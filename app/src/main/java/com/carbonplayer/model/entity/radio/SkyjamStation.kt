@@ -17,13 +17,13 @@ data class SkyjamStation(
         val deleted: Boolean? /* for public */,
         val inLibrary: Boolean?,
         val lastModifiedTimestamp: Long? = null,
-        val name: String,
+        val name: String?,
         val recentTimestamp: Long? /* for public */,
         val id: String?,
-        val seed: RadioSeed,
+        val seed: RadioSeed?,
         val sessionToken: String? /* For free radios */,
         val skipEventHistory: List<SkipEvent>?,
-        val tracks: List<SkyjamTrack>
+        val tracks: List<SkyjamTrack> = listOf()
 
 ) {
 
