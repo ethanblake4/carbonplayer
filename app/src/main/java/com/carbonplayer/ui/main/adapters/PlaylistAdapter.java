@@ -1,5 +1,7 @@
 package com.carbonplayer.ui.main.adapters;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.support.annotation.ColorInt;
@@ -15,18 +17,26 @@ import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.Playlist;
+import com.carbonplayer.model.entity.PlaylistEntry;
+import com.carbonplayer.model.entity.Track;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.ui.widget.fastscroll.SectionTitleProvider;
 import com.carbonplayer.utils.general.MathUtils;
 import com.carbonplayer.utils.ui.PaletteUtil;
 import com.github.florent37.glidepalette.GlidePalette;
+import com.google.common.util.concurrent.Atomics;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.realm.Realm;
 
 /**
  * Displays albums in variable-size grid view
@@ -37,6 +47,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
     private List<Playlist> dataset;
     private MainActivity context;
+    private Realm realm;
     private int screenWidthPx;
     private RequestManager requestManager;
 
@@ -85,6 +96,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         this.dataset = dataset;
         this.context = context;
         this.requestManager = requestManager;
+        this.realm = Realm.getDefaultInstance();
         Display display = context.getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
@@ -151,10 +163,73 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
                     .into(holder.thumb);
 
         } else {
-            requestManager.clear(holder.thumb);
-            holder.thumb.setImageResource(R.drawable.unknown_music_track);
-        }
+            List<String> artUrls = new ArrayList<>();
+            for(PlaylistEntry p: playlist.getEntries()) {
+                Track t;
+                t = p.getTrack();
+                if(t == null) {
+                    t = realm.where(Track.class)
+                            .equalTo(Track.STORE_ID, p.getTrackId())
+                            .or().equalTo(Track.TRACK_ID, p.getTrackId())
+                            .findFirst();
+                }
+                if(t==null) continue;
+                if(t.getAlbumArtURL() == null) continue;
+                if(!artUrls.contains(t.getAlbumArtURL())) artUrls.add(t.getAlbumArtURL());
+            }
 
+            int numArts = Math.min(4, artUrls.size());
+
+            final AtomicReference<Bitmap> bit1 = Atomics.newReference();
+            final AtomicReference<Bitmap> bit2 = Atomics.newReference();
+            final AtomicReference<Bitmap> bit3 = Atomics.newReference();
+
+            for(String url: artUrls.subList(0, numArts)) {
+                requestManager
+                        .asBitmap()
+                        .load(url)
+                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
+                        .into(new SimpleTarget<Bitmap>() {
+                            @Override
+                            public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                                if(bit1.get() == null) {
+                                    bit1.set(resource);
+                                    if(numArts < 2) {
+                                        combineBitmaps(resource, resource, resource, resource, holder.thumb);
+                                    }
+                                } else if (bit2.get() == null) {
+                                    bit2.set(resource);
+                                    if(numArts < 3) {
+                                        Bitmap bit1b = bit1.get();
+                                        combineBitmaps(bit1b, resource, bit1b, resource, holder.thumb);
+                                    }
+                                } else if(bit3.get() == null) {
+                                    bit3.set(resource);
+                                    if(numArts < 4) {
+                                        Bitmap bit1b = bit1.get();
+                                        Bitmap bit2b = bit2.get();
+                                        combineBitmaps(bit1b, bit2b, resource, bit2b, holder.thumb);
+                                    }
+                                } else {
+                                    combineBitmaps(bit1.get(), bit2.get(), bit3.get(), resource, holder.thumb);
+                                }
+                            }
+                        });
+
+            }
+        }
+    }
+
+    public void combineBitmaps(Bitmap b1, Bitmap b2, Bitmap b3, Bitmap b4, ImageView view) {
+        Bitmap big = Bitmap.createBitmap(b1.getWidth() * 2, b2.getHeight() * 2,
+                Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(big);
+        canvas.drawBitmap(b1, 0, 0, null);
+        canvas.drawBitmap(b2, b1.getWidth(), 0, null);
+        canvas.drawBitmap(b3, 0, b1.getHeight(), null);
+        canvas.drawBitmap(b4, b1.getWidth(), b1.getHeight(), null);
+        //new DrawableCrossFadeTransition()
+        view.setImageBitmap(big);
     }
 
     // Return the size of your dataset (invoked by the layout manager)

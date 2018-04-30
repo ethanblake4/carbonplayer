@@ -21,8 +21,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
-import io.realm.*
+import io.realm.Realm
+import io.realm.RealmList
+import io.realm.RealmResults
+import io.realm.Sort
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 
@@ -65,6 +69,7 @@ object MusicLibrary {
             Realm.getDefaultInstance().executeTransactionAsync { realm ->
                 addToDatabase(realm, tracks, update, received)
             }
+            received.addAndGet(tracks.size)
             onProgress.accept(Pair(false, received.get()))
         }, onError, Action { updatePlaylists(context, onError, onProgress, onSuccess) }).addToAutoDispose()
     }
@@ -77,7 +82,7 @@ object MusicLibrary {
 
         tracks.forEach { sjTrack ->
 
-            received?.incrementAndGet()
+            //received?.incrementAndGet()
             outTracks.add(addOneToDatabase(realm, sjTrack, update))
         }
 
@@ -401,15 +406,21 @@ object MusicLibrary {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
         val received = RealmInteger()
+        val netsecComplete = AtomicBoolean(false)
         plObservable.subscribe(Consumer { plList ->
             received.set(received.value() + plList.size)
             Realm.getDefaultInstance().executeTransactionAsync { realm ->
                 plList.forEach { pl ->
+                    pl.albumArtRef?.forEach {
+                        Timber.d(it.url)
+                    }
+                    if(pl.albumArtRef == null) Timber.d("NULL albumartref")
                     insertOrUpdatePlaylist(realm, pl)
                 }
+                if(netsecComplete.get()) updatePlentries(context, onError, onSuccess)
             }
             onProgress.accept(Pair(true, received.value()))
-        }, onError, Action { updatePlentries(context, onError, onSuccess) }).addToAutoDispose()
+        }, onError, Action { netsecComplete.set(true) }).addToAutoDispose()
     }
 
     private fun updatePlentries(context: Activity, onError: Consumer<Throwable>, onSuccess: Action) {
@@ -432,7 +443,8 @@ object MusicLibrary {
                             .equalTo(Playlist.REMOTE_ID, sjPlentry.playlistId)
                             .findFirst()
 
-                    if (playlist == null) Timber.d("updatePlentries could not find PLID ${sjPlentry.playlistId}")
+                    if (playlist == null) Timber.d(
+                            "updatePlentries could not find PLID ${sjPlentry.playlistId}")
 
                     playlist?.entries?.add(realm.copyToRealm(plentry))
                 }
