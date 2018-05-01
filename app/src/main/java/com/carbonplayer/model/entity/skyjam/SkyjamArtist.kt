@@ -18,4 +18,7 @@ data class SkyjamArtist(
         var artist_bio_attribution: Attribution? = null,
         var related_artists: MutableList<SkyjamArtist> = mutableListOf()
 
-) : IArtist
+) : IArtist {
+    override val bestArtistArtUrl: String?
+        get() = artistArtRef ?: artistArtRefs.first().url
+}

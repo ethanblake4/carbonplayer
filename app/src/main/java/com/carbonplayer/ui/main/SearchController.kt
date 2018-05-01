@@ -20,6 +20,7 @@ import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
 import com.carbonplayer.ui.main.adapters.TopChartsSongAdapter
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
+import com.carbonplayer.utils.ui.PaletteUtil
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.controller_search.view.*
@@ -121,8 +122,12 @@ class SearchController(
                                         requestManager
                                 )
                                 MediaTypeUtil.TYPE_ARTIST -> LinearArtistAdapter(
+                                        activity!!,
                                         entries.mapNotNull { it.artist }.take(5),
-                                        {}
+                                        { (artist, swPair) ->
+                                            (activity as MainActivity).gotoArtist(artist,
+                                                    swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)
+                                        }
                                 )
                                 MediaTypeUtil.TYPE_STATION -> SkyjamStationAdapter(
                                         entries.mapNotNull { it.station }.take(4),

@@ -44,6 +44,7 @@ import com.carbonplayer.utils.newIntent
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.carbonplayer.utils.ui.VolumeObserver
 import icepick.Icepick
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
@@ -351,8 +352,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     // When an artist is selected
-    fun gotoArtist(artist: Artist, swatchPair: PaletteUtil.SwatchPair) {
-        val frag = ArtistController(artist, swatchPair)
+    @JvmOverloads fun gotoArtist(artist: IArtist, swatchPair: PaletteUtil.SwatchPair,
+                   load: Boolean = true) {
+
+        val frag = if(artist is Artist || !load) {
+            ArtistController(artist, swatchPair)
+        } else {
+            val futureArtist = Protocol.getNautilusArtist(this, artist.artistId)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+
+            ArtistController(futureArtist as Observable<IArtist>, swatchPair)
+        }
+
         scrollCb(0)
 
         router.pushController(RouterTransaction.with(frag)

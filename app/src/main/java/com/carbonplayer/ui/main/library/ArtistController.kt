@@ -27,17 +27,22 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Artist
+import com.carbonplayer.model.entity.base.IArtist
+import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.utils.addToAutoDispose
+import com.carbonplayer.utils.general.Either
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.ColorUtils
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import com.github.ksoichiro.android.observablescrollview.ScrollState
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.realm.Realm
@@ -51,7 +56,7 @@ import java.util.concurrent.TimeUnit
  * Displays an album
  */
 class ArtistController(
-        var artist: Artist,
+        var artist: Either<Observable<IArtist>, IArtist>,
         val textColor: Int,
         val mainColor: Int,
         val bodyColor: Int,
@@ -64,8 +69,9 @@ class ArtistController(
     private var fabOffset: Int = 0
     private var squareHeight: Int = 0
 
-    private var artistProxy = artist
-    private val aId = artist.artistId
+    private lateinit var artistProxy: Artist
+    private lateinit var realArtist: IArtist
+    //private val aId = artist
 
     private var expanded = false
     private var ogHeight = 0
@@ -77,8 +83,8 @@ class ArtistController(
     private lateinit var requestMgr: RequestManager
 
     @Suppress("unused") @Keep constructor(savedState: Bundle) : this (
-            Realm.getDefaultInstance().where(Artist::class.java)
-                    .equalTo(Artist.ID, savedState.getString("artistId")).findFirst()!!,
+            Either.Right(Realm.getDefaultInstance().where(Artist::class.java)
+                    .equalTo(Artist.ID, savedState.getString("artistId")).findFirst()!!),
             savedState.getInt("textColor"),
             savedState.getInt("mainColor"),
             savedState.getInt("bodyColor"),
@@ -86,8 +92,17 @@ class ArtistController(
             savedState.getInt("secondaryTextColor")
     )
 
-    @Keep constructor(artist: Artist, swatchPair: PaletteUtil.SwatchPair) : this (
-            artist,
+    @Keep constructor(artist: IArtist, swatchPair: PaletteUtil.SwatchPair) : this (
+            Either.Right(artist),
+            swatchPair.primary.titleTextColor,
+            swatchPair.primary.rgb,
+            swatchPair.primary.bodyTextColor,
+            swatchPair.secondary.rgb,
+            swatchPair.secondary.bodyTextColor
+    )
+
+    @Keep constructor(futureArtist: Observable<IArtist>, swatchPair: PaletteUtil.SwatchPair) : this (
+            Either.Left(futureArtist),
             swatchPair.primary.titleTextColor,
             swatchPair.primary.rgb,
             swatchPair.primary.bodyTextColor,
@@ -96,7 +111,7 @@ class ArtistController(
     )
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString("artistId", artist.artistId)
+        outState.putString("artistId", realArtist.artistId)
         outState.putInt("textColor", textColor)
         outState.putInt("mainColor", mainColor)
         outState.putInt("bodyColor", bodyColor)
@@ -107,10 +122,27 @@ class ArtistController(
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
+        manager = MusicManager(activity as MainActivity)
+
         root = inflater.inflate(R.layout.activity_songgroup, container, false)
 
-        if(artist.artistBio == null) {
-            Protocol.getNautilusArtist(activity!!, artist.artistId)
+        if(artist is Either.Left) {
+            (artist as Either.Left).value.subscribe {
+                realArtist = it
+                setupView(root)
+            }
+        } else if (artist is Either.Right) {
+            realArtist = (artist as Either.Right).value
+            setupView(root)
+        }
+
+        return root
+
+    }
+
+    private fun setupView(view: View): View {
+        if(realArtist.artistBio == null) {
+            Protocol.getNautilusArtist(activity!!, realArtist.artistId)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .delay(300, TimeUnit.MILLISECONDS) /* Prevent animation interrupt */
@@ -119,16 +151,17 @@ class ArtistController(
                         val rlm = Realm.getDefaultInstance()
 
                         artistProxy = rlm.where(Artist::class.java)
-                                .equalTo(Artist.ID, aId)
+                                .equalTo(Artist.ID, realArtist.artistId)
                                 .findFirst()!!
 
                         rlm.executeTransaction {
                             artistProxy.updateFrom(a, it)
                         }
 
-                        if(view != null && artistProxy.artistBio != null && artistProxy.artistBio!!.isNotBlank()) {
+                        if(artistProxy.artistBio != null
+                                && artistProxy.artistBio!!.isNotBlank()) {
                             val const = ConstraintSet().apply {
-                                clone(view!!.constraintLayout6)
+                                clone(view.constraintLayout6)
                                 setMargin(R.id.primaryText, ConstraintSet.TOP,
                                         MathUtils.dpToPx2(resources, 32))
                             }
@@ -140,11 +173,11 @@ class ArtistController(
 
                             val bioText = artistProxy.artistBio
 
-                            view!!.post {
-                                TransitionManager.beginDelayedTransition(view!!.constraintLayout6, t)
-                                const.applyTo(view!!.constraintLayout6)
+                            view.post {
+                                TransitionManager.beginDelayedTransition(view.constraintLayout6, t)
+                                const.applyTo(view.constraintLayout6)
 
-                                view!!.descriptionText.run {
+                                view.descriptionText.run {
                                     text = bioText
                                     setTextColor(bodyColor)
                                     visibility = View.VISIBLE
@@ -155,11 +188,11 @@ class ArtistController(
 
                         }
 
-                        if(view != null && artistProxy.topTracks.isNotEmpty()) {
+                        if(artistProxy.topTracks.isNotEmpty()) {
 
                             val tpTracks = artistProxy.topTracks.toList()
 
-                            view!!.post {
+                            view.post {
                                 val params = root.songgroup_recycler.layoutParams
                                 params.height = (tpTracks.take(5).size * MathUtils.dpToPx2(resources, 59)) +
                                         IdentityUtils.getNavbarHeight(resources) +
@@ -170,7 +203,7 @@ class ArtistController(
                             }
 
                             this.activity!!.runOnUiThread {
-                                mAdapter = SongListAdapter(artist.topTracks.take(5), {
+                                mAdapter = SongListAdapter(extractTopTracks(realArtist).take(5), {
                                     Timber.d("clicked ${it.second}")
                                 })
 
@@ -187,9 +220,9 @@ class ArtistController(
                     }).addToAutoDispose()
         }
 
-        manager = MusicManager(activity as MainActivity)
 
-        Timber.d("artist ${artist.artistId}")
+
+        Timber.d("artist ${realArtist.artistId}")
 
         root.primaryText.setTextColor(textColor)
         root.secondaryText.setTextColor(textColor)
@@ -209,13 +242,8 @@ class ArtistController(
             activity?.let { Toast.makeText(it, "Downloading is not supported yet", Toast.LENGTH_LONG).show() }
         }
         root.overflowButton.setOnClickListener { v ->
-            //(activity as? MainActivity)?.showAlbumPopup(v, artist)
+            (activity as? MainActivity)?.showArtistPopup(v, realArtist)
         }
-
-        root.main_backdrop.transitionName = artist.artistId + "i"
-        root.constraintLayout6.transitionName = artist.artistId + "cr"
-        root.primaryText.transitionName = artist.artistId + "t"
-        root.secondaryText.transitionName = artist.artistId + "d"
 
         root.songgroup_scrollview.setScrollViewCallbacks(object : ObservableScrollViewCallbacks {
             override fun onUpOrCancelMotionEvent(scrollState: ScrollState?) {}
@@ -240,15 +268,15 @@ class ArtistController(
         //handler.addTextViewSizeResource(root.secondaryText,
         //        R.dimen.small_text_2, R.dimen.large_text_2)
 
-        if(artist.topTracks.isNotEmpty()) {
+        if(extractTopTracks(realArtist).isNotEmpty()) {
             val params = root.songgroup_recycler.layoutParams
-            params.height = (artist.topTracks.take(5).size * MathUtils.dpToPx2(resources, 59)) +
+            params.height = (extractTopTracks(realArtist).take(5).size * MathUtils.dpToPx2(resources, 59)) +
                     IdentityUtils.getNavbarHeight(resources) +
                     MathUtils.dpToPx2(resources,
                             if ((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
                                 56 else 0)
 
-            mAdapter = SongListAdapter(artist.topTracks.take(5), {
+            mAdapter = SongListAdapter(extractTopTracks(realArtist).take(5), {
                 Timber.d("clicked ${it.second}")
             })
 
@@ -262,8 +290,9 @@ class ArtistController(
 
         requestMgr = Glide.with(activity as Activity)
 
-        artist.artistArtRefs.first()?.let {
-            requestMgr.load(it.url)
+
+        realArtist.bestArtistArtUrl?.let {
+            requestMgr.load(it)
                     .apply(
                             RequestOptions.overrideOf(preImageWidth, preImageWidth)
                                     .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
@@ -271,7 +300,7 @@ class ArtistController(
         }
 
 
-        if(!artist.artistBio.isNullOrBlank()) {
+        if(!realArtist.artistBio.isNullOrBlank()) {
 
             val const = ConstraintSet().apply {
                 clone(root.constraintLayout6)
@@ -281,7 +310,7 @@ class ArtistController(
             const.applyTo(root.constraintLayout6)
 
             root.descriptionText.run {
-                text = artist.artistBio
+                text = realArtist.artistBio
                 setTextColor(bodyColor)
                 visibility = View.VISIBLE
                 alpha = 1.0f
@@ -300,11 +329,9 @@ class ArtistController(
         }, 600)
 
 
-        root.primaryText.text = artist.name
+        root.primaryText.text = realArtist.name
 
         root.songgroup_recycler.isNestedScrollingEnabled = false
-
-
 
         root.expandDescriptionChevron.setOnClickListener {
 
@@ -329,6 +356,11 @@ class ArtistController(
         }
 
         return root
+    }
+
+    fun extractTopTracks(artist: IArtist): List<ITrack> {
+        return if(artist is SkyjamArtist) artist.topTracks
+        else (artist as Artist).topTracks
     }
 
     fun setTransformedTextPosition(transform: Int) {
