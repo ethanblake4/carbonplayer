@@ -76,7 +76,13 @@ public class TrackCache {
         long cacheSize = dirSize(cacheDir);
         long spaceNeeded = Math.max(0, cacheSize - targetSize);
         long averageSize = (cacheSize / res.size()) / 100;
-        long averageImportance = 50;
+
+        long averageImportance = 0;
+        for (Track track : res) {
+            averageImportance += track.getCacheImportance(PlaySource.SONGS);
+        }
+        averageImportance /= res.size();
+
         float needClearingPercent = spaceNeeded / cacheSize;
 
         float clearNumber = (averageImportance * averageSize) * needClearingPercent;
