@@ -150,13 +150,19 @@ object MusicLibrary {
             artists.add(realm.where(Artist::class.java)
                     .equalTo(Artist.ID, sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID)
                     .findFirst() ?:
-                    Artist(sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID, sjTrack.artist))
+                    Artist(sjTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID, sjTrack.artist,
+                            inLibrary))
         } else {
-            artistPairs.forEach { (id, name) ->
+            var fst = true
+            artistPairs.forEach {  (id, name) ->
+
                 artists.add(realm.where(Artist::class.java)
                         .equalTo(Artist.ID, id)
-                        .findFirst() ?: Artist(id, name, sjTrack.artistArtRef)
+                        .findFirst() ?: Artist(id, name, sjTrack.artistArtRef,
+                        inLibrary && fst)
                 )
+
+                fst = false
             }
         }
 
@@ -238,15 +244,17 @@ object MusicLibrary {
             artists.add(realm.where(Artist::class.java)
                     .equalTo(Artist.ID, pTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID)
                     .findFirst() ?:
-            Artist(pTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID, pTrack.artist))
+            Artist(pTrack.artistId?.first() ?: UNKNOWN_ARTIST_ID, pTrack.artist, inLibrary))
         } else {
+            var fst = true
             artistPairs.forEach { (id, name) ->
                 artists.add(realm.where(Artist::class.java)
                         .equalTo(Artist.ID, id)
                         .findFirst() ?: Artist(id, name, pTrack.artistArtRef?.map { Image(
                         kind = "sj#image",
-                        url = it)})
+                        url = it)}, inLibrary && fst)
                 )
+                fst = false
             }
         }
 
@@ -476,6 +484,7 @@ object MusicLibrary {
     @UiThread
     fun loadArtists(): Flowable<RealmResults<Artist>> {
         return Realm.getDefaultInstance().where(Artist::class.java)
+                .equalTo("inLibrary", true)
                 .sort(Artist.NAME, Sort.ASCENDING)
                 .findAllAsync()
                 .asFlowable()

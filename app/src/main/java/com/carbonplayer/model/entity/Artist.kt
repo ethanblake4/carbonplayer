@@ -21,16 +21,18 @@ open class Artist(
         var topTracks: RealmList<Track> = RealmList(),
         var totalAlbums: Int = -1,
         var artistBioAttribution: Attribution? = null,
-        var related_artists: RealmList<Artist> = RealmList()
+        var related_artists: RealmList<Artist> = RealmList(),
+        var inLibrary: Boolean = true
 
 ) : RealmObject(), IArtist {
 
-    constructor(artistId: String, name: String) : this(artistId, "sj#artist", name)
+    constructor(artistId: String, name: String, inLibrary: Boolean = true) :
+            this(artistId, "sj#artist", name, inLibrary = inLibrary)
 
-    constructor(artistId: String, name: String, artRefs: List<Image>?) :
+    constructor(artistId: String, name: String, artRefs: List<Image>?, inLibrary: Boolean = true) :
             this(artistId, "", name, null, RealmList<Image>().apply {
                 artRefs?.let { addAll(it) }
-            })
+            }, inLibrary = inLibrary)
 
     constructor(src: SkyjamArtist, realm: Realm) : this (
             src.artistId,
