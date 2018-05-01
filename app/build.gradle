@@ -9,7 +9,6 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'realm-android'
 
 if(new File("carbonplayer.properties").exists()) {
-
     Properties props = new Properties()
     props.load(new FileInputStream(new File("carbonplayer.properties")))
     android {
@@ -24,6 +23,7 @@ if(new File("carbonplayer.properties").exists()) {
         compileSdkVersion 27
         buildToolsVersion "27.0.3"
         defaultConfig {
+            System.out.println(signingConfigs.config)
             applicationId "com.carbonplayer"
             minSdkVersion 21
             targetSdkVersion 27

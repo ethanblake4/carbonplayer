@@ -8,6 +8,7 @@ import android.content.res.Resources;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -58,6 +59,7 @@ public final class IdentityUtils {
     }
 
     public static int getNavbarHeight(Resources res) {
+        if(isEmulator()) return MathUtils.dpToPx2(res, 48);
         int id = res.getIdentifier("config_showNavigationBar", "bool", "android");
         if(id > 0 && res.getBoolean(id)) {
             int resourceId = res.getIdentifier("navigation_bar_height", "dimen", "android");
@@ -66,6 +68,17 @@ public final class IdentityUtils {
             }
         }
         return 0;
+    }
+
+    public static boolean isEmulator() {
+        return Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+                || "google_sdk".equals(Build.PRODUCT);
     }
 
      public static @Px int displayHeight(@NonNull Activity context){

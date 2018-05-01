@@ -30,12 +30,16 @@ import com.carbonplayer.utils.asParcel
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.AnimUtils
+import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.CompletableSubject
+import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.controller_main.*
 import kotlinx.android.synthetic.main.nowplaying.*
 import kotlinx.android.synthetic.main.nowplaying.view.*
 import timber.log.Timber
+import java.util.concurrent.Future
 
 
 /**
@@ -249,16 +253,22 @@ class NowPlayingHelper(private val activity: Activity) {
         trackQueue.replace(tracks, pos, false, local)
     }
 
-    fun startRadio(seedType: Int, seed: String) {
+    fun startRadio(seedType: Int, seed: String): Completable {
+
+        val completer = CompletableSubject.create()
+
         Protocol.radioFeed(activity, seed, 25, RadioFeedReason.INSTANT_MIX,
                 seedType, null)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe ({ r ->
+                    completer.onComplete()
                     newQueue(r.data.stations[0].tracks, 0, false)
                 }, { err ->
                     Timber.d(err)
                 })
+
+        return completer
     }
 
     fun newQueue(tracks: List<ITrack>) {

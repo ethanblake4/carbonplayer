@@ -13,19 +13,27 @@ import com.bumptech.glide.RequestManager
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.exception.ServerRejectionException
+import com.carbonplayer.model.entity.proto.identifiers.*
+import com.carbonplayer.model.entity.proto.identifiers.PlayableItemIdV1Proto.PlayableItemId.TypeCase.*
+import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId.TypeCase.*
+import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId.TypeCase.ARTIST
+import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId.TypeCase.TYPE_NOT_SET
 import com.carbonplayer.model.entity.proto.innerjam.ContentPageV1Proto.ContentPage.PageTypeCase
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeResponse
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.FullBleedSection
+import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adaptivehome.FullBleedListAdapter
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
+import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Action
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.adaptivehome.view.*
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 class HomeController : Controller() {
 
@@ -127,11 +135,16 @@ class HomeController : Controller() {
                             }
                         },
                         { mod: FullBleedModuleV1Proto.FullBleedModule ->
-                            Timber.d(mod.toString())
+                            Timber.d("Clicked module")
+                        }, { mod, cb ->
+                            playSingleSection(mod.singleSection)
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe { cb.run() }
                         }, requestManager, v.main_recycler)
-                        .apply {
-                            currentScrollCallback = this.scrollCallback
-                        }
+                    .apply {
+                    currentScrollCallback = this.scrollCallback
+                }
+
             }
             else -> {
                 v.adaptiveHomeCoordinator.let {
@@ -141,11 +154,88 @@ class HomeController : Controller() {
         }
     }
 
-    fun playSingleSection(singleSection: FullBleedSection) {
-        when (singleSection.contentCase) {
+    private fun playSingleSection(singleSection: FullBleedSection): Completable {
+        return when (singleSection.contentCase) {
             FullBleedSection.ContentCase.SQUAREPLAYABLECARDLIST -> {
-                //singleSection.squarePlayableCardList.cardsList[0].
+                playItem(singleSection.squarePlayableCardList.cardsList[0].itemId)
             }
+            FullBleedSection.ContentCase.WIDEPLAYABLECARDLIST -> {
+                playItem(singleSection.widePlayableCardList.cardsList[0].itemId)
+            }
+            FullBleedSection.ContentCase.TALLPLAYABLECARDLIST -> {
+                playItem(singleSection.tallPlayableCardList.cardsList[0].itemId)
+            }
+            else -> errorPlaying()
         }
+    }
+
+    private fun playItem(itemId: PlayableItemIdV1Proto.PlayableItemId): Completable {
+        val helper = (activity as MainActivity).npHelper
+
+        when(itemId.typeCase) {
+            RADIOSEED -> {
+                when(itemId.radioSeed.typeCase) {
+                    TRACK -> {
+                        return when(itemId.radioSeed.track.typeCase) {
+                            TrackIdV1Proto.TrackId.TypeCase.CATALOG -> {
+                                helper.startRadio(RadioSeed.TYPE_SJ_TRACK,
+                                        itemId.radioSeed.track.catalog.metajamCompactKey)
+                            }
+                            TrackIdV1Proto.TrackId.TypeCase.UPLOADED -> {
+                                helper.startRadio(RadioSeed.TYPE_LIBRARY_TRACK,
+                                        itemId.radioSeed.track.uploaded.lockerId)
+                            }
+                            else -> errorPlaying()
+                        }
+                    }
+                    ALBUMRELEASE -> {
+                        when(itemId.radioSeed.albumRelease.typeCase) {
+                            AlbumReleaseIdV1Proto.AlbumReleaseId.TypeCase.CATALOG -> {
+                                return helper.startRadio(RadioSeed.TYPE_ALBUM,
+                                        itemId.radioSeed.albumRelease.catalog.metajamCompactKey)
+                            }
+                            else -> return errorPlaying()
+                        }
+                    }
+                    CURATED -> {
+                        helper.startRadio(RadioSeed.TYPE_CURATED_STATION,
+                                itemId.radioSeed.curated.metajamCompactKey)
+                    }
+                    ARTIST -> {
+                        when(itemId.radioSeed.artist.typeCase) {
+                            ArtistIdV1Proto.ArtistId.TypeCase.CATALOG -> {
+                                helper.startRadio(RadioSeed.TYPE_ARTIST,
+                                        itemId.radioSeed.artist.catalog.metajamCompactKey)
+                            }
+                            else -> return errorPlaying()
+                        }
+                    }
+                    GENRE -> {
+                        return helper.startRadio(RadioSeed.TYPE_GENRE,
+                                itemId.radioSeed.genre.id)
+                    }
+                    LOCKERPLAYLIST -> {
+                        return helper.startRadio(RadioSeed.TYPE_PLAYLIST,
+                                itemId.radioSeed.lockerPlaylist.playlistToken)
+                    }
+
+                    FEELINGLUCKY -> return errorPlaying()
+                    TYPE_NOT_SET -> return errorPlaying()
+                    null -> return errorPlaying()
+                }
+            }
+            AUDIO -> return errorPlaying()
+            AUDIOLIST -> return errorPlaying()
+            PlayableItemIdV1Proto.PlayableItemId.TypeCase.ARTIST -> return errorPlaying()
+            PlayableItemIdV1Proto.PlayableItemId.TypeCase.TYPE_NOT_SET -> return errorPlaying()
+            else -> return errorPlaying()
+        }
+
+        return errorPlaying()
+    }
+
+    private fun errorPlaying(): Completable {
+        Timber.e("Could not play")
+        return Completable.timer(1, TimeUnit.MILLISECONDS)
     }
 }

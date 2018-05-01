@@ -10,6 +10,7 @@ import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -33,6 +34,7 @@ import butterknife.ButterKnife;
 import io.reactivex.functions.Action;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
+import kotlin.jvm.functions.Function2;
 
 import static android.text.Spanned.SPAN_INCLUSIVE_INCLUSIVE;
 
@@ -43,16 +45,19 @@ public final class FullBleedListAdapter
 
     public FullBleedListAdapter(List<FullBleedModule> dataset,
                                 Function1<FullBleedModule, Unit> callback,
+                                Function2<FullBleedModule, Action, Unit> playCallback,
                                 RequestManager requestManager, RecyclerView my) {
         //this.context = context;
         this.dataset = dataset;
         this.callback = callback;
+        this.playCallback = playCallback;
         this.requestManager = requestManager;
         recycler = my;
     }
 
     private List<FullBleedModule> dataset;
     private Function1<FullBleedModule, Unit> callback;
+    private Function2<FullBleedModule, Action, Unit> playCallback;
     private RequestManager requestManager;
     private List<Action> scrollCallbacks = new LinkedList<>();
 
@@ -67,13 +72,18 @@ public final class FullBleedListAdapter
         @BindView(R.id.full_bleed_card_grad) View gradient;
         @BindView(R.id.itemText) TextView itemText;
         @BindView(R.id.playButtonSpinner) ProgressBar playButtonSpinner;
+        @BindView(R.id.playButton) ImageButton playButton;
         @BindView(R.id.moduleTitleUnderline) View underline;
 
         ViewHolder(View v) {
             super(v);
             ButterKnife.bind(this, v);
             v.setOnClickListener(view -> callback.invoke(module));
-
+            playButton.setOnClickListener(view -> {
+                playButtonSpinner.setVisibility(View.VISIBLE);
+                playCallback.invoke(module,
+                        () -> playButtonSpinner.setVisibility(View.GONE));
+            });
             v.setLayoutParams(v.getLayoutParams());
         }
 
