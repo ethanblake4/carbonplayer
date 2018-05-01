@@ -119,6 +119,8 @@
     <string name="media_type_unknown">Unknown</string>
     <string name="media_type_best_match">Best match</string>
     <string name="action_shuffle_artist">Shuffle artist</string>
+    <string name="with_your_google_account">with your Google Account</string>
+    <string name="email_or_phone">Email or phone</string>
 
 
 </resources>

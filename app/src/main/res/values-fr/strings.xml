@@ -3,18 +3,20 @@
 
     <string name="app_name">Carbon Player</string>
 
-    <string name="notification_channel_name">Default</string>
+    <string name="notification_channel_name">Défaut</string>
     <string name="notification_channel_desc">The default notification channel.</string>
 
     <string name="title_activity_intro">Intro</string>
 
-    <string name="intro_welcome">Welcome to Carbon Player</string>
-    <string name="intro_slide_desc">Google Play Music, \ndesigned the way Google intended</string>
+    <string name="intro_welcome">Bienvenu à Carbon Player</string>
+    <string name="intro_slide_desc">Google Play Musique, \na désigné le facon que Google ont prévu</string>
 
-    <string name="intro_setup">Let\'s get setup</string>
-    <string name="intro_slide2_desc">Sign in to your Google Account so we can access your music</string>
-    <string name="intro_signin">Sign In</string>
-    <string name="sign_in_dialog_header">Sign in to your Google Account</string>
+    <string name="intro_setup">Commencons-nous</string>
+    <string name="intro_slide2_desc">Connexion à votre Compte Google pour que nous pouvons accéder ta musique</string>
+    <string name="intro_signin">Connexion</string>
+    <string name="sign_in_dialog_header">Connexion à votre Compte Google</string>
+    <string name="with_your_google_account">à votre Compte Google</string>
+    <string name="email_or_phone">Email ou télé</string>
     <string name="username">Username/Email</string>
     <string name="password">Password</string>
 
@@ -106,4 +108,19 @@
     <string name="search_bar_placeholder">Search music</string>
     <string name="my_library">My Library</string>
     <string name="error_search">Error loading search results.</string>
+
+    <string name="media_type_song">Song</string>
+    <string name="media_type_artist">Artist</string>
+    <string name="media_type_album">Album</string>
+    <string name="media_type_playlist">Playlist</string>
+    <string name="media_type_genre">Genre</string>
+    <string name="media_type_station">Radio station</string>
+    <string name="media_type_situation">Situation</string>
+    <string name="media_type_video">Video</string>
+    <string name="media_type_podcast">Podcast</string>
+    <string name="media_type_unknown">Unknown</string>
+    <string name="media_type_best_match">Best match</string>
+    <string name="action_shuffle_artist">Shuffle artist</string>
+
+
 </resources>

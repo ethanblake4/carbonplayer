@@ -52,6 +52,7 @@
     </style>
 
     <style name="GoogleText" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:fontFamily">sans-serif</item>
         <!-- Hint color and label color in FALSE state -->
         <item name="android:textColorHint">#888</item>
         <item name="android:textSize">14sp</item>
