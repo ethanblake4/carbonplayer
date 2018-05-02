@@ -47,4 +47,8 @@ internal class SongListAdapter(
     }
 
     override fun getItemCount(): Int = mDataset.size
+
+    companion object {
+        const val SONG_HEIGHT_DP = 60
+    }
 }

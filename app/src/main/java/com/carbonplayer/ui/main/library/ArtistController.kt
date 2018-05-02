@@ -3,6 +3,7 @@ package com.carbonplayer.ui.main.library
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -32,6 +33,7 @@ import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
+import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.utils.addToAutoDispose
@@ -123,10 +125,15 @@ class ArtistController(
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
         manager = MusicManager(activity as MainActivity)
+        requestMgr = Glide.with(activity as Activity)
 
         root = inflater.inflate(R.layout.activity_songgroup, container, false)
 
         if(artist is Either.Left) {
+            root.albumLayoutRoot.background = ColorDrawable(Color.DKGRAY)
+            root.songgroup_loader.visibility = View.VISIBLE
+            root.main_backdrop.visibility = View.INVISIBLE
+            root.songgroup_scrollview.visibility = View.INVISIBLE
             (artist as Either.Left).value.subscribe {
                 realArtist = it
                 setupView(root)
@@ -136,12 +143,52 @@ class ArtistController(
             setupView(root)
         }
 
+        root.primaryText.setTextColor(textColor)
+        root.secondaryText.setTextColor(textColor)
+        root.constraintLayout6.background = ColorDrawable(mainColor)
+        root.songgroup_grad.background = GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
+                intArrayOf(mainColor, ColorUtils.modifyAlpha(mainColor, 200),
+                        ColorUtils.modifyAlpha(mainColor, 0)))
+
+        root.downloadButton.imageTintList = ColorStateList.valueOf(textColor)
+        root.overflowButton.imageTintList = ColorStateList.valueOf(textColor)
+        root.expandDescriptionChevron.imageTintList = ColorStateList.valueOf(bodyColor)
+
+        root.play_fab.backgroundTintList = ColorStateList.valueOf(secondaryColor)
+        root.play_fab.imageTintList = ColorStateList.valueOf(secondaryTextColor)
+
+        root.downloadButton.setOnClickListener {
+            activity?.let { Toast.makeText(it, "Downloading is not supported yet", Toast.LENGTH_LONG).show() }
+        }
+        root.overflowButton.setOnClickListener { v ->
+            (activity as? MainActivity)?.showArtistPopup(v, realArtist)
+        }
+
+        root.songgroup_scrollview.setScrollViewCallbacks(object : ObservableScrollViewCallbacks {
+            override fun onUpOrCancelMotionEvent(scrollState: ScrollState?) {}
+
+            override fun onScrollChanged(scrollY: Int, firstScroll: Boolean, dragging: Boolean) {
+                root.main_backdrop.offset = (-scrollY).toFloat()
+            }
+
+            override fun onDownMotionEvent() {}
+        })
+
+        root.albumLayoutRoot.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
+
+        squareHeight = root.main_backdrop.height
+        fabOffset = MathUtils.dpToPx(activity, 28)
+
+        root.play_fab.visibility = View.INVISIBLE
+
+
         return root
 
     }
 
     private fun setupView(view: View): View {
         if(realArtist.artistBio == null) {
+            val aId = realArtist.artistId
             Protocol.getNautilusArtist(activity!!, realArtist.artistId)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -151,7 +198,7 @@ class ArtistController(
                         val rlm = Realm.getDefaultInstance()
 
                         artistProxy = rlm.where(Artist::class.java)
-                                .equalTo(Artist.ID, realArtist.artistId)
+                                .equalTo(Artist.ID, aId)
                                 .findFirst()!!
 
                         rlm.executeTransaction {
@@ -220,61 +267,20 @@ class ArtistController(
                     }).addToAutoDispose()
         }
 
-
-
         Timber.d("artist ${realArtist.artistId}")
-
-        root.primaryText.setTextColor(textColor)
-        root.secondaryText.setTextColor(textColor)
-        root.constraintLayout6.background = ColorDrawable(mainColor)
-        root.songgroup_grad.background = GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
-                intArrayOf(mainColor, ColorUtils.modifyAlpha(mainColor, 200),
-                        ColorUtils.modifyAlpha(mainColor, 0)))
-
-        root.downloadButton.imageTintList = ColorStateList.valueOf(textColor)
-        root.overflowButton.imageTintList = ColorStateList.valueOf(textColor)
-        root.expandDescriptionChevron.imageTintList = ColorStateList.valueOf(bodyColor)
-
-        root.play_fab.backgroundTintList = ColorStateList.valueOf(secondaryColor)
-        root.play_fab.imageTintList = ColorStateList.valueOf(secondaryTextColor)
-
-        root.downloadButton.setOnClickListener {
-            activity?.let { Toast.makeText(it, "Downloading is not supported yet", Toast.LENGTH_LONG).show() }
-        }
-        root.overflowButton.setOnClickListener { v ->
-            (activity as? MainActivity)?.showArtistPopup(v, realArtist)
-        }
-
-        root.songgroup_scrollview.setScrollViewCallbacks(object : ObservableScrollViewCallbacks {
-            override fun onUpOrCancelMotionEvent(scrollState: ScrollState?) {}
-
-            override fun onScrollChanged(scrollY: Int, firstScroll: Boolean, dragging: Boolean) {
-                root.main_backdrop.offset = (-scrollY).toFloat()
-            }
-
-            override fun onDownMotionEvent() {}
-        })
-
-        root.albumLayoutRoot.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
-
-        squareHeight = root.main_backdrop.height
-        fabOffset = MathUtils.dpToPx(activity, 28)
-
-        val preImageWidth = IdentityUtils.displayWidthDp(activity as Activity) - 4
-
-        //val handler = DetailSharedElementEnterCallback(this)
-        //handler.addTextViewSizeResource(root.primaryText,
-        //        R.dimen.small_text_size, R.dimen.large_text_size)
-        //handler.addTextViewSizeResource(root.secondaryText,
-        //        R.dimen.small_text_2, R.dimen.large_text_2)
+        root.albumLayoutRoot.background = ColorDrawable(Color.WHITE)
+        root.songgroup_loader.visibility = View.INVISIBLE
+        root.main_backdrop.visibility = View.VISIBLE
+        root.songgroup_scrollview.visibility = View.VISIBLE
 
         if(extractTopTracks(realArtist).isNotEmpty()) {
             val params = root.songgroup_recycler.layoutParams
-            params.height = (extractTopTracks(realArtist).take(5).size * MathUtils.dpToPx2(resources, 59)) +
+            params.height = (extractTopTracks(realArtist)
+                    .take(5).size * MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP)) +
                     IdentityUtils.getNavbarHeight(resources) +
                     MathUtils.dpToPx2(resources,
                             if ((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
-                                56 else 0)
+                                NowPlayingHelper.HEIGHT_DP else 0)
 
             mAdapter = SongListAdapter(extractTopTracks(realArtist).take(5), {
                 Timber.d("clicked ${it.second}")
@@ -288,13 +294,11 @@ class ArtistController(
             root.songgroup_recycler.adapter = mAdapter
         }
 
-        requestMgr = Glide.with(activity as Activity)
-
+        val preImageWidth = IdentityUtils.displayWidthDp(activity as Activity) - 4
 
         realArtist.bestArtistArtUrl?.let {
             requestMgr.load(it)
-                    .apply(
-                            RequestOptions.overrideOf(preImageWidth, preImageWidth)
+                    .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth)
                                     .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
                     .into(root.main_backdrop)
         }
@@ -317,7 +321,6 @@ class ArtistController(
             }
         }
 
-        root.play_fab.visibility = View.INVISIBLE
         Handler().postDelayed({
             root.play_fab.visibility = View.VISIBLE
             val anim = ScaleAnimation(0f, 1f, 0f, 1f, root.play_fab.pivotX,
@@ -327,7 +330,6 @@ class ArtistController(
             anim.interpolator = FastOutSlowInInterpolator()
             root.play_fab.startAnimation(anim)
         }, 600)
-
 
         root.primaryText.text = realArtist.name
 
@@ -358,9 +360,8 @@ class ArtistController(
         return root
     }
 
-    fun extractTopTracks(artist: IArtist): List<ITrack> {
-        return if(artist is SkyjamArtist) artist.topTracks
-        else (artist as Artist).topTracks
+    private fun extractTopTracks(artist: IArtist): List<ITrack> {
+        return (artist as? SkyjamArtist)?.topTracks ?: (artist as Artist).topTracks
     }
 
     fun setTransformedTextPosition(transform: Int) {
