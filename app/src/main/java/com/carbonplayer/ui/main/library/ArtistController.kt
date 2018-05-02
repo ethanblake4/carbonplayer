@@ -137,6 +137,9 @@ class ArtistController(
 
         root = inflater.inflate(R.layout.activity_songgroup, container, false)
 
+        root.main_backdrop.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.TWO_BY_ONE
+        root.parallaxSquare.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.TWO_BY_ONE
+
         if(artist is Either.Left) {
             root.albumLayoutRoot.background = ColorDrawable(Color.DKGRAY)
             root.songgroup_loader.visibility = View.VISIBLE
@@ -274,6 +277,16 @@ class ArtistController(
                         }
 
                         if(extractRelatedArtists(artistProxy).isNotEmpty()) {
+                            val params = root.songgroup_recycler.layoutParams
+                            params.height = (extractTopTracks(realArtist)
+                                    .take(5).size *
+                                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
+                            root.artistgroup_recycler.setPadding(0, 0, 0,
+                                    IdentityUtils.getNavbarHeight(resources) +
+                                            MathUtils.dpToPx2(resources,
+                                                    if ((activity as MainActivity).nowplaying_frame
+                                                            .visibility == View.VISIBLE)
+                                                        NowPlayingHelper.HEIGHT_DP else 0))
                             root.artistArtistsHeader.visibility = View.VISIBLE
                             root.artistgroup_recycler.visibility = View.VISIBLE
                             root.artistgroup_recycler.layoutManager = LinearLayoutManager(activity)
@@ -284,6 +297,17 @@ class ArtistController(
                         }
 
                         if(extractAllAlbums(artistProxy).isNotEmpty()) {
+                            val params = root.songgroup_recycler.layoutParams
+                            params.height = (extractTopTracks(realArtist)
+                                    .take(5).size *
+                                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
+                            root.artistgroup_recycler.setPadding(0, 0, 0, 0)
+                            root.albumgroup_recycler.setPadding(0, 0, 0,
+                                    IdentityUtils.getNavbarHeight(resources) +
+                                            MathUtils.dpToPx2(resources,
+                                                    if ((activity as MainActivity).nowplaying_frame
+                                                            .visibility == View.VISIBLE)
+                                                        NowPlayingHelper.HEIGHT_DP else 0))
                             root.artistAlbumsHeader.visibility = View.VISIBLE
                             root.albumgroup_recycler.visibility = View.VISIBLE
                             root.albumgroup_recycler.layoutManager = GridLayoutManager(activity, 2)
@@ -304,9 +328,6 @@ class ArtistController(
         root.songgroup_loader.visibility = View.INVISIBLE
         root.main_backdrop.visibility = View.VISIBLE
         root.songgroup_scrollview.visibility = View.VISIBLE
-
-        root.main_backdrop.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.TWO_BY_ONE
-        root.parallaxSquare.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.TWO_BY_ONE
 
         if(extractTopTracks(realArtist).isNotEmpty()) {
             val params = root.songgroup_recycler.layoutParams
@@ -330,6 +351,16 @@ class ArtistController(
         }
 
         if(extractRelatedArtists(realArtist).isNotEmpty()) {
+            val params = root.songgroup_recycler.layoutParams
+            params.height = (extractTopTracks(realArtist)
+                    .take(5).size *
+                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
+            root.artistgroup_recycler.setPadding(0, 0, 0,
+                    IdentityUtils.getNavbarHeight(resources) +
+                            MathUtils.dpToPx2(resources,
+                                    if ((activity as MainActivity).nowplaying_frame
+                                            .visibility == View.VISIBLE)
+                                        NowPlayingHelper.HEIGHT_DP else 0))
             root.artistArtistsHeader.visibility = View.VISIBLE
             root.artistgroup_recycler.visibility = View.VISIBLE
             root.artistgroup_recycler.layoutManager = LinearLayoutManager(activity)
@@ -340,6 +371,17 @@ class ArtistController(
         }
 
         if(extractAllAlbums(realArtist).isNotEmpty()) {
+            val params = root.songgroup_recycler.layoutParams
+            params.height = (extractTopTracks(realArtist)
+                    .take(5).size *
+                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
+            root.artistgroup_recycler.setPadding(0, 0, 0, 0)
+            root.albumgroup_recycler.setPadding(0, 0, 0,
+                    IdentityUtils.getNavbarHeight(resources) +
+                            MathUtils.dpToPx2(resources,
+                                    if ((activity as MainActivity).nowplaying_frame
+                                            .visibility == View.VISIBLE)
+                                        NowPlayingHelper.HEIGHT_DP else 0))
             root.artistAlbumsHeader.visibility = View.VISIBLE
             root.albumgroup_recycler.visibility = View.VISIBLE
             root.albumgroup_recycler.layoutManager = GridLayoutManager(activity, 2)
