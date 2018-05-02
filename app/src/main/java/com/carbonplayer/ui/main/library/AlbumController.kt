@@ -314,7 +314,8 @@ class AlbumController(
         } else setupRecycler()
 
         root.play_fab.setOnClickListener {
-            manager.fromAlbum(album, 0)
+            if(album is Album) manager.fromAlbum(album, 0)
+            else manager.fromTracks(tracks, 0, false)
         }
 
 
