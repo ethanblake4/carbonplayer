@@ -30,6 +30,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.base.IArtist
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto
 import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
@@ -273,6 +274,9 @@ class ArtistController(
         root.main_backdrop.visibility = View.VISIBLE
         root.songgroup_scrollview.visibility = View.VISIBLE
 
+        root.main_backdrop.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.TWO_BY_ONE
+        root.parallaxSquare.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.TWO_BY_ONE
+
         if(extractTopTracks(realArtist).isNotEmpty()) {
             val params = root.songgroup_recycler.layoutParams
             params.height = (extractTopTracks(realArtist)
@@ -362,11 +366,6 @@ class ArtistController(
 
     private fun extractTopTracks(artist: IArtist): List<ITrack> {
         return (artist as? SkyjamArtist)?.topTracks ?: (artist as Artist).topTracks
-    }
-
-    fun setTransformedTextPosition(transform: Int) {
-        root.secondaryText.layout(root.secondaryText.left, root.secondaryText.top + transform,
-                root.secondaryText.right, root.secondaryText.bottom + transform)
     }
 
     private val layoutListener = ViewTreeObserver.OnGlobalLayoutListener {

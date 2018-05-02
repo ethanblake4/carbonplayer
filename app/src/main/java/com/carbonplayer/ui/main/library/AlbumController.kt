@@ -30,6 +30,7 @@ import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.network.Protocol
@@ -127,6 +128,9 @@ class AlbumController(
         dp56 = MathUtils.dpToPx(activity, 56)
 
         root.underlayAppbar.background = ColorDrawable(mainColor)
+
+        root.main_backdrop.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.ONE_BY_ONE
+        root.parallaxSquare.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.ONE_BY_ONE
 
         root.underlayAppbar.setPadding(0, IdentityUtils.getStatusBarHeight(resources), 0, 0)
 

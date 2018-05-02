@@ -10,7 +10,7 @@
     android:focusableInTouchMode="true"
     tools:context=".ui.main.AlbumActivity">
 
-    <com.carbonplayer.ui.widget.ParallaxScrimageView
+    <com.carbonplayer.ui.widget.AspectParallaxScrimageView
         android:id="@+id/main_backdrop"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
