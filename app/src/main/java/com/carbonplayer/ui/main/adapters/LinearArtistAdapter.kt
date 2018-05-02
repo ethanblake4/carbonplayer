@@ -11,7 +11,6 @@ import com.bumptech.glide.Glide
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.base.IArtist
-import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import com.carbonplayer.ui.widget.fastscroll.SectionTitleProvider
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.github.florent37.glidepalette.GlidePalette
@@ -24,8 +23,9 @@ import kotlinx.android.synthetic.main.artist_list_item.view.*
 internal class LinearArtistAdapter(
         private val context: Context,
         private val dataset: List<IArtist>,
-        private val clicked: (Pair<IArtist, PaletteUtil.SwatchPair?>) -> Unit)
-    : RecyclerView.Adapter<LinearArtistAdapter.ViewHolder>(), SectionTitleProvider {
+        private val clicked: (Pair<IArtist, PaletteUtil.SwatchPair?>) -> Unit,
+        private val lightTheme: Boolean = false
+)   : RecyclerView.Adapter<LinearArtistAdapter.ViewHolder>(), SectionTitleProvider {
 
     override fun getSectionTitle(position: Int): String =
             dataset[position].name.take(1).toUpperCase()
@@ -47,7 +47,8 @@ internal class LinearArtistAdapter(
     override fun onCreateViewHolder(parent: ViewGroup,
                                     viewType: Int): ViewHolder {
         val v = LayoutInflater.from(parent.context)
-                .inflate(R.layout.artist_list_item, parent, false)
+                .inflate(if(lightTheme) R.layout.artist_list_item_light else R.layout.artist_list_item,
+                        parent, false)
 
         return ViewHolder(v)
     }

@@ -11,6 +11,7 @@ import android.os.Handler
 import android.support.annotation.Keep
 import android.support.constraint.ConstraintSet
 import android.support.v4.view.animation.FastOutSlowInInterpolator
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.transition.AutoTransition
@@ -27,16 +28,22 @@ import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.carbonplayer.R
+import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.Artist
+import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.IArtist
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.main.MainActivity
+import com.carbonplayer.ui.main.adapters.AlbumAdapterJ
+import com.carbonplayer.ui.main.adapters.LinearArtistAdapter
 import com.carbonplayer.ui.main.adapters.SongListAdapter
+import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.Either
 import com.carbonplayer.utils.general.IdentityUtils
@@ -151,6 +158,8 @@ class ArtistController(
                 intArrayOf(mainColor, ColorUtils.modifyAlpha(mainColor, 200),
                         ColorUtils.modifyAlpha(mainColor, 0)))
 
+        root.artistTracksHeader.visibility = View.VISIBLE
+
         root.downloadButton.imageTintList = ColorStateList.valueOf(textColor)
         root.overflowButton.imageTintList = ColorStateList.valueOf(textColor)
         root.expandDescriptionChevron.imageTintList = ColorStateList.valueOf(bodyColor)
@@ -263,6 +272,28 @@ class ArtistController(
                                 root.songgroup_recycler.adapter = mAdapter
                             }
                         }
+
+                        if(extractRelatedArtists(artistProxy).isNotEmpty()) {
+                            root.artistArtistsHeader.visibility = View.VISIBLE
+                            root.artistgroup_recycler.visibility = View.VISIBLE
+                            root.artistgroup_recycler.layoutManager = LinearLayoutManager(activity)
+                            root.artistgroup_recycler.adapter = LinearArtistAdapter(
+                                    activity!!,
+                                    extractRelatedArtists(realArtist).take(5),
+                                    {})
+                        }
+
+                        if(extractAllAlbums(artistProxy).isNotEmpty()) {
+                            root.artistAlbumsHeader.visibility = View.VISIBLE
+                            root.albumgroup_recycler.visibility = View.VISIBLE
+                            root.albumgroup_recycler.layoutManager = GridLayoutManager(activity, 2)
+                            root.albumgroup_recycler.adapter = if(realArtist is Artist) AlbumAdapterJ(
+                                    extractAllAlbums(realArtist as Artist).take(4) as List<Album>,
+                                    activity as MainActivity, requestMgr) else TopChartsAlbumAdapter(
+                                    extractAllAlbums(realArtist).take(4) as List<SkyjamAlbum>,
+                                    activity as MainActivity,
+                                    requestMgr)
+                        }
                     }, {
                         err -> Timber.e(err)
                     }).addToAutoDispose()
@@ -296,6 +327,28 @@ class ArtistController(
             root.songgroup_recycler.layoutManager = mLayoutManager
 
             root.songgroup_recycler.adapter = mAdapter
+        }
+
+        if(extractRelatedArtists(realArtist).isNotEmpty()) {
+            root.artistArtistsHeader.visibility = View.VISIBLE
+            root.artistgroup_recycler.visibility = View.VISIBLE
+            root.artistgroup_recycler.layoutManager = LinearLayoutManager(activity)
+            root.artistgroup_recycler.adapter = LinearArtistAdapter(
+                    activity!!,
+                    extractRelatedArtists(realArtist).take(5),
+                    {}, true)
+        }
+
+        if(extractAllAlbums(realArtist).isNotEmpty()) {
+            root.artistAlbumsHeader.visibility = View.VISIBLE
+            root.albumgroup_recycler.visibility = View.VISIBLE
+            root.albumgroup_recycler.layoutManager = GridLayoutManager(activity, 2)
+            root.albumgroup_recycler.adapter = if(realArtist is Artist) AlbumAdapterJ(
+                    extractAllAlbums(realArtist as Artist).take(4) as List<Album>,
+                    activity as MainActivity, requestMgr) else TopChartsAlbumAdapter(
+                        extractAllAlbums(realArtist).take(4) as List<SkyjamAlbum>,
+                        activity as MainActivity,
+                        requestMgr)
         }
 
         val preImageWidth = IdentityUtils.displayWidthDp(activity as Activity) - 4
@@ -366,6 +419,14 @@ class ArtistController(
 
     private fun extractTopTracks(artist: IArtist): List<ITrack> {
         return (artist as? SkyjamArtist)?.topTracks ?: (artist as Artist).topTracks
+    }
+
+    private fun extractRelatedArtists(artist: IArtist): List<IArtist> {
+        return (artist as? SkyjamArtist)?.related_artists ?: (artist as Artist).related_artists
+    }
+
+    private fun extractAllAlbums(artist: IArtist): List<IAlbum> {
+        return (artist as? SkyjamArtist)?.albums ?: (artist as Artist).albums
     }
 
     private val layoutListener = ViewTreeObserver.OnGlobalLayoutListener {

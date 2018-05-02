@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="20dp"
+        android:textColor="#000"
         android:fontFamily="@font/renner_medium"
         android:text="Cluster Title"
         android:textSize="20sp" />
@@ -27,6 +28,8 @@
         android:layout_width="wrap_content"
         android:layout_height="38dp"
         android:layout_gravity="center_horizontal"
+        android:backgroundTint="#fff"
         android:text="See all"
+        android:textColor="#000"
         android:textStyle="bold" />
 </LinearLayout>
