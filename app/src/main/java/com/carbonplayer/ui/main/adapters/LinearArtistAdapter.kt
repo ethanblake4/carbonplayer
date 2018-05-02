@@ -9,7 +9,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.carbonplayer.R
+import com.carbonplayer.model.entity.Artist
+import com.carbonplayer.model.entity.base.IArtist
 import com.carbonplayer.model.entity.skyjam.SkyjamArtist
+import com.carbonplayer.ui.widget.fastscroll.SectionTitleProvider
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.github.florent37.glidepalette.GlidePalette
 import de.hdodenhof.circleimageview.CircleImageView
@@ -20,9 +23,12 @@ import kotlinx.android.synthetic.main.artist_list_item.view.*
  */
 internal class LinearArtistAdapter(
         private val context: Context,
-        private val dataset: List<SkyjamArtist>,
-        private val clicked: (Pair<SkyjamArtist, PaletteUtil.SwatchPair?>) -> Unit)
-    : RecyclerView.Adapter<LinearArtistAdapter.ViewHolder>() {
+        private val dataset: List<IArtist>,
+        private val clicked: (Pair<IArtist, PaletteUtil.SwatchPair?>) -> Unit)
+    : RecyclerView.Adapter<LinearArtistAdapter.ViewHolder>(), SectionTitleProvider {
+
+    override fun getSectionTitle(position: Int): String =
+            dataset[position].name.take(1).toUpperCase()
 
     internal inner class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
 
@@ -52,9 +58,11 @@ internal class LinearArtistAdapter(
 
         holder.name.text = t.name
 
+        val artRef = t.artistArtRef ?: (t as? Artist)?.artistArtRefs?.firstOrNull()?.url
+
         Glide.with(holder.itemView)
-                .load(t.artistArtRef)
-                .listener(GlidePalette.with(t.artistArtRef).intoCallBack { it?.let { palette ->
+                .load(artRef)
+                .listener(GlidePalette.with(artRef).intoCallBack { it?.let { palette ->
                     holder.swatchPair = PaletteUtil.getSwatches(context, palette)
                 }})
                 .into(holder.thumb)

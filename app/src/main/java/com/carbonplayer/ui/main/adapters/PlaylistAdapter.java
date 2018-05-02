@@ -241,6 +241,6 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
     @Override
     public String getSectionTitle(int position) {
-        return dataset.get(position).getName().substring(0, 1);
+        return dataset.get(position).getName().substring(0, 1).toUpperCase();
     }
 }

@@ -112,6 +112,9 @@ class NowPlayingHelper(private val activity: Activity) {
 
         bottomNavHeight = activity.bottom_nav.height
 
+        if(activity.npui_recycler.layoutManager == null)
+            activity.npui_recycler.layoutManager = LinearLayoutManager(activity)
+
         activity.npui_playpause.setOnClickListener {
             val intent = newIntent().apply {
                 action = Constants.ACTION.PLAYPAUSE
@@ -156,7 +159,7 @@ class NowPlayingHelper(private val activity: Activity) {
         activity.nowplaying_frame.npui_volumebar_background
                 .layoutParams.width = (dispW / 2f).toInt() - heightPx
 
-        activity.npui_recycler.translationY = dispW * 1.5f
+        activity.slidingPanel.visibility = View.GONE
         activity.npui_recycler.isNestedScrollingEnabled = false
 
         activity.nowplaying_frame.npui_volumebar_background.translationY =
@@ -172,6 +175,9 @@ class NowPlayingHelper(private val activity: Activity) {
                 (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth))
 
         activity.nowplaying_frame.callback = { up ->
+            activity.slidingPanel.post {
+                activity.slidingPanel.visibility = if(up > 0.99f) View.VISIBLE else View.GONE
+            }
 
             activity.nowplaying_frame.npui_thumb.run {
                 postOnAnimation {
@@ -355,6 +361,8 @@ class NowPlayingHelper(private val activity: Activity) {
                 maybeBind(this)
             }
 
+            updateRecycler(tracks)
+
             ContextCompat.startForegroundService(activity, intent)
         }
 
@@ -366,6 +374,8 @@ class NowPlayingHelper(private val activity: Activity) {
 
                 maybeBind(this)
             }
+
+            addAtEndToRecycler(trackQueue.parcelable(), tracks)
 
             ContextCompat.startForegroundService(activity, intent)
         }
@@ -381,7 +391,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
             ContextCompat.startForegroundService(activity, intent)
 
-            updateRecycler(trackQueue.parcelable())
+            addNextToRecycler(trackQueue.parcelable())
         }
 
         override fun reorder(pos: Int, pnew: Int) {
