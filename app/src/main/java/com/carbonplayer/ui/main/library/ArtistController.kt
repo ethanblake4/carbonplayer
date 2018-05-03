@@ -194,9 +194,7 @@ class ArtistController(
 
         root.play_fab.visibility = View.INVISIBLE
 
-
         return root
-
     }
 
     private fun setupView(view: View): View {
@@ -297,6 +295,7 @@ class ArtistController(
                                     { (artist, swPair) ->
                                         (activity as MainActivity).gotoArtist(artist,
                                                 swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)})
+                            root.artistgroup_recycler.requestLayout()
                         }
 
                         if(extractAllAlbums(artistProxy).isNotEmpty()) {
@@ -374,6 +373,7 @@ class ArtistController(
                         (activity as MainActivity).gotoArtist(artist,
                                 swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)
                     }, true)
+
         }
 
         if(extractAllAlbums(realArtist).isNotEmpty()) {
@@ -463,6 +463,12 @@ class ArtistController(
         }
 
         return root
+    }
+
+    override fun onAttach(view: View) {
+        super.onAttach(view)
+
+        root.artistgroup_recycler.requestLayout()
     }
 
     private fun extractTopTracks(artist: IArtist): List<ITrack> {
