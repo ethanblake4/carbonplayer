@@ -27,6 +27,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
+import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.Artist
@@ -44,12 +45,14 @@ import com.carbonplayer.ui.main.adapters.AlbumAdapterJ
 import com.carbonplayer.ui.main.adapters.LinearArtistAdapter
 import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
+import com.carbonplayer.ui.main.dataui.AlbumListController
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.Either
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.ColorUtils
 import com.carbonplayer.utils.ui.PaletteUtil
+import com.github.florent37.glidepalette.GlidePalette
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import com.github.ksoichiro.android.observablescrollview.ScrollState
 import io.reactivex.Observable
@@ -86,6 +89,8 @@ class ArtistController(
     private var expanded = false
     private var ogHeight = 0
 
+    private var swatchPair: PaletteUtil.SwatchPair? = null
+
     private var mAdapter: RecyclerView.Adapter<*>? = null
     private var mLayoutManager: RecyclerView.LayoutManager? = null
 
@@ -109,7 +114,9 @@ class ArtistController(
             swatchPair.primary.bodyTextColor,
             swatchPair.secondary.rgb,
             swatchPair.secondary.bodyTextColor
-    )
+    ) {
+        this.swatchPair = swatchPair
+    }
 
     @Keep constructor(futureArtist: Observable<IArtist>, swatchPair: PaletteUtil.SwatchPair) : this (
             Either.Left(futureArtist),
@@ -118,7 +125,9 @@ class ArtistController(
             swatchPair.primary.bodyTextColor,
             swatchPair.secondary.rgb,
             swatchPair.secondary.bodyTextColor
-    )
+    ) {
+        this.swatchPair = swatchPair
+    }
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("artistId", realArtist.artistId)
@@ -171,7 +180,8 @@ class ArtistController(
         root.play_fab.imageTintList = ColorStateList.valueOf(secondaryTextColor)
 
         root.downloadButton.setOnClickListener {
-            activity?.let { Toast.makeText(it, "Downloading is not supported yet", Toast.LENGTH_LONG).show() }
+            activity?.let { Toast.makeText(it,
+                    "Downloading is not supported yet", Toast.LENGTH_LONG).show() }
         }
         root.overflowButton.setOnClickListener { v ->
             (activity as? MainActivity)?.showArtistPopup(v, realArtist)
@@ -277,7 +287,7 @@ class ArtistController(
 
                         if(extractRelatedArtists(artistProxy).isNotEmpty()) {
                             val params = root.songgroup_recycler.layoutParams
-                            params.height = (extractTopTracks(realArtist)
+                            params.height = (extractTopTracks(artistProxy)
                                     .take(5).size *
                                     MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
                             root.artistgroup_recycler.setPadding(0, 0, 0,
@@ -291,7 +301,7 @@ class ArtistController(
                             root.artistgroup_recycler.layoutManager = LinearLayoutManager(activity)
                             root.artistgroup_recycler.adapter = LinearArtistAdapter(
                                     activity!!,
-                                    extractRelatedArtists(realArtist).take(5),
+                                    extractRelatedArtists(artistProxy).take(5),
                                     { (artist, swPair) ->
                                         (activity as MainActivity).gotoArtist(artist,
                                                 swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)})
@@ -300,7 +310,7 @@ class ArtistController(
 
                         if(extractAllAlbums(artistProxy).isNotEmpty()) {
                             val params = root.songgroup_recycler.layoutParams
-                            params.height = (extractTopTracks(realArtist)
+                            params.height = (extractTopTracks(artistProxy)
                                     .take(5).size *
                                     MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
                             root.artistgroup_recycler.setPadding(0, 0, 0, 0)
@@ -314,11 +324,19 @@ class ArtistController(
                             root.albumgroup_recycler.visibility = View.VISIBLE
                             root.albumgroup_recycler.layoutManager = GridLayoutManager(activity, 2)
                             root.albumgroup_recycler.adapter = if(realArtist is Artist) AlbumAdapterJ(
-                                    extractAllAlbums(realArtist as Artist).take(4) as List<Album>,
+                                    extractAllAlbums(artistProxy).take(4) as List<Album>,
                                     activity as MainActivity, requestMgr) else TopChartsAlbumAdapter(
-                                    extractAllAlbums(realArtist).take(4) as List<SkyjamAlbum>,
+                                    extractAllAlbums(artistProxy).take(4) as List<SkyjamAlbum>,
                                     activity as MainActivity,
                                     requestMgr)
+                            if(extractAllAlbums(realArtist).size < 4) {
+                                root.artistAllAlbums.visibility = View.INVISIBLE
+                            } else root.artistAllAlbums.setOnClickListener {
+                                (activity as MainActivity).goto(AlbumListController(
+                                        extractAllAlbums(realArtist),
+                                        swatchPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR
+                                ))
+                            }
                         }
                     }, {
                         err -> Timber.e(err)
@@ -405,6 +423,27 @@ class ArtistController(
             requestMgr.load(it)
                     .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth)
                                     .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
+                    .apply { if(swatchPair == PaletteUtil.DEFAULT_SWATCH_PAIR) {
+                        listener(GlidePalette.with(it)
+                                .use(0)
+                                .intoCallBack({ palette -> if (palette != null) {
+                                    val pair = PaletteUtil.getSwatches(activity!!, palette)
+                                    this@ArtistController.swatchPair = pair
+                                    PaletteUtil.crossfadeBackground(
+                                            root.constraintLayout6, pair.primary)
+                                PaletteUtil.crossfadeTitle(
+                                        root.primaryText, pair.primary)
+                                PaletteUtil.crossfadeSubtitle(root.secondaryText, pair.secondary)
+
+                                if(ColorUtils.isDark(pair.primary.bodyTextColor)) {
+                                    root.overflowButton.imageTintList =
+                                            CarbonPlayerApplication.instance.darkCSL
+                                }
+                            }
+                        })
+                        )
+                        }
+                    }
                     .into(root.main_backdrop)
         }
 

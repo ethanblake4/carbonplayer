@@ -25,6 +25,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
+import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
@@ -43,6 +44,7 @@ import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.ColorUtils
 import com.carbonplayer.utils.ui.PaletteUtil
+import com.github.florent37.glidepalette.GlidePalette
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import com.github.ksoichiro.android.observablescrollview.ScrollState
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -79,6 +81,7 @@ class AlbumController(
     private var mAdapter: RecyclerView.Adapter<*>? = null
     private var mLayoutManager: RecyclerView.LayoutManager? = null
 
+    private var swatchPair: PaletteUtil.SwatchPair? = null
     private var aId: String
     private var albumProxy = album
 
@@ -96,7 +99,7 @@ class AlbumController(
             savedState.getInt("bodyColor"),
             savedState.getInt("secondaryColor"),
             savedState.getInt("secondaryTextColor")
-    )
+    ) { this.swatchPair = swatchPair }
 
     @Keep constructor(album: IAlbum, swatchPair: PaletteUtil.SwatchPair) : this (
             album,
@@ -105,7 +108,9 @@ class AlbumController(
             swatchPair.primary.bodyTextColor,
             swatchPair.secondary.rgb,
             swatchPair.secondary.bodyTextColor
-    )
+    ) {
+        this.swatchPair = swatchPair
+    }
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("albumId", album.albumId)
@@ -242,6 +247,27 @@ class AlbumController(
         requestMgr.load(album.albumArtRef)
                 .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth)
                                 .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
+                .apply { if(swatchPair == PaletteUtil.DEFAULT_SWATCH_PAIR) {
+                    listener(GlidePalette.with(album.albumArtRef)
+                            .use(0)
+                            .intoCallBack({ palette -> if (palette != null) {
+                                val pair = PaletteUtil.getSwatches(activity!!, palette)
+
+                                PaletteUtil.crossfadeBackground(
+                                        root.constraintLayout6, pair.primary)
+                                PaletteUtil.crossfadeTitle(
+                                        root.primaryText, pair.primary)
+                                PaletteUtil.crossfadeSubtitle(root.secondaryText, pair.secondary)
+
+                                if(ColorUtils.isDark(pair.primary.bodyTextColor)) {
+                                    root.overflowButton.imageTintList =
+                                            CarbonPlayerApplication.instance.darkCSL
+                                }
+                            }
+                            })
+                    )
+                }
+                }
                 .into(root.main_backdrop)
 
         if(album.description != null && album.description!!.isNotBlank()) {

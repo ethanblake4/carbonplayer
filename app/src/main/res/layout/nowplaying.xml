@@ -11,7 +11,7 @@
         android:id="@+id/npui_thumb"
         android:layout_width="56dp"
         android:layout_height="0dp"
-        android:scaleType="centerCrop"
+        android:scaleType="fitCenter"
         android:src="@drawable/unknown_music_track" />
 
     <TextView

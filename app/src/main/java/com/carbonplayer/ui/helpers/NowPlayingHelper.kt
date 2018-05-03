@@ -17,7 +17,9 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.Scroller
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.RequestOptions
 import com.carbonplayer.R
 import com.carbonplayer.audio.MusicPlayerService
 import com.carbonplayer.audio.TrackQueue
@@ -35,12 +37,10 @@ import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.CompletableSubject
-import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.controller_main.*
 import kotlinx.android.synthetic.main.nowplaying.*
 import kotlinx.android.synthetic.main.nowplaying.view.*
 import timber.log.Timber
-import java.util.concurrent.Future
 
 
 /**
@@ -162,6 +162,9 @@ class NowPlayingHelper(private val activity: Activity) {
 
         activity.slidingPanel.visibility = View.GONE
         activity.npui_recycler.isNestedScrollingEnabled = false
+
+        activity.npui_recycler.setPadding(0, IdentityUtils.getStatusBarHeight(activity.resources),
+                0, 0)
 
         activity.nowplaying_frame.npui_volumebar_background.translationY =
                 (dispW * 1.3f) + (heightPx /4)
@@ -413,6 +416,8 @@ class NowPlayingHelper(private val activity: Activity) {
                     }
                     val track = msg.obj as ParcelableTrack
                     requestMgr.load(track.albumArtURL)
+                            .apply(RequestOptions.overrideOf(dispW, dispH)
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL))
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(activity.npui_thumb)
 
