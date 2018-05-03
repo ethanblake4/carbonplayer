@@ -12,6 +12,7 @@ import android.os.*
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.support.v7.widget.LinearLayoutManager
+import android.text.TextUtils
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Scroller
@@ -90,7 +91,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
             try {
                 /**
-                 * Register an [IncomingHandler] so we recieve messages from the service
+                 * Register an [IncomingHandler] so we receive messages from the service
                  */
                 Timber.d("Registering bound client")
                 val msg = Message.obtain(null, Constants.MESSAGE.REGISTER_CLIENT)
@@ -238,32 +239,16 @@ class NowPlayingHelper(private val activity: Activity) {
         activity.npui_recycler.postOnAnimation(queueSwipeRunnable)
     }
 
-    fun newRadioFeed(radioFeedReason: RadioFeedReason, seed: String?) {
-
-        val intent = newIntent().apply {
-
-            action = if (serviceStarted || isServiceRunning()) Constants.ACTION.RADIO_FEED
-            else Constants.ACTION.START_SERVICE
-
-            putExtra(Constants.KEY.RADIO_SEED, seed)
-            putExtra(Constants.KEY.RADIO_FEED_REASON, radioFeedReason.ordinal)
-
-            maybeBind(this)
-        }
-
-        ContextCompat.startForegroundService(activity, intent)
-
-    }
-
     fun newQueue(tracks: List<ITrack>, pos: Int, local: Boolean = true) {
         trackQueue.replace(tracks, pos, false, local)
     }
 
-    fun startRadio(seedType: Int, seed: String): Completable {
+    fun startRadio(seedType: Int, seed: String,
+                   reason: RadioFeedReason = RadioFeedReason.INSTANT_MIX): Completable {
 
         val completer = CompletableSubject.create()
 
-        Protocol.radioFeed(activity, seed, 25, RadioFeedReason.INSTANT_MIX,
+        Protocol.radioFeed(activity, seed, 25, reason,
                 seedType, null)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -433,6 +418,11 @@ class NowPlayingHelper(private val activity: Activity) {
 
                     activity.npui_song.text = track.title
                     activity.npui_artist.text = track.artist
+
+                    activity.npui_song.ellipsize = TextUtils.TruncateAt.MARQUEE
+                    activity.npui_song.setSingleLine(true)
+                    activity.npui_song.marqueeRepeatLimit = 5
+                    activity.npui_song.isSelected = true
                 }
                 Constants.EVENT.Playing -> {
                     activity.npui_playpause

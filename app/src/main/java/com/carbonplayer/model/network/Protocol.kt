@@ -122,6 +122,8 @@ object Protocol {
                     .appendQueryParameter("rz", reason.toApiValue())
                     .build()
 
+            Timber.d("RadioRequest: seedType=$seedType, rz=${reason.toApiValue()}")
+
             val rqAdapter = CarbonPlayerApplication.moshi.adapter(RadioFeedRequest::class.java)
 
             val request = playBuilder(context)

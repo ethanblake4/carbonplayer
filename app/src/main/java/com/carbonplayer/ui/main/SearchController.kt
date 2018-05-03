@@ -16,6 +16,7 @@ import com.carbonplayer.model.entity.utils.MediaTypeUtil
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.adapters.*
+import com.carbonplayer.ui.main.dataui.AlbumListController
 import com.carbonplayer.ui.main.dataui.SongListController
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
@@ -158,6 +159,12 @@ class SearchController(
                                 MediaTypeUtil.TYPE_SONG -> {
                                     (activity as MainActivity).goto(SongListController(
                                             entries.mapNotNull { it.track },
+                                            PaletteUtil.DEFAULT_SWATCH_PAIR
+                                    ))
+                                }
+                                MediaTypeUtil.TYPE_ALBUM -> {
+                                    (activity as MainActivity).goto(AlbumListController(
+                                            entries.mapNotNull { it.album },
                                             PaletteUtil.DEFAULT_SWATCH_PAIR
                                     ))
                                 }

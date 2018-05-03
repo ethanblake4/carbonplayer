@@ -3,34 +3,31 @@ package com.carbonplayer.ui.main.dataui
 import android.os.Bundle
 import android.support.annotation.Keep
 import android.support.design.widget.AppBarLayout
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bluelinelabs.conductor.Controller
+import com.bumptech.glide.Glide
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.ParcelableTrack
-import com.carbonplayer.model.entity.Track
-import com.carbonplayer.model.entity.base.ITrack
-import com.carbonplayer.model.entity.radio.SkyjamStation
+import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.MainActivity
-import com.carbonplayer.ui.main.adapters.SearchSongAdapter
+import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.ui.PaletteUtil
 import kotlinx.android.synthetic.main.controller_single_recycler.view.*
 
-class SongListController(
-        val songList: List<ITrack>,
+class AlbumListController(
+        val albumList: List<IAlbum>,
         val swatchPair: PaletteUtil.SwatchPair
 ) : Controller() {
 
     lateinit var musicManager: MusicManager
 
     @Keep @Suppress("unused")
-    constructor(bundle: Bundle) : this(
-            (bundle.getParcelableArray("tracks") as Array<ParcelableTrack>).toList(),
-            PaletteUtil.DEFAULT_SWATCH_PAIR)
+    constructor() : this(listOf(), PaletteUtil.DEFAULT_SWATCH_PAIR)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
@@ -55,12 +52,11 @@ class SongListController(
 
         root.fastscroll.setRecyclerView(root.main_recycler)
 
-        root.main_recycler.layoutManager = LinearLayoutManager(activity)
-        root.main_recycler.adapter = SearchSongAdapter(
-                songList,
-                { pos -> musicManager.fromTracks(songList, pos, songList.first() is Track) },
-                { v, track -> (activity as MainActivity).showTrackPopup(v, track) }
-
+        root.main_recycler.layoutManager = GridLayoutManager(activity, 2)
+        root.main_recycler.adapter = TopChartsAlbumAdapter(
+                albumList,
+                activity as MainActivity,
+                Glide.with(activity!!)
         )
 
         return root

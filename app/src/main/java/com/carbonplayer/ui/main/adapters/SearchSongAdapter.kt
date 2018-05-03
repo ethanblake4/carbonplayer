@@ -6,6 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.RequestOptions
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.Track
@@ -53,16 +56,22 @@ internal class SearchSongAdapter(
             is SkyjamTrack -> t.albumArtRef?.first()?.url?.let {
                 Glide.with(holder.itemView)
                         .load(it)
+                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
+                        .transition(DrawableTransitionOptions.withCrossFade(200))
                         .into(holder.itemView.trackThumb)
             }
             is Track -> t.albums?.first()?.albumArtRef?.let {
                 Glide.with(holder.itemView)
                         .load(it)
+                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
+                        .transition(DrawableTransitionOptions.withCrossFade(200))
                         .into(holder.itemView.trackThumb)
             }
             is ParcelableTrack -> t.albumArtURL?.let {
                 Glide.with(holder.itemView)
                         .load(it)
+                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
+                        .transition(DrawableTransitionOptions.withCrossFade(200))
                         .into(holder.itemView.trackThumb)
             }
         }

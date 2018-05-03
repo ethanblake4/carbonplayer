@@ -29,6 +29,7 @@ import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.IArtist
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
@@ -454,6 +455,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.menu_start_radio -> {
                     npHelper.startRadio(RadioSeed.TYPE_ARTIST, artist.artistId)
+                }
+                R.id.menu_artist_shuffle -> {
+                    npHelper.startRadio(RadioSeed.TYPE_ARTIST_FOR_SHUFFLE, artist.artistId,
+                            RadioFeedReason.ARTIST_SHUFFLE)
                 }
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",

@@ -119,6 +119,7 @@ class MusicPlaybackImpl(
         mirroredQueue.clear()
         mirroredContentQueue.clear()
         add(queue, track, initFirst)
+
         ontrackchanged(trackNum, mirroredQueue[trackNum])
         playerIsPrepared = false
     }

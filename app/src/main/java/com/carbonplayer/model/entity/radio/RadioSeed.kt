@@ -16,10 +16,11 @@ data class RadioSeed private constructor(
 
         const val TYPE_LIBRARY_TRACK = 1
         const val TYPE_SJ_TRACK = 2
-        const val TYPE_ARTIST = 3 // and 7
+        const val TYPE_ARTIST = 3
         const val TYPE_ALBUM = 4
         const val TYPE_GENRE = 5
         const val TYPE_PLAYLIST = 6 // and 8
+        const val TYPE_ARTIST_FOR_SHUFFLE = 7
         const val TYPE_CURATED_STATION = 9
 
         fun create(sourceId: String, seedType: Int) : RadioSeed {
