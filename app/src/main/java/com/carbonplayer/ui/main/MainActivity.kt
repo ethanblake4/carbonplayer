@@ -17,6 +17,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import com.bluelinelabs.conductor.Conductor
+import com.bluelinelabs.conductor.Controller
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
 import com.carbonplayer.CarbonPlayerApplication
@@ -24,10 +25,17 @@ import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.Artist
+import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.IArtist
+import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.entity.radio.SkyjamStation
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamArtist
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.NowPlayingHelper
@@ -45,6 +53,7 @@ import com.carbonplayer.utils.newIntent
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.carbonplayer.utils.ui.VolumeObserver
 import icepick.Icepick
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
@@ -352,8 +361,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     // When an artist is selected
-    fun gotoArtist(artist: Artist, swatchPair: PaletteUtil.SwatchPair) {
-        val frag = ArtistController(artist, swatchPair)
+    @JvmOverloads fun gotoArtist(artist: IArtist, swatchPair: PaletteUtil.SwatchPair,
+                   load: Boolean = true) {
+
+        val frag = if(artist is Artist || !load) {
+            ArtistController(artist, swatchPair)
+        } else {
+            val futureArtist = Protocol.getNautilusArtist(this, artist.artistId)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+
+            ArtistController(futureArtist as Observable<IArtist>, swatchPair)
+        }
+
         scrollCb(0)
 
         router.pushController(RouterTransaction.with(frag)
@@ -402,7 +422,10 @@ class MainActivity : AppCompatActivity() {
                         album.artists?.first()?.let {
                             gotoArtist(it, PaletteUtil.DEFAULT_SWATCH_PAIR)
                         }
-
+                    }
+                    else if(album is SkyjamAlbum) {
+                        gotoArtist(SkyjamArtist(album.artistId.first()),
+                                PaletteUtil.DEFAULT_SWATCH_PAIR)
                     }
                 }
                 R.id.menu_start_radio -> {
@@ -418,6 +441,17 @@ class MainActivity : AppCompatActivity() {
             return@setOnMenuItemClickListener true
         }
         pop.show()
+    }
+
+    fun goto(controller: Controller) {
+        scrollCb(0)
+
+        router.pushController(RouterTransaction.with(controller)
+                .pushChangeHandler(SimpleScaleTransition(this))
+                .popChangeHandler(SimpleScaleTransition(this)))
+
+        lastAppbarText = main_actionbar_text.text.toString()
+        main_actionbar_text.text = ""
     }
 
     fun showArtistPopup(view: View, artist: IArtist) {
@@ -437,6 +471,58 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.menu_start_radio -> {
                     npHelper.startRadio(RadioSeed.TYPE_ARTIST, artist.artistId)
+                }
+                R.id.menu_artist_shuffle -> {
+                    npHelper.startRadio(RadioSeed.TYPE_ARTIST_FOR_SHUFFLE, artist.artistId,
+                            RadioFeedReason.ARTIST_SHUFFLE)
+                }
+                else -> {
+                    Toast.makeText(this, "This action is not supported yet",
+                            Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            return@setOnMenuItemClickListener true
+        }
+        pop.show()
+    }
+
+    fun showTrackPopup(view: View, track: ITrack) {
+        val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
+        pop.inflate(R.menu.remote_song_popup)
+
+        pop.setOnMenuItemClickListener { item ->
+
+            when (item.itemId) {
+                R.id.menu_share -> {
+                    val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
+                    sharingIntent.type = "text/plain"
+                    val shareBody = "https://play.google.com/music/m/${track.storeId}?signup_if_needed=1"
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
+                    startActivity(Intent.createChooser(sharingIntent, "Share via"))
+                }
+                R.id.menu_start_radio -> {
+                    track.storeId?.let {
+                        npHelper.startRadio(RadioSeed.TYPE_SJ_TRACK, it)
+                    } ?: Toast.makeText(this, "Could not start radio",
+                            Toast.LENGTH_SHORT).show()
+                }
+                R.id.menu_go_to_album -> {
+                    (track as? Track)?.albums?.first()?.let {
+                        gotoAlbum(it, PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    } ?: Toast.makeText(this, "Not supported yet for remote tracks",
+                            Toast.LENGTH_SHORT).show()
+                }
+                R.id.menu_go_to_artist -> {
+                    (track as? Track)?.artists?.first()?.let {
+                        gotoArtist(it, PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    } ?: (track as? SkyjamTrack)?.artistId?.first()?.let {
+                        gotoArtist(Artist(it, track.albumArtist, false),
+                                PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    } ?: (track as? ParcelableTrack)?.artistId?.first()?.let {
+                        gotoArtist(Artist(it, track.albumArtist, false),
+                                PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    }
                 }
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",

@@ -43,6 +43,7 @@ class AlbumPageController : Controller() {
                     IdentityUtils.getNavbarHeight(it))
         }
 
+        
         layoutManager = GridLayoutManager(activity, 2)
 
 

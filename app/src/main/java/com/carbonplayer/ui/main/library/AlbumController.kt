@@ -30,6 +30,7 @@ import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.network.Protocol
@@ -127,6 +128,9 @@ class AlbumController(
         dp56 = MathUtils.dpToPx(activity, 56)
 
         root.underlayAppbar.background = ColorDrawable(mainColor)
+
+        root.main_backdrop.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.ONE_BY_ONE
+        root.parallaxSquare.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.ONE_BY_ONE
 
         root.underlayAppbar.setPadding(0, IdentityUtils.getStatusBarHeight(resources), 0, 0)
 
@@ -284,7 +288,7 @@ class AlbumController(
 
         val setupRecycler = {
             val params = root.songgroup_recycler.layoutParams
-            params.height = (tracks.size * MathUtils.dpToPx2(resources, 60)) +
+            params.height = (tracks.size * MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP)) +
                     IdentityUtils.getNavbarHeight(resources) +
                     MathUtils.dpToPx2(resources,
                             if ((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
@@ -310,7 +314,8 @@ class AlbumController(
         } else setupRecycler()
 
         root.play_fab.setOnClickListener {
-            manager.fromAlbum(album, 0)
+            if(album is Album) manager.fromAlbum(album, 0)
+            else manager.fromTracks(tracks, 0, false)
         }
 
 

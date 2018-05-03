@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:orientation="vertical">
 
-        <com.carbonplayer.ui.widget.SquareView
+        <com.carbonplayer.ui.widget.AspectView
             android:id="@+id/parallaxSquare"
             android:layout_width="match_parent"
             android:layout_height="0dp" />
@@ -171,6 +171,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/artistgroup_recycler"
+            android:nestedScrollingEnabled="false"
             android:visibility="gone"/>
 
         <FrameLayout
@@ -203,6 +204,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/albumgroup_recycler"
+            android:nestedScrollingEnabled="false"
             android:visibility="gone"/>
 
     </LinearLayout>

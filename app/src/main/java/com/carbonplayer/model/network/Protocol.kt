@@ -122,6 +122,8 @@ object Protocol {
                     .appendQueryParameter("rz", reason.toApiValue())
                     .build()
 
+            Timber.d("RadioRequest: seedType=$seedType, rz=${reason.toApiValue()}")
+
             val rqAdapter = CarbonPlayerApplication.moshi.adapter(RadioFeedRequest::class.java)
 
             val request = playBuilder(context)
@@ -266,7 +268,8 @@ object Protocol {
         }
     }
 
-    fun getTopChartsFor(context: Context, genre: String, offset: Int, pageSize: Int): Observable<TopChartsResponse> {
+    fun getTopChartsFor(context: Context, genre: String, offset: Int, pageSize: Int)
+            : Observable<TopChartsResponse> {
 
         val adapter = CarbonPlayerApplication.moshi.adapter(TopChartsResponse::class.java)
 

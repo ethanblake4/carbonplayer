@@ -14,12 +14,13 @@ import com.carbonplayer.R
 import com.carbonplayer.model.entity.SearchResponse
 import com.carbonplayer.model.entity.utils.MediaTypeUtil
 import com.carbonplayer.model.network.Protocol
-import com.carbonplayer.ui.main.adapters.LinearArtistAdapter
-import com.carbonplayer.ui.main.adapters.SkyjamStationAdapter
-import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
-import com.carbonplayer.ui.main.adapters.TopChartsSongAdapter
+import com.carbonplayer.ui.helpers.MusicManager
+import com.carbonplayer.ui.main.adapters.*
+import com.carbonplayer.ui.main.dataui.AlbumListController
+import com.carbonplayer.ui.main.dataui.SongListController
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
+import com.carbonplayer.utils.ui.PaletteUtil
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.controller_search.view.*
@@ -34,8 +35,11 @@ class SearchController(
     constructor() : this("")
 
     lateinit var requestManager: RequestManager
+    lateinit var musicManager: MusicManager
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
+
+        musicManager = MusicManager(activity as MainActivity)
 
         val view = inflater.inflate(R.layout.controller_search, container, false)
         view.searchHeader.setPadding(0,
@@ -112,8 +116,15 @@ class SearchController(
                         }
                         cDetail.entries?.let { entries ->
                             v.clusterEntries.adapter = when (cDetail.cluster?.type) {
-                                MediaTypeUtil.TYPE_SONG -> TopChartsSongAdapter(
-                                        entries.mapNotNull { it.track }.take(5), {}
+                                MediaTypeUtil.TYPE_SONG -> SearchSongAdapter(
+                                        entries.mapNotNull { it.track }.take(5),
+                                        { pos ->
+                                            musicManager.fromTracks(entries.mapNotNull { it.track },
+                                                    pos)
+                                        },
+                                        { v, track -> (activity as MainActivity)
+                                                .showTrackPopup(v, track)
+                                        }
                                 )
                                 MediaTypeUtil.TYPE_ALBUM -> TopChartsAlbumAdapter(
                                         entries.mapNotNull { it.album }.take(4),
@@ -121,16 +132,43 @@ class SearchController(
                                         requestManager
                                 )
                                 MediaTypeUtil.TYPE_ARTIST -> LinearArtistAdapter(
+                                        activity!!,
                                         entries.mapNotNull { it.artist }.take(5),
-                                        {}
+                                        { (artist, swPair) ->
+                                            (activity as MainActivity).gotoArtist(artist,
+                                                    swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)
+                                        }
                                 )
                                 MediaTypeUtil.TYPE_STATION -> SkyjamStationAdapter(
                                         entries.mapNotNull { it.station }.take(4),
                                         activity as MainActivity,
                                         requestManager
                                 )
+                                MediaTypeUtil.TYPE_PLAYLIST -> SearchPlaylistAdapter(
+                                        activity!!,
+                                        entries.mapNotNull { it.playlist }.take(4),
+                                        { playlist -> },
+                                        { v, playlist -> }
+                                )
                                 else -> null
                             }
+                        }
+
+                        v.see_all.setOnClickListener {
+                            cDetail.entries?.let { entries -> when (cDetail.cluster?.type) {
+                                MediaTypeUtil.TYPE_SONG -> {
+                                    (activity as MainActivity).goto(SongListController(
+                                            entries.mapNotNull { it.track },
+                                            PaletteUtil.DEFAULT_SWATCH_PAIR
+                                    ))
+                                }
+                                MediaTypeUtil.TYPE_ALBUM -> {
+                                    (activity as MainActivity).goto(AlbumListController(
+                                            entries.mapNotNull { it.album },
+                                            PaletteUtil.DEFAULT_SWATCH_PAIR
+                                    ))
+                                }
+                            }}
                         }
                         view.searchResults.addView(v)
                     }

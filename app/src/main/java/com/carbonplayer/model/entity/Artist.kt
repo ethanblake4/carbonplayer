@@ -26,6 +26,9 @@ open class Artist(
 
 ) : RealmObject(), IArtist {
 
+    override val bestArtistArtUrl: String?
+        get() = artistArtRef ?: artistArtRefs.first()?.url
+
     constructor(artistId: String, name: String, inLibrary: Boolean = true) :
             this(artistId, "sj#artist", name, inLibrary = inLibrary)
 

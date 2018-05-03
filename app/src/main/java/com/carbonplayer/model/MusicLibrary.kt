@@ -91,15 +91,25 @@ object MusicLibrary {
 
     private fun extractFeaturing(track: ITrack): List<String> {
 
+        // Song (feat. Artist)
         return track.title.substringAfter(" (feat. ", "!")
                 .takeIf { it != "!" }?.substringBefore(")")
                 ?.split(", ")?.flatMap { it.split(" & ") }
                 ?.flatMap { it.split(" and" ) } ?:
 
+        // Song with Artist
         track.title.substringAfter(" with ", "!")
                 .takeIf { it != "!" }
                 ?.split(", ")?.flatMap { it.split(" & ") }
-                ?.flatMap { it.split(" and ") } ?: listOf()
+                ?.flatMap { it.split(" and ") } ?:
+
+        // Song feat. Artist
+        track.title.substringAfter(" feat. ", "!")
+                .takeIf { it != "!" }
+                ?.split(", ")?.flatMap { it.split(" & ") }
+                ?.flatMap { it.split(" and" ) } ?:
+
+        listOf()
     }
 
     fun addOneToDatabase(realm: Realm, sjTrack: SkyjamTrack, update: Boolean = true,

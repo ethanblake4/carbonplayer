@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.carbonplayer.ui.widget.NowPlayingFrame xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:sothree="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nowplaying_frame"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -17,6 +18,7 @@
         android:id="@+id/npui_song"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="132dp"
         android:layout_marginStart="68dp"
         android:layout_marginTop="8dp"
         android:text="Song Name"
@@ -47,6 +49,9 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="68dp"
         android:layout_marginTop="30dp"
+        android:layout_marginRight="132dp"
+        android:ellipsize="end"
+        android:lines="1"
         android:text="Artist" />
 
     <ImageView
@@ -85,14 +90,34 @@
         android:focusable="true"
         app:fabSize="mini" />
 
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/npui_recycler"
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+        android:id="@+id/slidingPanel"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#fff">
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        sothree:umanoPanelHeight="68dp"
+        sothree:umanoShadowHeight="4dp"
+        sothree:umanoOverlay="false"
+        sothree:umanoScrollableView="@+id/npui_recycler">
 
-    </android.support.v7.widget.RecyclerView>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Main Content"
+            android:textSize="16sp" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/npui_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#fff">
+        </android.support.v7.widget.RecyclerView>
+
+
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
+
+
 
 
 </com.carbonplayer.ui.widget.NowPlayingFrame>

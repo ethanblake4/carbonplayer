@@ -18,6 +18,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
+import com.carbonplayer.model.entity.base.IAlbum;
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.utils.general.MathUtils;
@@ -36,7 +37,7 @@ import butterknife.ButterKnife;
 
 public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAdapter.ViewHolder> {
 
-    private List<SkyjamAlbum> mDataset;
+    private List<IAlbum> mDataset;
     private MainActivity context;
     private int screenWidthPx;
     private RequestManager requestManager;
@@ -49,7 +50,7 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
         @BindView(R.id.detailText) TextView detailText;
         @BindView(R.id.imageButton) ImageButton menuButton;
 
-        SkyjamAlbum album;
+        IAlbum album;
         PaletteUtil.SwatchPair swatchPair;
         int size;
 
@@ -88,7 +89,7 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public TopChartsAlbumAdapter(List<SkyjamAlbum> myDataset, MainActivity context,
+    public TopChartsAlbumAdapter(List<IAlbum> myDataset, MainActivity context,
                                  RequestManager requestManager) {
         mDataset = myDataset;
         this.context = context;
@@ -130,7 +131,7 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
         holder.titleText.setTextColor(defaultTextColor);
         holder.detailText.setTextColor(defaultTextColor);
 
-        SkyjamAlbum a = mDataset.get(position);
+        IAlbum a = mDataset.get(position);
         holder.titleText.setText(a.getName());
         holder.detailText.setText(a.getAlbumArtist());
         holder.album = a;

@@ -1,8 +1,9 @@
 package com.carbonplayer.ui.main.library
 
 import android.content.Context
+import android.os.Bundle
 import android.os.Parcelable
-import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -13,10 +14,12 @@ import com.bumptech.glide.RequestManager
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.ui.main.MainActivity
-import com.carbonplayer.ui.main.adapters.ArtistAdapter
+import com.carbonplayer.ui.main.adapters.LinearArtistAdapter
 import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.ui.PaletteUtil
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.single_recycler_layout.view.*
+import timber.log.Timber
 
 class ArtistsPageController : Controller() {
 
@@ -24,9 +27,9 @@ class ArtistsPageController : Controller() {
     private var adapter: RecyclerView.Adapter<*>? = null
     lateinit var layoutManager: RecyclerView.LayoutManager
     lateinit var requestManager: RequestManager
-    var recyclerState: Parcelable? = null
+    private var recyclerState: Parcelable? = null
 
-    var subscribed = false;
+    var subscribed = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
@@ -41,26 +44,34 @@ class ArtistsPageController : Controller() {
                     IdentityUtils.getNavbarHeight(it))
         }
 
-        layoutManager = GridLayoutManager(activity, 2)
+        layoutManager = LinearLayoutManager(activity)
 
         view.main_recycler.layoutManager = layoutManager
 
         requestManager = Glide.with(activity)
 
-        //recyclerState = savedInstanceState?.getParcelable("recycler")
-
-        view.main_recycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
-
-            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                //(activity as MainActivity).scrollCb(dy)
-            }
-        })
-
         if(activity != null && !subscribed) resubscribe(view)
 
         return view
+    }
+
+    override fun onSaveViewState(view: View, outState: Bundle) {
+        Timber.d("Artists - onSaveViewState = saving self state")
+        outState.putParcelable("recycler", view.main_recycler.layoutManager.onSaveInstanceState())
+
+        super.onSaveViewState(view, outState)
+    }
+
+    override fun onRestoreViewState(view: View, savedViewState: Bundle) {
+
+        super.onRestoreViewState(view, savedViewState)
+
+        Timber.d("onRestoreViewState, view: $view, " +
+                "viewCtx: ${view.context}, activity: $activity")
+
+        recyclerState = savedViewState.getParcelable("recycler") ?: recyclerState
+
+        if (activity != null && !subscribed) resubscribe(view)
     }
 
     override fun onContextAvailable(context: Context) {
@@ -69,11 +80,14 @@ class ArtistsPageController : Controller() {
         if(view != null && !subscribed) resubscribe(view!!)
     }
 
-    fun resubscribe(view: View) {
+    private fun resubscribe(view: View) {
         artistSubscription?.dispose()
         artistSubscription = MusicLibrary.loadArtists()
                 .subscribe { artists ->
-                    adapter = ArtistAdapter(artists, activity as MainActivity, requestManager)
+                    adapter = LinearArtistAdapter(activity as MainActivity, artists,  { (it, swPair) ->
+                        (activity as MainActivity).gotoArtist(it, swPair ?:
+                            PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    })
                     view.main_recycler.adapter = adapter
                     view.fastscroll.setRecyclerView(view.main_recycler)
                     recyclerState?.let {
