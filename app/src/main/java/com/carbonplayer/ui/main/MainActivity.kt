@@ -17,16 +17,21 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import com.bluelinelabs.conductor.Conductor
+import com.bluelinelabs.conductor.Controller
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Artist
+import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.IArtist
+import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.entity.radio.SkyjamStation
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.NowPlayingHelper
@@ -421,6 +426,17 @@ class MainActivity : AppCompatActivity() {
         pop.show()
     }
 
+    fun goto(controller: Controller) {
+        scrollCb(0)
+
+        router.pushController(RouterTransaction.with(controller)
+                .pushChangeHandler(SimpleScaleTransition(this))
+                .popChangeHandler(SimpleScaleTransition(this)))
+
+        lastAppbarText = main_actionbar_text.text.toString()
+        main_actionbar_text.text = ""
+    }
+
     fun showArtistPopup(view: View, artist: IArtist) {
 
         val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
@@ -438,6 +454,54 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.menu_start_radio -> {
                     npHelper.startRadio(RadioSeed.TYPE_ARTIST, artist.artistId)
+                }
+                else -> {
+                    Toast.makeText(this, "This action is not supported yet",
+                            Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            return@setOnMenuItemClickListener true
+        }
+        pop.show()
+    }
+
+    fun showTrackPopup(view: View, track: ITrack) {
+        val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
+        pop.inflate(R.menu.remote_song_popup)
+
+        pop.setOnMenuItemClickListener { item ->
+
+            when (item.itemId) {
+                R.id.menu_share -> {
+                    val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
+                    sharingIntent.type = "text/plain"
+                    val shareBody = "https://play.google.com/music/m/${track.storeId}?signup_if_needed=1"
+                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
+                    startActivity(Intent.createChooser(sharingIntent, "Share via"))
+                }
+                R.id.menu_start_radio -> {
+                    track.storeId?.let {
+                        npHelper.startRadio(RadioSeed.TYPE_SJ_TRACK, it)
+                    } ?: Toast.makeText(this, "Could not start radio",
+                            Toast.LENGTH_SHORT).show()
+                }
+                R.id.menu_go_to_album -> {
+                    (track as? Track)?.albums?.first()?.let {
+                        gotoAlbum(it, PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    } ?: Toast.makeText(this, "Not supported yet for remote tracks",
+                            Toast.LENGTH_SHORT).show()
+                }
+                R.id.menu_go_to_artist -> {
+                    (track as? Track)?.artists?.first()?.let {
+                        gotoArtist(it, PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    } ?: (track as? SkyjamTrack)?.artistId?.first()?.let {
+                        gotoArtist(Artist(it, track.albumArtist, false),
+                                PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    } ?: (track as? ParcelableTrack)?.artistId?.first()?.let {
+                        gotoArtist(Artist(it, track.albumArtist, false),
+                                PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    }
                 }
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",

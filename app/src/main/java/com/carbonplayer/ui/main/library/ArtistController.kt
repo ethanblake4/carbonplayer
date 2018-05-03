@@ -200,7 +200,8 @@ class ArtistController(
     }
 
     private fun setupView(view: View): View {
-        if(realArtist.artistBio == null) {
+
+        if(realArtist.artistBio == null && realArtist is Artist) {
             val aId = realArtist.artistId
             Protocol.getNautilusArtist(activity!!, realArtist.artistId)
                     .subscribeOn(Schedulers.io())
@@ -264,7 +265,7 @@ class ArtistController(
 
                             this.activity!!.runOnUiThread {
                                 mAdapter = SongListAdapter(extractTopTracks(realArtist).take(5), {
-                                    Timber.d("clicked ${it.second}")
+                                    manager.fromTracks(extractTopTracks(realArtist), it.second)
                                 })
 
                                 // use a linear layout manager
@@ -293,7 +294,9 @@ class ArtistController(
                             root.artistgroup_recycler.adapter = LinearArtistAdapter(
                                     activity!!,
                                     extractRelatedArtists(realArtist).take(5),
-                                    {})
+                                    { (artist, swPair) ->
+                                        (activity as MainActivity).gotoArtist(artist,
+                                                swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)})
                         }
 
                         if(extractAllAlbums(artistProxy).isNotEmpty()) {
@@ -339,7 +342,7 @@ class ArtistController(
                                 NowPlayingHelper.HEIGHT_DP else 0)
 
             mAdapter = SongListAdapter(extractTopTracks(realArtist).take(5), {
-                Timber.d("clicked ${it.second}")
+                manager.fromTracks(extractTopTracks(realArtist), it.second, realArtist is Artist)
             })
 
             // use a linear layout manager
@@ -367,7 +370,10 @@ class ArtistController(
             root.artistgroup_recycler.adapter = LinearArtistAdapter(
                     activity!!,
                     extractRelatedArtists(realArtist).take(5),
-                    {}, true)
+                    { (artist, swPair) ->
+                        (activity as MainActivity).gotoArtist(artist,
+                                swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    }, true)
         }
 
         if(extractAllAlbums(realArtist).isNotEmpty()) {

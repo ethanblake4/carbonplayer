@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/songLayoutRoot"
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+
+    <com.carbonplayer.ui.widget.SquareHeightImageView
+        android:id="@+id/trackThumb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/artistName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/artistName"
+        app:srcCompat="@drawable/unknown_music_track" />
+
+
+    <TextView
+        android:id="@+id/trackName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="5dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="Divinity (ft. Amy Millan)"
+        android:textAppearance="@android:style/TextAppearance.Material.Body2"
+        app:layout_constraintBottom_toTopOf="@+id/artistName"
+        app:layout_constraintStart_toEndOf="@+id/trackThumb"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/artistName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:text="Porter Robinson &amp; Amy Millan"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
+        android:textColor="#ccc"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/trackName"
+        app:layout_constraintTop_toBottomOf="@+id/trackName"
+        tools:ignore="HardcodedText" />
+
+
+    <ImageButton
+        android:id="@+id/songLayoutMenu"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        app:layout_constraintBottom_toTopOf="@+id/artistName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/artistName"
+        app:srcCompat="@drawable/ic_more" />
+
+</android.support.constraint.ConstraintLayout>

@@ -375,7 +375,7 @@ class NowPlayingHelper(private val activity: Activity) {
                 maybeBind(this)
             }
 
-            addAtEndToRecycler(trackQueue.parcelable(), tracks)
+            updateRecycler(trackQueue.parcelable())
 
             ContextCompat.startForegroundService(activity, intent)
         }
@@ -391,7 +391,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
             ContextCompat.startForegroundService(activity, intent)
 
-            addNextToRecycler(trackQueue.parcelable())
+            updateRecycler(trackQueue.parcelable())
         }
 
         override fun reorder(pos: Int, pnew: Int) {

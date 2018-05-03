@@ -121,6 +121,7 @@
     <string name="action_shuffle_artist">Shuffle artist</string>
     <string name="with_your_google_account">with your Google Account</string>
     <string name="email_or_phone">Email or phone</string>
+    <string name="action_go_to_album">Go to album</string>
 
 
 </resources>

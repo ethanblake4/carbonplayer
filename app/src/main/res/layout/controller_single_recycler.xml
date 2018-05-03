@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.otaliastudios.nestedscrollcoordinatorlayout.NestedScrollCoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/singleRecyclerCoordinator"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_insetEdge="top"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:layout_scrollFlags="scroll|enterAlways"/>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/main_recycler"
+        android:clipToPadding="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+
+    <com.carbonplayer.ui.widget.fastscroll.FastScroller
+        android:id="@+id/fastscroll"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:layout_marginBottom="112dp"
+        android:layout_marginTop="64dp"
+        android:orientation="vertical"
+        app:fastscroll__bubbleColor="#565656">
+    </com.carbonplayer.ui.widget.fastscroll.FastScroller>
+
+
+</com.otaliastudios.nestedscrollcoordinatorlayout.NestedScrollCoordinatorLayout>
