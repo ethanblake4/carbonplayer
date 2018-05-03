@@ -22,6 +22,7 @@ import com.bluelinelabs.conductor.RouterTransaction
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
+import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.IArtist
@@ -395,9 +396,19 @@ class MainActivity : AppCompatActivity() {
                     sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
                     startActivity(Intent.createChooser(sharingIntent, "Share via"))
                 }
+                R.id.menu_go_to_artist -> {
+                    if(album is Album)
+                    {
+                        album.artists?.first()?.let {
+                            gotoArtist(it, PaletteUtil.DEFAULT_SWATCH_PAIR)
+                        }
+
+                    }
+                }
                 R.id.menu_start_radio -> {
                     npHelper.startRadio(RadioSeed.TYPE_ALBUM, album.albumId)
                 }
+
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",
                             Toast.LENGTH_SHORT).show()
