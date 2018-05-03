@@ -23,6 +23,7 @@ import com.bluelinelabs.conductor.RouterTransaction
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
+import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.Artist
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.Track
@@ -32,6 +33,8 @@ import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.entity.radio.SkyjamStation
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.model.network.Protocol
@@ -413,9 +416,22 @@ class MainActivity : AppCompatActivity() {
                     sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
                     startActivity(Intent.createChooser(sharingIntent, "Share via"))
                 }
+                R.id.menu_go_to_artist -> {
+                    if(album is Album)
+                    {
+                        album.artists?.first()?.let {
+                            gotoArtist(it, PaletteUtil.DEFAULT_SWATCH_PAIR)
+                        }
+                    }
+                    else if(album is SkyjamAlbum) {
+                        gotoArtist(SkyjamArtist(album.artistId.first()),
+                                PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    }
+                }
                 R.id.menu_start_radio -> {
                     npHelper.startRadio(RadioSeed.TYPE_ALBUM, album.albumId)
                 }
+
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",
                             Toast.LENGTH_SHORT).show()
