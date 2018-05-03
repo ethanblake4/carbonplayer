@@ -20,6 +20,7 @@ import com.bluelinelabs.conductor.Conductor
 import com.bluelinelabs.conductor.Controller
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
+import com.bumptech.glide.Glide
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
@@ -296,10 +297,10 @@ class MainActivity : AppCompatActivity() {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ suggestions ->
-                    suggestionsRecycler.adapter = SuggestionsAdapter(suggestions.take(6)) { itm ->
+                    suggestionsRecycler.adapter = SuggestionsAdapter(suggestions.take(6),{ itm ->
                         if(itm.entity?.album != null) gotoAlbum(itm.entity.album,
                                 PaletteUtil.DEFAULT_SWATCH_PAIR)
-                    }
+                    }, Glide.with(this))
                 }, { err ->
                     Timber.e(err)
                     sub()
