@@ -239,7 +239,10 @@ object MusicLibrary {
                     (0 until combinedArtists.size).forEach {
                         if (it == 0 || !_artists[it].startsWith("the", true)) {
                             artistPairs[pTrack.artistId[it]] = _artists[it]
-                        } else artistPairs[pTrack.artistId[it-1]] += " & " + combinedArtists[it]
+                        } else {
+                            val carp = artistPairs[pTrack.artistId[it-1]]
+                            artistPairs[pTrack.artistId[it-1]] = carp + " & " + combinedArtists[it]
+                        }
                     }
                 } else treatAsOneArtist = true  // Fallback: treat as a single artist
             } else treatAsOneArtist = true
