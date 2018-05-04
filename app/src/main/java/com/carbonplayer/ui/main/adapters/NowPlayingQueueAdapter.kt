@@ -16,7 +16,9 @@ import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
+import com.carbonplayer.ui.widget.helpers.ItemTouchHelperAdapter
 import kotlinx.android.synthetic.main.song_item_queue.view.*
+import java.util.*
 
 /**
  * Album / playlist adapter
@@ -24,7 +26,7 @@ import kotlinx.android.synthetic.main.song_item_queue.view.*
 internal class NowPlayingQueueAdapter(
         var dataset: List<ITrack>,
         private val clicked: (Pair<ITrack, Int>) -> Unit)
-    : RecyclerView.Adapter<NowPlayingQueueAdapter.ViewHolder>() {
+    : RecyclerView.Adapter<NowPlayingQueueAdapter.ViewHolder>(), ItemTouchHelperAdapter {
 
     internal inner class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         var trackName: TextView = v.findViewById<View>(R.id.trackName) as TextView
@@ -75,6 +77,30 @@ internal class NowPlayingQueueAdapter(
         }
         holder.pos = position
 
+    }
+
+    override fun onItemDismiss(position: Int) {
+        if(dataset is MutableList) {
+            (dataset as MutableList).removeAt(position)
+        } else {
+            dataset = dataset.toMutableList().apply {
+                removeAt(position)
+            }
+        }
+        notifyItemRemoved(position)
+    }
+
+    override fun onItemMove(fromPosition: Int, toPosition: Int) {
+        if (fromPosition < toPosition) {
+            for (i in fromPosition until toPosition) {
+                Collections.swap(dataset, i, i + 1)
+            }
+        } else {
+            for (i in fromPosition downTo toPosition + 1) {
+                Collections.swap(dataset, i, i - 1)
+            }
+        }
+        notifyItemMoved(fromPosition, toPosition)
     }
 
     override fun getItemCount(): Int = dataset.size

@@ -13,6 +13,7 @@ import android.os.*
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.helper.ItemTouchHelper
 import android.text.TextUtils
 import android.view.KeyEvent
 import android.view.View
@@ -30,6 +31,7 @@ import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adapters.NowPlayingQueueAdapter
+import com.carbonplayer.ui.widget.helpers.QueueItemTouchCallback
 import com.carbonplayer.utils.Constants
 import com.carbonplayer.utils.asParcel
 import com.carbonplayer.utils.general.IdentityUtils
@@ -170,11 +172,13 @@ class NowPlayingHelper(private val activity: Activity) {
         //activity.slidingPanel.visibility = View.GONE
         activity.npui_recycler.isNestedScrollingEnabled = false
 
-        activity.npui_recycler.setPadding(0, IdentityUtils.getStatusBarHeight(activity.resources),
-                0, 0)
+        //activity.npui_recycler.setPadding(0, IdentityUtils.getStatusBarHeight(activity.resources),
+        //        0, 0)
 
         activity.nowplaying_frame.npui_volumebar_background.translationY =
                 (dispW * 1.3f) + (heightPx /4)
+
+        activity.nowplaying_frame.seekBar.translationY = dispW.toFloat()
 
 
         activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.3f
@@ -407,6 +411,10 @@ class NowPlayingHelper(private val activity: Activity) {
                         revealPlayerUI()
                     }
                     val track = msg.obj as ParcelableTrack
+                    val second = (track.durationMillis / 1000) % 60
+                    val minute = (track.durationMillis / (1000 * 60)) % 60
+                    activity.nowplaying_frame.songDuration.text =
+                            String.format("%02d:%02d", minute, second)
                     requestMgr.load(track.albumArtURL)
                             .listener(GlidePalette.with(track.albumArtURL)
                             .use(0)
@@ -471,23 +479,32 @@ class NowPlayingHelper(private val activity: Activity) {
     private fun updateRecycler(tracks: List<ParcelableTrack>) {
         if(activity.npui_recycler.layoutManager == null)
             activity.npui_recycler.layoutManager = LinearLayoutManager(activity)
-        if (activity.npui_recycler.adapter == null)
-            activity.npui_recycler.adapter = NowPlayingQueueAdapter(tracks, { i ->
-
-            })
+        if (activity.npui_recycler.adapter == null) {
+            setupQueueAdapter(tracks)
+        }
         else (activity.npui_recycler.adapter as NowPlayingQueueAdapter).apply {
             dataset = tracks
             notifyDataSetChanged()
         }
     }
 
+    private fun setupQueueAdapter(tracks: List<ParcelableTrack>) {
+        val adapter = NowPlayingQueueAdapter(tracks, { i ->
+
+        })
+
+        activity.npui_recycler.adapter = adapter
+
+        val callback = QueueItemTouchCallback(adapter)
+        val touchHelper = ItemTouchHelper(callback)
+        touchHelper.attachToRecyclerView(activity.npui_recycler)
+    }
+
     private fun addNextToRecycler(tracks: List<ParcelableTrack>) {
         if(activity.npui_recycler.layoutManager == null)
             activity.npui_recycler.layoutManager = LinearLayoutManager(activity)
         if (activity.npui_recycler.adapter == null)
-            activity.npui_recycler.adapter = NowPlayingQueueAdapter(tracks, { i ->
-
-            })
+            setupQueueAdapter(tracks)
         else (activity.npui_recycler.adapter as NowPlayingQueueAdapter).apply {
             dataset = tracks
             notifyItemRangeInserted(trackQueue.position, tracks.size)
@@ -498,9 +515,7 @@ class NowPlayingHelper(private val activity: Activity) {
         if(activity.npui_recycler.layoutManager == null)
             activity.npui_recycler.layoutManager = LinearLayoutManager(activity)
         if (activity.npui_recycler.adapter == null)
-            activity.npui_recycler.adapter = NowPlayingQueueAdapter(tracks, { i ->
-
-            })
+            setupQueueAdapter(tracks)
         else (activity.npui_recycler.adapter as NowPlayingQueueAdapter).apply {
             dataset = tracks
             notifyItemRangeInserted(dataset.size - added.size, tracks.size)

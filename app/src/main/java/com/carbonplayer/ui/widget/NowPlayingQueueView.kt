@@ -19,12 +19,13 @@ class NowPlayingQueueView: RecyclerView {
     private var last2Y = 0f
     public var initialY = -2f
     private val scroller = Scroller(context, FastOutSlowInInterpolator())
-    private var scrollHasControl = false
+    var scrollHasControl = false
     private val maxY = IdentityUtils.getStatusBarHeight(resources)
     private var eventStartTime = 0L
     private var eventInitialY = 0f
     private var eventHasMotion = false
     var isUp = false
+    var lastUpFraction = 0f
 
     private var runThread = true
     private lateinit var runner: Runnable
@@ -38,10 +39,11 @@ class NowPlayingQueueView: RecyclerView {
         runner = Runnable {
             if(runThread) {
                 scroller.computeScrollOffset()
-                if(scrollHasControl && scroller.currY != layoutParams.height) {
+                if(scrollHasControl && scroller.currY.toFloat() != translationY) {
                     translationY = scroller.currY.toFloat()
                     val upFraction = ((initialY - scroller.currY) / (
                             initialY - maxY))
+                    lastUpFraction = upFraction
 
                     callback?.invoke(upFraction)
                     isUp = upFraction > 0.99f
@@ -86,13 +88,17 @@ class NowPlayingQueueView: RecyclerView {
                 if(eventHasMotion) {
                     if(isUp && event.rawY < lastY) {
                         super.onTouchEvent(event)
-                    } else if (isUp && scrollY > 0) {
+                    } else if (isUp && computeVerticalScrollOffset() > 0) {
                         super.onTouchEvent(event)
                     } else {
                         translationY = Math.min(translationY + dy, initialY)
 
-                        callback?.invoke(((translationY - initialY) / (
-                                initialY - maxY)))
+                        val upFrac = ((initialY - translationY) / (
+                                initialY - maxY))
+                        callback?.invoke(upFrac)
+                        isUp = upFrac > 0.99f
+                        lastUpFraction = upFrac
+
                         last2Y = lastY
                         lastY = event.rawY
                     }
@@ -114,9 +120,9 @@ class NowPlayingQueueView: RecyclerView {
 
                 if(isUp && event.rawY < lastY) {
                     super.onTouchEvent(event)
-                } else if (isUp && scrollY > 0) {
+                } else if (isUp && computeVerticalScrollOffset() > 0) {
                     super.onTouchEvent(event)
-                } else if(eventHasMotion) {
+                } else if(true) {
 
                     Timber.d("Fling from startY: %d, velocity: %d, endY: %d",
                             location[1], (lastY - last2Y).toInt(),
@@ -134,7 +140,7 @@ class NowPlayingQueueView: RecyclerView {
                                 velocity, 0, 0, 0, initialY.toInt())
                         scroller.finalY = maxY
                     } else {
-                        if (curY > maxY / 2) {
+                        if (curY > initialY / 2) {
                             scroller.fling(0, curY, 0,
                                     velocity, 0, 0, 0, initialY.toInt())
                             scroller.finalY = initialY.toInt()
@@ -153,13 +159,13 @@ class NowPlayingQueueView: RecyclerView {
                 } else if( scroller.isFinished ){
                     activePointerId = MotionEvent.INVALID_POINTER_ID
 
-                    if (location[1] <= initialY + 12) {
+                    /*if (location[1] <= initialY + 12) {
                         scroller.startScroll(0, initialY.toInt(), 0, maxY
                                 - initialY.toInt(), 400)
                         scrollHasControl = true
-                    } else {
+                    } else {*/
                         super.onTouchEvent(event)
-                    }
+                    /*}*/
                 }
             }
 

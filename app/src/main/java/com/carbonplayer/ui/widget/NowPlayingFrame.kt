@@ -8,6 +8,7 @@ import android.widget.FrameLayout
 import android.widget.Scroller
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
+import kotlinx.android.synthetic.main.nowplaying.view.*
 import timber.log.Timber
 
 /**
@@ -66,6 +67,8 @@ class NowPlayingFrame : FrameLayout {
             if (ev.rawX > IdentityUtils.displayWidth2(context) -
                     MathUtils.dpToPx2(context.resources, 134)) return false
         }
+        if(!npui_recycler.scrollHasControl || npui_recycler.lastUpFraction > 0.75f) return false
+
         return true
     }
 

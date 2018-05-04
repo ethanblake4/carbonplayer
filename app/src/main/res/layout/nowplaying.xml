@@ -82,6 +82,43 @@
         android:layout_height="32dp"
         app:srcCompat="@drawable/ic_volume_up" />
 
+    <FrameLayout
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="16dp"
+        android:background="#fff">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="2dp"
+            android:text="0:00"
+            android:textColor="#aaa"
+            android:textSize="12sp" />
+
+        <View
+            android:id="@+id/seekSlider"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="32dp"
+            android:background="#333" />
+
+        <TextView
+            android:id="@+id/songDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|end"
+            android:layout_marginEnd="2dp"
+            android:text="0:00"
+            android:textColor="#aaa"
+            android:textSize="12sp" />
+
+
+
+
+    </FrameLayout>
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/volume_fab"
         android:layout_width="18dp"
@@ -91,14 +128,13 @@
         app:fabSize="mini" />
 
 
-
     <com.carbonplayer.ui.widget.NowPlayingQueueView
         android:id="@+id/npui_recycler"
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#fff"
         android:elevation="4dp"
-        android:layout_height="wrap_content"
-        android:background="#fff">
-    </com.carbonplayer.ui.widget.NowPlayingQueueView>
+        android:visibility="visible"></com.carbonplayer.ui.widget.NowPlayingQueueView>
 
 
 
