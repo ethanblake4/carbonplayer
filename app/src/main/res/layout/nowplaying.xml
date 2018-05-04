@@ -90,29 +90,16 @@
         android:focusable="true"
         app:fabSize="mini" />
 
-    <com.sothree.slidinguppanel.SlidingUpPanelLayout
-        android:id="@+id/slidingPanel"
+
+
+    <com.carbonplayer.ui.widget.NowPlayingQueueView
+        android:id="@+id/npui_recycler"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="bottom"
-        sothree:umanoPanelHeight="68dp"
-        sothree:umanoShadowHeight="4dp"
-        sothree:umanoOverlay="false"
-        sothree:umanoScrollableView="@+id/npui_recycler"
-        sothree:umanoDragView="@+id/npui_recycler">
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"></FrameLayout>
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/npui_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#fff">
-        </android.support.v7.widget.RecyclerView>
+        android:layout_height="wrap_content"
+        android:background="#fff">
+    </com.carbonplayer.ui.widget.NowPlayingQueueView>
 
 
-    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
 
 

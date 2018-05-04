@@ -17,26 +17,51 @@ class NowPlayingQueueView: RecyclerView {
     private var activePointerId = MotionEvent.INVALID_POINTER_ID
     private var lastY = 0f
     private var last2Y = 0f
-    private var initialY = -2f
+    public var initialY = -2f
     private val scroller = Scroller(context, FastOutSlowInInterpolator())
     private var scrollHasControl = false
-    private val maxY = IdentityUtils.displayHeight2(context) -
-            initialY
+    private val maxY = IdentityUtils.getStatusBarHeight(resources)
     private var eventStartTime = 0L
     private var eventInitialY = 0f
     private var eventHasMotion = false
     var isUp = false
 
+    private var runThread = true
+    private lateinit var runner: Runnable
     var callback: ((Float) -> Unit)? = null
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
     constructor(context: Context, attrs: AttributeSet, def: Int) : super(context, attrs, def)
 
+    init {
+        runner = Runnable {
+            if(runThread) {
+                scroller.computeScrollOffset()
+                if(scrollHasControl && scroller.currY != layoutParams.height) {
+                    translationY = scroller.currY.toFloat()
+                    val upFraction = ((scroller.currY - initialY) / (
+                            maxY - initialY))
+                    elevation = upFraction * 4f
+
+                    requestLayout()
+
+                    callback?.invoke(upFraction)
+                    isUp = upFraction > 0.99f
+
+
+
+                    //Timber.d("scroller: %d", scroller.currY)
+                }
+                postOnAnimation(runner)
+            }
+        }
+        postOnAnimation(runner)
+    }
+
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 
         //Timber.d("On touch event: %d", event?.actionMasked)
-
 
         when(event?.actionMasked) {
 
@@ -45,8 +70,6 @@ class NowPlayingQueueView: RecyclerView {
                  * the scroller */
 
                 super.onTouchEvent(event)
-
-
                 scrollHasControl = false
                 val ac = event.actionIndex
                 last2Y = lastY
@@ -56,22 +79,36 @@ class NowPlayingQueueView: RecyclerView {
                 eventStartTime = System.currentTimeMillis()
             }
             MotionEvent.ACTION_MOVE -> {
+
                 /*
                  * When movement occurs, change our height and callback the new position
                  */
                 val dy = event.rawY - lastY
+
+
                 if(!eventHasMotion && (event.rawY > eventInitialY + 1
                         || event.rawY < eventInitialY - 1)) eventHasMotion = true
-                if(eventHasMotion && dy > 0 && scrollY <= 0) {
-                    y = Math.max(y - dy, initialY)
-                    postOnAnimation { requestLayout() }
-                    callback?.invoke(((y - initialY) / (
-                            maxY - initialY)))
-                } else {
+                if(eventHasMotion) {
+                    if(isUp && event.rawY < lastY) {
+                        super.onTouchEvent(event)
+                    } else if (isUp && scrollY > 0) {
+                        super.onTouchEvent(event)
+                    } else {
+                        translationY = Math.min(translationY + dy, initialY)
+                        elevation = ((scroller.currY - initialY) / (
+                                maxY - initialY)) * 4f
+
+                        postOnAnimation { requestLayout() }
+
+                        callback?.invoke(((translationY - initialY) / (
+                                maxY - initialY)))
+                        last2Y = lastY
+                        lastY = event.rawY
+                    }
+                } else if (last2Y == lastY){
                     super.onTouchEvent(event)
                 }
-                last2Y = lastY
-                lastY = event.rawY
+
             }
             MotionEvent.ACTION_UP -> {
 
@@ -80,42 +117,44 @@ class NowPlayingQueueView: RecyclerView {
                 *   - If there was no motion, start a scroll to the nearest position OR
                  *  - If the motion was a tap and isUp is FALSE, scroll to the top */
 
-                super.onTouchEvent(event)
-
                 val location = intArrayOf(0, 0)
 
                 getLocationInWindow(location)
 
-                if(eventHasMotion) {
+                if(isUp && event.rawY < lastY) {
+                    super.onTouchEvent(event)
+                } else if (isUp && scrollY > 0) {
+                    super.onTouchEvent(event)
+                } else if(eventHasMotion) {
 
                     Timber.d("Fling from startY: %d, velocity: %d, endY: %d",
-                            location[1], (last2Y - lastY).toInt(),
-                            IdentityUtils.displayHeight2(context))
+                            location[1], (lastY - last2Y).toInt(),
+                            maxY)
 
-                    val velocity = (last2Y - lastY).toInt()
+                    val velocity = (lastY - last2Y).toInt()
                     val curY = location[1]
 
                     if (velocity > 10) {
                         scroller.fling(0, curY, 0,
-                                velocity, 0, 0, curY, Integer.MAX_VALUE)
-                        scroller.finalY = maxY.toInt()
+                                velocity, 0, 0, 0, initialY.toInt())
+                        scroller.finalY = initialY.toInt()
                     } else if (velocity < -10) {
                         scroller.fling(0, curY, 0,
-                                velocity, 0, 0, initialY.toInt(), Integer.MAX_VALUE)
-                        scroller.finalY = initialY.toInt()
+                                velocity, 0, 0, 0, initialY.toInt())
+                        scroller.finalY = maxY
                     } else {
                         if (curY > maxY / 2) {
                             scroller.fling(0, curY, 0,
-                                    velocity, 0, 0, curY, Integer.MAX_VALUE)
-                            scroller.finalY = maxY.toInt()
+                                    velocity, 0, 0, 0, initialY.toInt())
+                            scroller.finalY = initialY.toInt()
                         } else {
                             scroller.fling(0, curY, 0,
-                                    velocity, 0, 0, initialY.toInt(), Integer.MAX_VALUE)
-                            scroller.finalY = initialY.toInt()
+                                    velocity, 0, 0, 0, initialY.toInt())
+                            scroller.finalY = maxY
                         }
                     }
 
-                    scroller.extendDuration(500)
+                    scroller.extendDuration(400)
 
                     scrollHasControl = true
                     eventHasMotion = false
@@ -123,10 +162,12 @@ class NowPlayingQueueView: RecyclerView {
                 } else if( scroller.isFinished ){
                     activePointerId = MotionEvent.INVALID_POINTER_ID
 
-                    if (measuredHeight <= initialY + 12) {
-                        scroller.startScroll(0, initialY.toInt(), 0, maxY.toInt()
-                                - initialY.toInt(), 500)
+                    if (location[1] <= initialY + 12) {
+                        scroller.startScroll(0, initialY.toInt(), 0, maxY
+                                - initialY.toInt(), 400)
                         scrollHasControl = true
+                    } else {
+                        super.onTouchEvent(event)
                     }
                 }
             }

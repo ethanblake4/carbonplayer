@@ -165,7 +165,9 @@ class NowPlayingHelper(private val activity: Activity) {
         activity.nowplaying_frame.npui_volumebar_background
                 .layoutParams.width = (dispW / 2f).toInt() - heightPx
 
-        activity.slidingPanel.visibility = View.GONE
+        activity.npui_recycler.translationY = dispW * 1.5f
+
+        //activity.slidingPanel.visibility = View.GONE
         activity.npui_recycler.isNestedScrollingEnabled = false
 
         activity.npui_recycler.setPadding(0, IdentityUtils.getStatusBarHeight(activity.resources),
@@ -184,7 +186,7 @@ class NowPlayingHelper(private val activity: Activity) {
                 (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth))
 
         activity.nowplaying_frame.callback = { up ->
-                activity.slidingPanel.visibility = if(up > 0.99f) View.VISIBLE else View.GONE
+                //activity.slidingPanel.visibility = if(up > 0.99f) View.VISIBLE else View.GONE
 
             activity.nowplaying_frame.npui_thumb.run {
                     layoutParams.width =
@@ -317,6 +319,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
         AnimUtils.expand(activity.bottomNavContainer.nowplaying_frame, heightPx)
         activity.nowplaying_frame.initialHeight= heightPx
+        activity.npui_recycler.initialY = dispW * 1.5f
 
     }
 
