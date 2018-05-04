@@ -15,6 +15,7 @@ public final class Constants {
         String INSERT_AT_END = "INSERT_AT_END";
         String INSERT_NEXT = "INSERT_NEXT";
         String REORDER = "REORDER";
+        String REMOVE = "REMOVE";
 
         String PREVIOUS = "PREVIOUS";
         String PLAYPAUSE = "PLAYPAUSE";

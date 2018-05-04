@@ -2,10 +2,7 @@ package com.carbonplayer.ui.main.adapters
 
 import android.annotation.SuppressLint
 import android.support.v7.widget.RecyclerView
-import android.view.ContextThemeWrapper
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -25,7 +22,11 @@ import java.util.*
  */
 internal class NowPlayingQueueAdapter(
         var dataset: List<ITrack>,
-        private val clicked: (Pair<ITrack, Int>) -> Unit)
+        private val clicked: (Pair<ITrack, Int>) -> Unit,
+        private val handlePressed: (ViewHolder) -> Unit,
+        private val itemRemoved: (Int) -> Unit,
+        private val itemReordered: (Int, Int) -> Unit
+)
     : RecyclerView.Adapter<NowPlayingQueueAdapter.ViewHolder>(), ItemTouchHelperAdapter {
 
     internal inner class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
@@ -35,6 +36,12 @@ internal class NowPlayingQueueAdapter(
         init {
             v.findViewById<View>(R.id.songLayoutRoot).setOnClickListener { _ ->
                 clicked(Pair(dataset[pos], pos))
+            }
+            v.song_item_handle.setOnTouchListener { _, ev ->
+                if(ev.actionMasked == MotionEvent.ACTION_DOWN){
+                    handlePressed(this)
+                }
+                false
             }
         }
     }
@@ -88,6 +95,7 @@ internal class NowPlayingQueueAdapter(
             }
         }
         notifyItemRemoved(position)
+        itemRemoved(position)
     }
 
     override fun onItemMove(fromPosition: Int, toPosition: Int) {
@@ -101,6 +109,7 @@ internal class NowPlayingQueueAdapter(
             }
         }
         notifyItemMoved(fromPosition, toPosition)
+        itemReordered(fromPosition, toPosition)
     }
 
     override fun getItemCount(): Int = dataset.size

@@ -46,6 +46,8 @@ class MusicPlayback(
 
     fun reorder(from: Int, to: Int) = playbackImpl.reorder(from, to)
 
+    fun remove(pos: Int) = playbackImpl.remove(pos)
+
     fun getCurrentPosition() = playbackImpl.getCurrentPosition()
 
     fun pause() = playbackImpl.pause()

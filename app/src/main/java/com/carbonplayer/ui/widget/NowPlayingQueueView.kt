@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.Scroller
 import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.general.MathUtils
 import timber.log.Timber
 
 /* A recyclerview that allows to be swiped up and down. If it is swiped up,
@@ -19,6 +20,7 @@ class NowPlayingQueueView: RecyclerView {
     private var last2Y = 0f
     public var initialY = -2f
     private val scroller = Scroller(context, FastOutSlowInInterpolator())
+    private val dragHandleMaxX: Int
     var scrollHasControl = false
     private val maxY = IdentityUtils.getStatusBarHeight(resources)
     private var eventStartTime = 0L
@@ -36,6 +38,7 @@ class NowPlayingQueueView: RecyclerView {
     constructor(context: Context, attrs: AttributeSet, def: Int) : super(context, attrs, def)
 
     init {
+        dragHandleMaxX = MathUtils.dpToPx2(resources, 40)
         runner = Runnable {
             if(runThread) {
                 scroller.computeScrollOffset()
@@ -86,7 +89,9 @@ class NowPlayingQueueView: RecyclerView {
                 if(!eventHasMotion && (event.rawY > eventInitialY + 1
                         || event.rawY < eventInitialY - 1)) eventHasMotion = true
                 if(eventHasMotion) {
-                    if(isUp && event.rawY < lastY) {
+                    if(event.rawX < dragHandleMaxX){
+                        super.onTouchEvent(event)
+                    } else if(isUp && event.rawY < lastY) {
                         super.onTouchEvent(event)
                     } else if (isUp && computeVerticalScrollOffset() > 0) {
                         super.onTouchEvent(event)
@@ -118,7 +123,9 @@ class NowPlayingQueueView: RecyclerView {
 
                 getLocationInWindow(location)
 
-                if(isUp && event.rawY < lastY) {
+                if(event.rawX < dragHandleMaxX){
+                    super.onTouchEvent(event)
+                } else if(isUp && event.rawY < lastY) {
                     super.onTouchEvent(event)
                 } else if (isUp && computeVerticalScrollOffset() > 0) {
                     super.onTouchEvent(event)

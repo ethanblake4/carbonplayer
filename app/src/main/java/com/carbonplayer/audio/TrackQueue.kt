@@ -3,7 +3,6 @@ package com.carbonplayer.audio
 
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.base.ITrack
-import com.carbonplayer.model.entity.enums.PlaySource
 import com.carbonplayer.utils.parcelable
 import io.realm.Realm
 
@@ -46,6 +45,7 @@ class TrackQueue(val callback: TrackQueueCallback) {
         }
     }
 
+
     private inline fun wrapRealm(local: Boolean, crossinline block: (realm: Realm?) -> Unit) {
 
         if (!local) Realm.getDefaultInstance().executeTransaction({ block(it) })
@@ -57,6 +57,11 @@ class TrackQueue(val callback: TrackQueueCallback) {
         queue.removeAt(pos)
         queue.add(pnew, t)
         if (!noCallback) callback.reorder(pos, pnew)
+    }
+
+    fun remove(pos: Int, noCallback: Boolean = false) {
+        queue.removeAt(pos)
+        if(!noCallback) callback.remove(pos)
     }
 
 
@@ -77,5 +82,6 @@ class TrackQueue(val callback: TrackQueueCallback) {
         fun insertAtEnd(tracks: MutableList<ParcelableTrack>)
         fun insertNext(tracks: MutableList<ParcelableTrack>)
         fun reorder(pos: Int, pnew: Int)
+        fun remove(pos: Int)
     }
 }

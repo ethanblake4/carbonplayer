@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.media.MediaMetadata
-import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.*
 import android.support.v4.app.NotificationCompat
@@ -133,6 +132,15 @@ class MusicPlayerService : Service(), MusicFocusable {
                 Timber.i("Reorder %d %d", from, to)
 
                 playback.reorder(from, to)
+            }
+            Constants.ACTION.REMOVE -> {
+                val bundle = intent.extras
+
+                val pos = bundle.getInt(Constants.KEY.POSITION)
+
+                Timber.i("Remove %d", pos)
+
+                playback.remove(pos)
             }
             Constants.ACTION.SEND_QUEUE -> {
                 Timber.i("Sending Queue")

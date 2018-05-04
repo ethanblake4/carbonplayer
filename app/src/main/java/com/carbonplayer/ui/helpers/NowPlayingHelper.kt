@@ -80,6 +80,7 @@ class NowPlayingHelper(private val activity: Activity) {
             .getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var lastVolumePercent = 0f
     var playing = false
+    private lateinit var touchHelper: ItemTouchHelper
 
     private var recyclerIsUp = false
     private val recyclerScroller = Scroller(activity, FastOutSlowInInterpolator())
@@ -390,6 +391,18 @@ class NowPlayingHelper(private val activity: Activity) {
 
             ContextCompat.startForegroundService(activity, intent)
         }
+
+        override fun remove(pos: Int) {
+            val intent = newIntent().apply {
+                action = Constants.ACTION.REMOVE
+
+                putExtra(Constants.KEY.POSITION, pos)
+
+                maybeBind(this)
+            }
+
+            ContextCompat.startForegroundService(activity, intent)
+        }
     }
 
     val trackQueue: TrackQueue = TrackQueue(trackQueueCallback)
@@ -489,14 +502,21 @@ class NowPlayingHelper(private val activity: Activity) {
     }
 
     private fun setupQueueAdapter(tracks: List<ParcelableTrack>) {
-        val adapter = NowPlayingQueueAdapter(tracks, { i ->
 
+        val adapter = NowPlayingQueueAdapter(tracks, { pos ->
+
+        }, { vh ->
+            touchHelper.startDrag(vh)
+        }, { pos ->
+            trackQueue.remove(pos)
+        },
+        { from, to ->
+            trackQueue.reorder(from, to)
         })
 
         activity.npui_recycler.adapter = adapter
-
         val callback = QueueItemTouchCallback(adapter)
-        val touchHelper = ItemTouchHelper(callback)
+        touchHelper = ItemTouchHelper(callback)
         touchHelper.attachToRecyclerView(activity.npui_recycler)
     }
 
