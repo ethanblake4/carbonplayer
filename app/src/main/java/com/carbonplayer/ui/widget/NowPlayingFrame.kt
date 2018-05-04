@@ -9,7 +9,6 @@ import android.widget.Scroller
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import timber.log.Timber
-import kotlin.math.max
 
 /**
  * A FrameLayout that can be expanded via swipe to increase its height and
@@ -155,7 +154,7 @@ class NowPlayingFrame : FrameLayout {
                     Timber.d("Fling from startY: $curHeight," +
                             " velocity: $velocity, endY: ${scroller.finalY}")
 
-                    scroller.extendDuration(500)
+                    scroller.extendDuration(400)
 
                     scrollHasControl = true
                     eventHasMotion = false
@@ -165,7 +164,7 @@ class NowPlayingFrame : FrameLayout {
 
                     if (measuredHeight <= initialHeight + 12) {
                         scroller.startScroll(0, initialHeight, 0, maxHeight
-                                - initialHeight, 500)
+                                - initialHeight, 400)
                         Timber.d("Scroll from startY: $initialHeight," +
                                 "dy: ${ maxHeight - initialHeight }")
                         scrollHasControl = true
