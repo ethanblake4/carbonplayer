@@ -15,8 +15,6 @@ import timber.log.Timber
  * reduce its vertical screen position, creating the appearance of swiping up
  *
  * It also sends its current position via a callback to allow for animations
- *
- * @TODO switch from a 16ms thread to View.postOnAnimation()
  */
 class NowPlayingFrame : FrameLayout {
 
@@ -75,6 +73,9 @@ class NowPlayingFrame : FrameLayout {
         super.onDetachedFromWindow()
         runThread = false
     }
+
+
+
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 

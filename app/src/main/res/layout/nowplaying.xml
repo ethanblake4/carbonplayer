@@ -95,6 +95,7 @@
     <com.carbonplayer.ui.widget.NowPlayingQueueView
         android:id="@+id/npui_recycler"
         android:layout_width="match_parent"
+        android:elevation="4dp"
         android:layout_height="wrap_content"
         android:background="#fff">
     </com.carbonplayer.ui.widget.NowPlayingQueueView>

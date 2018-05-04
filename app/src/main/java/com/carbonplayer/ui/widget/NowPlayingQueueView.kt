@@ -7,7 +7,6 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.Scroller
 import com.carbonplayer.utils.general.IdentityUtils
-import com.carbonplayer.utils.general.MathUtils
 import timber.log.Timber
 
 /* A recyclerview that allows to be swiped up and down. If it is swiped up,
@@ -44,19 +43,15 @@ class NowPlayingQueueView: RecyclerView {
                     val upFraction = ((initialY - scroller.currY) / (
                             initialY - maxY))
 
-                    elevation = MathUtils.dpToPx2(resources, upFraction * 4f)
-
-                    requestLayout()
-
                     callback?.invoke(upFraction)
                     isUp = upFraction > 0.99f
 
                     //Timber.d("scroller: %d", scroller.currY)
                 }
-                postOnAnimation(runner)
+                post(runner)
             }
         }
-        postOnAnimation(runner)
+        post(runner)
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -95,13 +90,6 @@ class NowPlayingQueueView: RecyclerView {
                         super.onTouchEvent(event)
                     } else {
                         translationY = Math.min(translationY + dy, initialY)
-
-                        val elevDp = (((initialY - scroller.currY) / (
-                                initialY - maxY)) * 4f)
-
-                        elevation = MathUtils.dpToPx2(resources, elevDp)
-
-                        postOnAnimation { requestLayout() }
 
                         callback?.invoke(((translationY - initialY) / (
                                 initialY - maxY)))
