@@ -38,6 +38,8 @@ public class Preferences {
     public String OAuthToken;
     public String PlayMusicOAuth;
 
+    public int textAdditionalContrast = 20;
+
     public int maxAudioCacheSizeMB = 1024;
 
     public boolean filterExplicit = false;
@@ -45,6 +47,10 @@ public class Preferences {
     public int getContentFilterAsInt() {
         if(filterExplicit) return 2;
         return 1;
+    }
+
+    public float getScrimifyAmount() {
+        return ((float)textAdditionalContrast) / 100f;
     }
 
     public StreamQuality getPreferredStreamQuality(Context context){

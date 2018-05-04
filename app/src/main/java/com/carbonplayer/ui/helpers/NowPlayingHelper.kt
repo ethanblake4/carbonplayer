@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.res.ColorStateList
 import android.media.AudioManager
 import android.os.*
 import android.support.v4.content.ContextCompat
@@ -20,6 +21,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
+import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.audio.MusicPlayerService
 import com.carbonplayer.audio.TrackQueue
@@ -33,6 +35,9 @@ import com.carbonplayer.utils.asParcel
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.AnimUtils
+import com.carbonplayer.utils.ui.ColorUtils
+import com.carbonplayer.utils.ui.PaletteUtil
+import com.github.florent37.glidepalette.GlidePalette
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -416,6 +421,32 @@ class NowPlayingHelper(private val activity: Activity) {
                     }
                     val track = msg.obj as ParcelableTrack
                     requestMgr.load(track.albumArtURL)
+                            .listener(GlidePalette.with(track.albumArtURL)
+                            .use(0)
+                            .intoCallBack{ palette -> if (palette != null) {
+                                activity.nowplaying_frame.post {
+                                    val pair = PaletteUtil.getSwatches(activity, palette)
+                                    PaletteUtil.crossfadeBackground(
+                                            activity.bottomNavContainer, pair.primary)
+                                    PaletteUtil.crossfadeTitle(
+                                            activity.npui_song, pair.primary)
+                                    PaletteUtil.crossfadeSubtitle(activity.npui_artist, pair.primary)
+                                    val tintList = ColorStateList(
+                                            arrayOf(IntArray(1, { -android.R.attr.state_checked }),
+                                                    IntArray(1, {android.R.attr.state_checked})),
+                                            arrayOf(ColorUtils.scrimify(pair.primary.bodyTextColor,
+                                                    CarbonPlayerApplication.instance.preferences.scrimifyAmount),
+                                                    ColorUtils.scrimify(pair.primary.bodyTextColor,
+                                                            0.7f)).toIntArray()
+                                            )
+
+                                    activity.npui_fastrewind.imageTintList = tintList
+                                    activity.npui_fastforward.imageTintList = tintList
+                                    activity.npui_playpause.imageTintList = tintList
+                                    activity.bottom_nav.itemIconTintList = tintList
+                                    activity.bottom_nav.itemTextColor = tintList
+                                }
+                            }})
                             .apply(RequestOptions.overrideOf(dispW, dispH)
                                     .diskCacheStrategy(DiskCacheStrategy.ALL))
                             .transition(DrawableTransitionOptions.withCrossFade())
