@@ -26,6 +26,11 @@ public class MathUtils {
                 res.getDisplayMetrics()));
     }
 
+    public static float dpToPx2(Resources res, float dp) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
+                res.getDisplayMetrics());
+    }
+
     public static int pxToDp(Context context, int px) {
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         int dp = Math.round(px / (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));

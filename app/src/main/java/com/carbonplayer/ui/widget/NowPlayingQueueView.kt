@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.Scroller
 import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.general.MathUtils
 import timber.log.Timber
 
 /* A recyclerview that allows to be swiped up and down. If it is swiped up,
@@ -40,16 +41,15 @@ class NowPlayingQueueView: RecyclerView {
                 scroller.computeScrollOffset()
                 if(scrollHasControl && scroller.currY != layoutParams.height) {
                     translationY = scroller.currY.toFloat()
-                    val upFraction = ((scroller.currY - initialY) / (
-                            maxY - initialY))
-                    elevation = upFraction * 4f
+                    val upFraction = ((initialY - scroller.currY) / (
+                            initialY - maxY))
+
+                    elevation = MathUtils.dpToPx2(resources, upFraction * 4f)
 
                     requestLayout()
 
                     callback?.invoke(upFraction)
                     isUp = upFraction > 0.99f
-
-
 
                     //Timber.d("scroller: %d", scroller.currY)
                 }
@@ -95,13 +95,16 @@ class NowPlayingQueueView: RecyclerView {
                         super.onTouchEvent(event)
                     } else {
                         translationY = Math.min(translationY + dy, initialY)
-                        elevation = ((scroller.currY - initialY) / (
-                                maxY - initialY)) * 4f
+
+                        val elevDp = (((initialY - scroller.currY) / (
+                                initialY - maxY)) * 4f)
+
+                        elevation = MathUtils.dpToPx2(resources, elevDp)
 
                         postOnAnimation { requestLayout() }
 
                         callback?.invoke(((translationY - initialY) / (
-                                maxY - initialY)))
+                                initialY - maxY)))
                         last2Y = lastY
                         lastY = event.rawY
                     }
