@@ -38,7 +38,7 @@ public class Preferences {
     public String OAuthToken;
     public String PlayMusicOAuth;
 
-    public int textAdditionalContrast = 20;
+    public int textAdditionalContrast = 8;
 
     public int maxAudioCacheSizeMB = 1024;
 

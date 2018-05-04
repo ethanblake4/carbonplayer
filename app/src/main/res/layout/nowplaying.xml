@@ -98,14 +98,11 @@
         sothree:umanoPanelHeight="68dp"
         sothree:umanoShadowHeight="4dp"
         sothree:umanoOverlay="false"
-        sothree:umanoScrollableView="@+id/npui_recycler">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="Main Content"
-            android:textSize="16sp" />
+        sothree:umanoScrollableView="@+id/npui_recycler"
+        sothree:umanoDragView="@+id/npui_recycler">
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"></FrameLayout>
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/npui_recycler"

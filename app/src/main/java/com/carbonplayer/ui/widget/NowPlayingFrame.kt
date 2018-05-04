@@ -35,26 +35,28 @@ class NowPlayingFrame : FrameLayout {
     var isUp = false
     private var runThread = true
 
-    private var thread: Thread = Thread(Runnable {
-        while(runThread) {
-            scroller.computeScrollOffset()
-            if(scrollHasControl && scroller.currY != layoutParams.height) {
-                layoutParams.height = scroller.currY
-                postOnAnimation { requestLayout() }
-                val upFraction = ((scroller.currY - initialHeight).toFloat() / (
-                        maxHeight - initialHeight).toFloat())
-                callback?.invoke(upFraction)
-                isUp = upFraction > 0.99f
-
-                //Timber.d("scroller: %d", scroller.currY)
-            }
-            Thread.sleep(16)
-        }
-    })
+    private lateinit var runner: Runnable
     var callback: ((Float) -> Unit)? = null
 
     init {
-        thread.start()
+        //thread.start()
+        runner = Runnable {
+            if(runThread) {
+                scroller.computeScrollOffset()
+                if(scrollHasControl && scroller.currY != layoutParams.height) {
+                    layoutParams.height = scroller.currY
+                    requestLayout()
+                    val upFraction = ((scroller.currY - initialHeight).toFloat() / (
+                            maxHeight - initialHeight).toFloat())
+                    callback?.invoke(upFraction)
+                    isUp = upFraction > 0.99f
+
+                    //Timber.d("scroller: %d", scroller.currY)
+                }
+                postOnAnimation(runner)
+            }
+        }
+        postOnAnimation(runner)
     }
 
     constructor(context: Context) : super(context)
@@ -103,9 +105,12 @@ class NowPlayingFrame : FrameLayout {
                     layoutParams.height = minOf (
                             maxOf(layoutParams.height - dy.toInt(), initialHeight),
                             maxHeight)
-                    postOnAnimation { requestLayout() }
-                    callback?.invoke(((layoutParams.height - initialHeight).toFloat() / (
-                            maxHeight - initialHeight).toFloat()))
+                    postOnAnimation {
+                        requestLayout()
+                        callback?.invoke(((layoutParams.height - initialHeight).toFloat() / (
+                                maxHeight - initialHeight).toFloat()))
+                    }
+
                 }
                 last2Y = lastY
                 lastY = event.rawY

@@ -60,6 +60,8 @@ class CarbonPlayerApplication : Application() {
         preferences = Preferences()
         preferences.load()
 
+        preferences.textAdditionalContrast = 8
+
         okHttpClient = OkHttpClient.Builder()
                 .addNetworkInterceptor(StethoInterceptor()).build()
         androidHttpClient = AndroidHttpClient.newInstance(googleUserAgent, applicationContext)

@@ -16,6 +16,8 @@ import com.carbonplayer.utils.general.MathUtils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import timber.log.Timber;
+
 /**
  * Utility methods for working with colors.
  *
@@ -177,6 +179,8 @@ public class ColorUtils {
         } else {
             lightnessMultiplier = 1f - lightnessMultiplier;
         }
+
+        Timber.d("Scrimify with %f", lightnessMultiplier);
 
 
         hsl[2] = MathUtils.constrain(0f, 1f, hsl[2] * lightnessMultiplier);

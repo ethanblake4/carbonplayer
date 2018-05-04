@@ -184,53 +184,37 @@ class NowPlayingHelper(private val activity: Activity) {
                 (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth))
 
         activity.nowplaying_frame.callback = { up ->
-            activity.slidingPanel.post {
                 activity.slidingPanel.visibility = if(up > 0.99f) View.VISIBLE else View.GONE
-            }
 
             activity.nowplaying_frame.npui_thumb.run {
-                postOnAnimation {
                     layoutParams.width =
                             (up.times(dispW - heightPx)).toInt() + heightPx
-                    invalidate()
-                }
+                    //invalidate()
             }
             activity.nowplaying_frame.npui_song.run {
-                postOnAnimation {
                     alpha = 1f - up
-                    invalidate()
-                }
+                    //invalidate()
             }
             activity.nowplaying_frame.npui_artist.run {
-                postOnAnimation {
                     alpha = 1f - up
-                    invalidate()
-                }
+                    //invalidate()
             }
 
             try {
                 activity.bottom_nav.run {
-                    postOnAnimation {
                         layoutParams.height = (heightPx * (1f - up)).toInt()
-                    }
                 }
                 activity.nowplaying_frame.npui_fastrewind.run {
-                    postOnAnimation {
                         translationY = (up * dispW / controlsScalar)
                         x = ((dispW / 4f - buttonHalfWidth) * up) + (prevInitialX * (1f - up))
-                    }
                 }
                 activity.nowplaying_frame.npui_playpause.run {
-                    postOnAnimation {
                         translationY = (up * dispW / controlsScalar)
                         x = (((dispW / 2f) - buttonHalfWidth) * up) + (playPauseInitialX * (1f - up))
-                    }
                 }
                 activity.nowplaying_frame.npui_fastforward.run {
-                    postOnAnimation {
                         translationY = (up * dispW / controlsScalar)
                         x = ((dispW - (dispW / 4f) - buttonHalfWidth)) * up + (nextInitialX * (1f - up))
-                    }
                 }
             } catch (e: NullPointerException) {
                 Timber.e("NPE in nowplayinghelper -> why does this happen? ", e)
