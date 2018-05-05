@@ -315,6 +315,10 @@ class MusicPlaybackImpl(
         return Pair(stream, sourceFromStream(stream))
     }
 
+    override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {
+        Timber.d("Timeline changed")
+    }
+
     private fun sourceFromStream(stream: Stream): MediaSource {
         Timber.d("sourceFromStream $stream")
         return ExtractorMediaSource.Factory( { ExoPlayerDataSource(stream) })
@@ -378,10 +382,6 @@ class MusicPlaybackImpl(
         if (disallowNextAutoInc) disallowNextAutoInc = false
     }
 
-    override fun onTimelineChanged(timeline: Timeline?, manifest: Any?) {
-        Timber.d("Timeline changed")
-
-    }
 
     override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
         Timber.d("Playback parameters changed")

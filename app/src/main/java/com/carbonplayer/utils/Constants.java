@@ -20,6 +20,7 @@ public final class Constants {
         String PREVIOUS = "PREVIOUS";
         String PLAYPAUSE = "PLAYPAUSE";
         String NEXT = "NEXT";
+        String SKIP_TO_TRACK = "SKIP_TO_TRACK";
 
         String SEND_QUEUE = "SEND_QUEUE";
         String SEND_STATE = "SEND_STATE";
@@ -41,6 +42,7 @@ public final class Constants {
         int Error = 6;
 
         int TrackPlaying = 7;
+        int TrackPosition = 10;
     }
 
     public interface KEY {

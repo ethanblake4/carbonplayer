@@ -70,7 +70,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
     private val dispW = IdentityUtils.displayWidth2(activity)
     private val dispH = IdentityUtils.displayHeight2(activity)
-    private val controlsScalar = (dispH.toFloat() / dispW.toFloat()) * 2.4f
+    private val controlsScalar = (dispH.toFloat() / dispW.toFloat()) * 2f
     private val heightPx = MathUtils.dpToPx2(activity.resources, HEIGHT_DP)
     private val buttonHalfWidth = MathUtils.dpToPx2(activity.resources, 16)
     private val prevInitialX = dispW - MathUtils.dpToPx2(activity.resources, 132)
@@ -81,6 +81,7 @@ class NowPlayingHelper(private val activity: Activity) {
     private var lastVolumePercent = 0f
     var playing = false
     private lateinit var touchHelper: ItemTouchHelper
+    private var curTracK: ITrack? = null
 
     private var recyclerIsUp = false
     private val recyclerScroller = Scroller(activity, FastOutSlowInInterpolator())
@@ -165,8 +166,8 @@ class NowPlayingHelper(private val activity: Activity) {
             activity.nowplaying_frame.visibility = View.GONE
         }
 
-        activity.nowplaying_frame.npui_volumebar_background
-                .layoutParams.width = (dispW / 2f).toInt() - heightPx
+        /*activity.nowplaying_frame.npui_volumebar_background
+                .layoutParams.width = (dispW / 2f).toInt() - heightPx*/
 
         activity.npui_recycler.translationY = dispW * 1.5f
 
@@ -176,19 +177,19 @@ class NowPlayingHelper(private val activity: Activity) {
         //activity.npui_recycler.setPadding(0, IdentityUtils.getStatusBarHeight(activity.resources),
         //        0, 0)
 
-        activity.nowplaying_frame.npui_volumebar_background.translationY =
+        activity.nowplaying_frame.npui_mixDescriptor.translationY =
                 (dispW * 1.3f) + (heightPx /4)
 
         activity.nowplaying_frame.seekBar.translationY = dispW.toFloat()
 
 
-        activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.3f
-        activity.nowplaying_frame.npui_volumeHi.translationY = dispW * 1.3f
-        activity.nowplaying_frame.volume_fab.translationY = (dispW * 1.3f ) + (heightPx / 6f)
-        activity.nowplaying_frame.npui_volumeLow.x = dispW / 4f - buttonHalfWidth
-        activity.nowplaying_frame.npui_volumeHi.x = dispW - (dispW / 4f) - buttonHalfWidth
-        activity.nowplaying_frame.volume_fab.x = ((1f - volumePercent()) * dispW / 4f) +
-                (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth))
+        //activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.3f
+        //activity.nowplaying_frame.npui_volumeHi.translationY = dispW * 1.3f
+        //activity.nowplaying_frame.volume_fab.translationY = (dispW * 1.3f ) + (heightPx / 6f)
+        //activity.nowplaying_frame.npui_volumeLow.x = dispW / 4f - buttonHalfWidth
+        //activity.nowplaying_frame.npui_volumeHi.x = dispW - (dispW / 4f) - buttonHalfWidth
+        //activity.nowplaying_frame.volume_fab.x = ((1f - volumePercent()) * dispW / 4f) +
+        //        (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth))
 
         activity.nowplaying_frame.callback = { up ->
                 //activity.slidingPanel.visibility = if(up > 0.99f) View.VISIBLE else View.GONE
@@ -290,19 +291,19 @@ class NowPlayingHelper(private val activity: Activity) {
     }
 
     fun maybeHandleVolumeEvent() {
-        if (volumePercent() != lastVolumePercent) {
+        /*if (volumePercent() != lastVolumePercent) {
             activity.nowplaying_frame.volume_fab.animate()
                     .x(((1f - volumePercent()) * dispW / 4f) +
                             (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth)))
                     .setDuration(250).setInterpolator(FastOutSlowInInterpolator()).start()
-        }
+        }*/
     }
 
     /**
      * TODO we should also update the UI here instead of waiting for the system to notify us
      */
     fun handleVolumeEvent(event: Int): Boolean {
-        if (event == KeyEvent.KEYCODE_VOLUME_DOWN || event == KeyEvent.KEYCODE_VOLUME_UP) {
+        /*if (event == KeyEvent.KEYCODE_VOLUME_DOWN || event == KeyEvent.KEYCODE_VOLUME_UP) {
             if (activity.nowplaying_frame.isUp) {
                 audioManager.adjustStreamVolume(
                         AudioManager.STREAM_MUSIC,
@@ -311,7 +312,7 @@ class NowPlayingHelper(private val activity: Activity) {
                         AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE)
                 return true
             }
-        }
+        }*/
         return false
     }
 
@@ -423,13 +424,13 @@ class NowPlayingHelper(private val activity: Activity) {
                     if (activity.nowplaying_frame.visibility != View.VISIBLE) {
                         revealPlayerUI()
                     }
-                    val track = msg.obj as ParcelableTrack
-                    val second = (track.durationMillis / 1000) % 60
-                    val minute = (track.durationMillis / (1000 * 60)) % 60
+                    curTracK = msg.obj as ParcelableTrack
+                    val second = (curTracK!!.durationMillis / 1000) % 60
+                    val minute = (curTracK!!.durationMillis / (1000 * 60)) % 60
                     activity.nowplaying_frame.songDuration.text =
                             String.format("%02d:%02d", minute, second)
-                    requestMgr.load(track.albumArtURL)
-                            .listener(GlidePalette.with(track.albumArtURL)
+                    requestMgr.load(curTracK!!.albumArtURL)
+                            .listener(GlidePalette.with(curTracK!!.albumArtURL)
                             .use(0)
                             .intoCallBack{ palette -> if (palette != null) {
                                 activity.nowplaying_frame.post {
@@ -460,14 +461,29 @@ class NowPlayingHelper(private val activity: Activity) {
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(activity.npui_thumb)
 
-                    activity.npui_song.text = track.title
-                    activity.npui_artist.text = track.artist
+                    activity.npui_song.text = curTracK!!.title
+                    activity.npui_artist.text = curTracK!!.artist
 
                     activity.npui_song.ellipsize = TextUtils.TruncateAt.MARQUEE
                     activity.npui_song.setSingleLine(true)
                     activity.npui_song.marqueeRepeatLimit = 5
                     activity.npui_song.isSelected = true
                 }
+
+                Constants.EVENT.TrackPosition -> {
+                    val positionMillis = msg.obj as Long
+                    val second = (positionMillis / 1000) % 60
+                    val minute = (positionMillis / (1000 * 60)) % 60
+                    activity.nowplaying_frame.playTime.text =
+                            String.format("%02d:%02d", minute, second)
+                    curTracK?.let {
+                        activity.nowplaying_frame.seekSlider.translationX =
+                                ((positionMillis.toDouble() / it.durationMillis.toDouble())
+                                        * dispW * 0.92).toFloat()
+
+                    }
+                }
+
                 Constants.EVENT.Playing -> {
                     activity.npui_playpause
                             .setImageDrawable(activity.getDrawable(R.drawable.ic_pause))
@@ -504,7 +520,14 @@ class NowPlayingHelper(private val activity: Activity) {
     private fun setupQueueAdapter(tracks: List<ParcelableTrack>) {
 
         val adapter = NowPlayingQueueAdapter(tracks, { pos ->
+            val intent = newIntent().apply {
 
+                action = Constants.ACTION.SKIP_TO_TRACK
+                putExtra(Constants.KEY.POSITION, pos.second)
+                maybeBind(this)
+            }
+
+            ContextCompat.startForegroundService(activity, intent)
         }, { vh ->
             touchHelper.startDrag(vh)
         }, { pos ->

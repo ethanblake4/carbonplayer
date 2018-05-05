@@ -142,6 +142,15 @@ class MusicPlayerService : Service(), MusicFocusable {
 
                 playback.remove(pos)
             }
+            Constants.ACTION.SKIP_TO_TRACK -> {
+                val bundle = intent.extras
+
+                val pos = bundle.getInt(Constants.KEY.POSITION)
+
+                Timber.i("Skip to %d", pos)
+
+                playback.skipToTrack(pos)
+            }
             Constants.ACTION.SEND_QUEUE -> {
                 Timber.i("Sending Queue")
                 emit(Constants.EVENT.SendQueue)
@@ -239,6 +248,8 @@ class MusicPlayerService : Service(), MusicFocusable {
                         PlaybackStateCompat.STATE_PAUSED,
                             playback.getCurrentPosition(), 1.0f)
                             .setBufferedPosition(bufferedPosition).build())
+
+                    emit(Constants.EVENT.TrackPosition, playback.getCurrentPosition())
                 }
             }
             lastNotifiedTrack?.let {

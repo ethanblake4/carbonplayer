@@ -110,7 +110,7 @@ repositories {
 }
 
 ext {
-    supportLibVersion = '27.0.2'
+    supportLibVersion = '27.1.1'
 }
 
 dependencies {
@@ -133,7 +133,7 @@ dependencies {
     implementation 'com.uphyca:stetho_realm:2.2.2'
 
 
-    implementation 'com.google.android.exoplayer:exoplayer:2.6.1'
+    implementation 'com.google.android.exoplayer:exoplayer:2.7.3'
     implementation 'com.google.android.gms:play-services-auth:11.2.2'
     implementation 'com.google.protobuf:protobuf-lite:3.0.1'
     protobuf 'com.google.protobuf:protobuf-java:3.3.1'

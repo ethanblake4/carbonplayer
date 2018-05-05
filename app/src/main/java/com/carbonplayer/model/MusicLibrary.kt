@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.support.annotation.UiThread
 import android.util.Pair
+import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.model.entity.*
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.ITrack
@@ -42,7 +43,8 @@ object MusicLibrary {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { entries ->
                     for (e in entries) {
-                        if (e.name == "isNautilusUser")
+                        if (e.name == "isNautilusUser"
+                                && !CarbonPlayerApplication.instance.preferences.isCarbonTester)
                             if (e.value == "false") {
                                 failed.set(true)
                                 onError.accept(NoNautilusException())

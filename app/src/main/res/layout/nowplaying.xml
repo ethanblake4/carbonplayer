@@ -63,7 +63,7 @@
         android:contentDescription="@string/fast_forward"
         app:srcCompat="@drawable/ic_fast_forward" />
 
-    <View
+    <!--View
         android:id="@+id/npui_volumebar_background"
         android:layout_width="match_parent"
         android:layout_height="2dp"
@@ -80,7 +80,13 @@
         android:id="@+id/npui_volumeHi"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        app:srcCompat="@drawable/ic_volume_up" />
+        app:srcCompat="@drawable/ic_volume_up" /-->
+
+    <TextView
+        android:id="@+id/npui_mixDescriptor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"/>
 
     <FrameLayout
         android:id="@+id/seekBar"
@@ -89,6 +95,7 @@
         android:background="#fff">
 
         <TextView
+            android:id="@+id/playTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
@@ -119,13 +126,13 @@
 
     </FrameLayout>
 
-    <android.support.design.widget.FloatingActionButton
+    <!--android.support.design.widget.FloatingActionButton
         android:id="@+id/volume_fab"
         android:layout_width="18dp"
         android:layout_height="18dp"
         android:clickable="true"
         android:focusable="true"
-        app:fabSize="mini" />
+        app:fabSize="mini" /-->
 
 
     <com.carbonplayer.ui.widget.NowPlayingQueueView
@@ -134,7 +141,10 @@
         android:layout_height="match_parent"
         android:background="#fff"
         android:elevation="4dp"
-        android:visibility="visible"></com.carbonplayer.ui.widget.NowPlayingQueueView>
+        android:visibility="visible">
+
+
+    </com.carbonplayer.ui.widget.NowPlayingQueueView>
 
 
 

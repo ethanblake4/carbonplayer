@@ -44,6 +44,8 @@ public class Preferences {
 
     public boolean filterExplicit = false;
 
+    public boolean isCarbonTester = true;
+
     public int getContentFilterAsInt() {
         if(filterExplicit) return 2;
         return 1;

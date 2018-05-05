@@ -95,11 +95,11 @@ class Stream (
 
     @Synchronized
     private fun createInDb() {
-        Realm.getDefaultInstance().executeTransaction { rlm ->
+        /*Realm.getDefaultInstance().executeTransaction { rlm ->
             (track as ParcelableTrack).let {
                 track = MusicLibrary.addOneToDatabase(rlm, it, true, track.inLibrary)
             }
-        }
+        }*/
     }
 
     fun initDownload() {
