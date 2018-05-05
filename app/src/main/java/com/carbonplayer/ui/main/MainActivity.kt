@@ -233,9 +233,10 @@ class MainActivity : AppCompatActivity() {
 
                 val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE)
                         as InputMethodManager
-                inputMethodManager.toggleSoftInputFromWindow(
+                inputMethodManager.showSoftInput(searchQuery, 0)
+                /*inputMethodManager.toggleSoftInputFromWindow(
                         searchQuery.applicationWindowToken,
-                        InputMethodManager.SHOW_FORCED, 0)
+                        InputMethodManager.SHOW_FORCED, 0)*/
             }, 300)
 
         }
@@ -254,6 +255,10 @@ class MainActivity : AppCompatActivity() {
 
         searchQuery.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO) {
+                val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE)
+                        as InputMethodManager
+                inputMethodManager.hideSoftInputFromWindow(
+                        searchQuery.applicationWindowToken, 0)
                 val frag = SearchController(searchQuery.text.toString())
 
                 router.pushController(RouterTransaction.with(frag)
