@@ -23,6 +23,7 @@ import com.carbonplayer.model.entity.skyjam.*
 import com.carbonplayer.model.network.entity.*
 import com.carbonplayer.model.network.utils.ClientContextFactory
 import com.carbonplayer.model.network.utils.IOUtils
+import com.carbonplayer.utils.general.Either
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.protocol.URLSigning
 import com.squareup.moshi.JsonAdapter
@@ -461,7 +462,7 @@ object Protocol {
     }
 
     private fun <R, T : PagedJsonResponse<R>> rawPagedFeed(context: Context, urlPart: String,
-                                                     adapter: JsonAdapter<T>): Observable<R> {
+                                                     adapter: JsonAdapter<T>): Observable<Either<R, Unit>> {
 
         val client = CarbonPlayerApplication
                 .instance.okHttpClient
@@ -469,7 +470,7 @@ object Protocol {
                 .appendQueryParameter("alt", "json")
                 .appendDefaults()
 
-        return Observable.create<R> { subscriber ->
+        return Observable.create<Either<R, Unit>> { subscriber ->
 
             var startToken: String? = ""
 
@@ -492,45 +493,78 @@ object Protocol {
                         .build()
                 try {
 
-                    val r = client.newCall(request).execute()
-                    if (!r.isSuccessful) subscriber.onError(ResponseCodeException())
+                    Timber.d("starting exec")
 
-                    r.body()?.source()?.let { adapter.fromJson(it)?.let { response ->
-                        if (response.nextPageToken != null) startToken = response.nextPageToken
-                        subscriber.onNext(response.data)
-                    } }
+                    val r = client.newCall(request).execute()
+                    if (!r.isSuccessful) {
+                        Timber.d("ending responsecode")
+                        subscriber.onError(ResponseCodeException())
+                    }
+
+                    r.body()?.source()?.let {
+                        Timber.d("recieve source")
+                        adapter.fromJson(it)?.let { response ->
+                        startToken = response.nextPageToken
+                        Timber.d("recieve startToken as $startToken")
+                        response.data?.let { subscriber.onNext(Either.Left(it))
+                            Timber.d("recieve data")}
+                        if(startToken == "" || startToken == null) {
+                            Timber.d("ending 1")
+                            subscriber.onNext(Either.Right(Unit))
+                            subscriber.onComplete()
+                        }
+                            it
+                    } ?: {
+                            Timber.d("ending 2")
+                            subscriber.onComplete()
+                            it
+                        }.invoke() } ?: {
+                        Timber.d("ending 3")
+                        subscriber.onComplete()
+                    }.invoke()
 
                 } catch (e: IOException) {
+                    Timber.d("ending ioexception")
                     subscriber.onError(e)
                 } catch (e: JSONException) {
+                    Timber.d("ending jsonexception")
                     subscriber.onError(e)
                 }
             }
+            Timber.d("ending at end")
             subscriber.onComplete()
         }
     }
 
     @JvmStatic
-    fun listTracks(context: Context): Observable<List<SkyjamTrack>> {
+    fun listTracks(context: Context): Observable<com.google.common.base.Optional<List<SkyjamTrack>>> {
         val adapter = CarbonPlayerApplication.moshi.adapter(PagedTrackResponse::class.java)
-        return rawPagedFeed<PagedTrackResponseData, PagedTrackResponse>(context, "trackfeed", adapter)
-                .map { response -> response.items }
-    }
-
-    @JvmStatic
-    fun listPlaylists(context: Activity): Observable<List<SkyjamPlaylist>> {
-        val adapter = CarbonPlayerApplication.moshi.adapter(PagedPlaylistResponse::class.java)
-        return rawPagedFeed(context, "playlistfeed", adapter)
-                .map<List<SkyjamPlaylist>> { response ->
-                    response.items
+        return rawPagedFeed<PagedTrackResponseData?, PagedTrackResponse>(context, "trackfeed", adapter)
+                .map { response ->
+                    if(response is Either.Left)
+                        com.google.common.base.Optional.fromNullable(response.value?.items)
+                    else com.google.common.base.Optional.absent()
                 }
     }
 
     @JvmStatic
-    fun listPlaylistEntries(context: Activity): Observable<List<SkyjamPlentry>> {
+    fun listPlaylists(context: Activity): Observable<com.google.common.base.Optional<List<SkyjamPlaylist>>> {
+        val adapter = CarbonPlayerApplication.moshi.adapter(PagedPlaylistResponse::class.java)
+        return rawPagedFeed(context, "playlistfeed", adapter)
+                .map{ response ->
+                    if(response is Either.Left)
+                        com.google.common.base.Optional.fromNullable(response.value?.items)
+                    else com.google.common.base.Optional.absent()
+                }
+    }
+
+    @JvmStatic
+    fun listPlaylistEntries(context: Activity): Observable<com.google.common.base.Optional<List<SkyjamPlentry>>> {
         val adapter = CarbonPlayerApplication.moshi.adapter(PagedPlentryResponse::class.java)
         return rawPagedFeed(context, "plentryfeed", adapter)
-                .map { response -> response.items }
+                .map { response -> if(response is Either.Left)
+                    com.google.common.base.Optional.fromNullable(response.value?.items)
+                else com.google.common.base.Optional.absent() }
     }
 
     fun getStreamURL(context: Context, song_id: String): Single<String> {

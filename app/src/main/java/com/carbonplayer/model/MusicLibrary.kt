@@ -68,11 +68,13 @@ object MusicLibrary {
         val received = AtomicInteger()
 
         trackObservable.subscribe(Consumer { tracks ->
-            Realm.getDefaultInstance().executeTransactionAsync { realm ->
-                addToDatabase(realm, tracks, update, received)
+            if(tracks.isPresent) {
+                Realm.getDefaultInstance().executeTransactionAsync { realm ->
+                    addToDatabase(realm, tracks.get(), update, received)
+                }
+                received.addAndGet(tracks.get().size)
+                onProgress.accept(Pair(false, received.get()))
             }
-            received.addAndGet(tracks.size)
-            onProgress.accept(Pair(false, received.get()))
         }, onError, Action { updatePlaylists(context, onError, onProgress, onSuccess) }).addToAutoDispose()
     }
 
@@ -430,19 +432,20 @@ object MusicLibrary {
                 .observeOn(AndroidSchedulers.mainThread())
         val received = RealmInteger()
         val netsecComplete = AtomicBoolean(false)
-        plObservable.subscribe(Consumer { plList ->
-            received.set(received.value() + plList.size)
+        plObservable.subscribe(Consumer { plList -> if(plList.isPresent) {
+            received.set(received.value() + plList.get().size)
             Realm.getDefaultInstance().executeTransactionAsync { realm ->
-                plList.forEach { pl ->
+                plList.get().forEach { pl ->
                     pl.albumArtRef?.forEach {
                         Timber.d(it.url)
                     }
-                    if(pl.albumArtRef == null) Timber.d("NULL albumartref")
+                    if (pl.albumArtRef == null) Timber.d("NULL albumartref")
                     insertOrUpdatePlaylist(realm, pl)
                 }
-                if(netsecComplete.get()) updatePlentries(context, onError, onSuccess)
+                if (netsecComplete.get()) updatePlentries(context, onError, onSuccess)
             }
             onProgress.accept(Pair(true, received.value()))
+        }
         }, onError, Action { netsecComplete.set(true) }).addToAutoDispose()
     }
 
@@ -451,10 +454,10 @@ object MusicLibrary {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
 
-        plentryObservable.subscribe(Consumer { lis ->
+        plentryObservable.subscribe(Consumer { lis -> if(lis.isPresent) {
             Realm.getDefaultInstance().executeTransactionAsync { realm ->
 
-                lis.forEach { sjPlentry ->
+                lis.get().forEach { sjPlentry ->
 
                     val track = sjPlentry.track?.let {
                         insertOrUpdateTrack(realm, it)
@@ -473,6 +476,7 @@ object MusicLibrary {
                 }
 
             }
+        }
         }, onError, onSuccess).addToAutoDispose()
     }
 
