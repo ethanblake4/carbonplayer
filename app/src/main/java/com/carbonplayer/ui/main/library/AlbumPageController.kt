@@ -40,7 +40,7 @@ class AlbumPageController : Controller() {
 
         resources?.let {
             view.main_recycler.setPadding(0, 0, 0,
-                    IdentityUtils.getNavbarHeight(it))
+                    IdentityUtils.getNavbarHeight(it) + (activity as MainActivity).bottomInset)
         }
 
         

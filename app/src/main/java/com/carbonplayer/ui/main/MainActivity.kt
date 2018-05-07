@@ -50,6 +50,7 @@ import com.carbonplayer.ui.settings.Settings
 import com.carbonplayer.ui.transition.SimpleScaleTransition
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
+import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.newIntent
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.carbonplayer.utils.ui.VolumeObserver
@@ -59,6 +60,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.controller_main.*
+import kotlinx.android.synthetic.main.nowplaying.*
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -78,6 +80,11 @@ class MainActivity : AppCompatActivity() {
 
     /* Publishes new search text */
     private val suggestSubject = PublishSubject.create<String>()
+
+    /* Offset for views that get covered by NPUI */
+    val bottomInset: Int get() = MathUtils.dpToPx2(resources,
+            if(nowplaying_frame.visibility == View.VISIBLE)
+                NowPlayingHelper.HEIGHT_DP else 0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
 

@@ -8,15 +8,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.res.ColorStateList
-import android.media.AudioManager
 import android.os.*
 import android.support.v4.content.ContextCompat
-import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.text.TextUtils
 import android.view.View
-import android.widget.Scroller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -51,15 +48,12 @@ import timber.log.Timber
 
 /**
  * Manages now playing UI and sends commands to [MusicPlayerService]
+ * Also handles playing from radio stations
  *
  * The structure of this class is a bit confusing. When the queue is modified locally, this class
  * typically will notify its [TrackQueue] of the change, which will then callback to this class's
  * [TrackQueue.TrackQueueCallback], which will finally alert the [MusicPlayerService] of the change.
  *
- * For remote operations like starting a radio station, this class will directly message the
- * [MusicPlayerService], as in this case the service has full control over modification of the queue.
- *
- * When
  */
 
 class NowPlayingHelper(private val activity: Activity) {
@@ -75,28 +69,15 @@ class NowPlayingHelper(private val activity: Activity) {
     private val prevInitialX = dispW - MathUtils.dpToPx2(activity.resources, 132)
     private val playPauseInitialX = dispW - MathUtils.dpToPx2(activity.resources, 90)
     private val nextInitialX = dispW - MathUtils.dpToPx2(activity.resources, 48)
-    private val audioManager = activity.applicationContext
-            .getSystemService(Context.AUDIO_SERVICE) as AudioManager
-    private var lastVolumePercent = 0f
-    var playing = false
     private lateinit var touchHelper: ItemTouchHelper
     private var curTracK: ITrack? = null
+
+    var recentlyPlayedTrackIds = mutableListOf<String>()
 
     private var queueAdapter: NowPlayingQueueAdapter? = null
     private var currentSeedType: Int? = null
     private var currentRadioSeed: String? = null
     private var currentRadioReason: RadioFeedReason? = null
-
-    private var recyclerIsUp = false
-    private val recyclerScroller = Scroller(activity, FastOutSlowInInterpolator())
-
-    private val queueSwipeRunnable = Runnable {
-        if(!recyclerIsUp && !recyclerScroller.isFinished) {
-            recyclerScroller.computeScrollOffset()
-            activity.npui_recycler.translationY = -recyclerScroller.currY.toFloat()
-        }
-        repostQueueSwipe()
-    }
 
     private var connection: ServiceConnection? = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -170,52 +151,28 @@ class NowPlayingHelper(private val activity: Activity) {
             activity.nowplaying_frame.visibility = View.GONE
         }
 
-        /*activity.nowplaying_frame.npui_volumebar_background
-                .layoutParams.width = (dispW / 2f).toInt() - heightPx*/
-
         activity.npui_recycler.translationY = dispW * 1.5f
 
-        //activity.slidingPanel.visibility = View.GONE
         activity.npui_recycler.isNestedScrollingEnabled = false
-
-        //activity.npui_recycler.setPadding(0, IdentityUtils.getStatusBarHeight(activity.resources),
-        //        0, 0)
 
         activity.nowplaying_frame.npui_mixDescriptor.translationY =
                 (dispW * 1.3f) + (heightPx /4)
 
         activity.nowplaying_frame.seekBar.translationY = dispW.toFloat()
 
-
-        //activity.nowplaying_frame.npui_volumeLow.translationY = dispW * 1.3f
-        //activity.nowplaying_frame.npui_volumeHi.translationY = dispW * 1.3f
-        //activity.nowplaying_frame.volume_fab.translationY = (dispW * 1.3f ) + (heightPx / 6f)
-        //activity.nowplaying_frame.npui_volumeLow.x = dispW / 4f - buttonHalfWidth
-        //activity.nowplaying_frame.npui_volumeHi.x = dispW - (dispW / 4f) - buttonHalfWidth
-        //activity.nowplaying_frame.volume_fab.x = ((1f - volumePercent()) * dispW / 4f) +
-        //        (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth))
-
+        /* The NPUI's expanded percent has changed **/
         activity.nowplaying_frame.callback = { up ->
-                //activity.slidingPanel.visibility = if(up > 0.99f) View.VISIBLE else View.GONE
 
-            activity.nowplaying_frame.npui_thumb.run {
-                    layoutParams.width =
+            activity.nowplaying_frame.npui_thumb.layoutParams.width =
                             (up.times(dispW - heightPx)).toInt() + heightPx
-                    //invalidate()
-            }
-            activity.nowplaying_frame.npui_song.run {
-                    alpha = 1f - up
-                    //invalidate()
-            }
-            activity.nowplaying_frame.npui_artist.run {
-                    alpha = 1f - up
-                    //invalidate()
-            }
+
+            activity.nowplaying_frame.npui_song.alpha = 1f - up
+
+            activity.nowplaying_frame.npui_artist.alpha = 1f - up
 
             try {
-                activity.bottom_nav.run {
-                        layoutParams.height = (heightPx * (1f - up)).toInt()
-                }
+                activity.bottom_nav.layoutParams.height = (heightPx * (1f - up)).toInt()
+
                 activity.nowplaying_frame.npui_fastrewind.run {
                         translationY = (up * dispW / controlsScalar)
                         x = ((dispW / 4f - buttonHalfWidth) * up) + (prevInitialX * (1f - up))
@@ -239,23 +196,18 @@ class NowPlayingHelper(private val activity: Activity) {
     private var serviceStarted = false
     private var requestMgr = Glide.with(activity)
 
-    private fun repostQueueSwipe() {
-        activity.npui_recycler.postOnAnimation(queueSwipeRunnable)
-    }
-
     fun newQueue(tracks: List<ITrack>, pos: Int, local: Boolean = true,
                  descriptor: String = "") {
         activity.nowplaying_frame.npui_mixDescriptor.text = descriptor
         trackQueue.replace(tracks, pos, false, local)
+
+        currentSeedType = null
+        currentRadioReason = null
+        currentRadioSeed = null
     }
 
     fun startRadio(seedType: Int, seed: String,
                    reason: RadioFeedReason = RadioFeedReason.INSTANT_MIX ): Completable {
-
-        currentSeedType = seedType
-        currentRadioReason = reason
-        currentRadioSeed = seed
-
 
         val completer = CompletableSubject.create()
 
@@ -270,8 +222,11 @@ class NowPlayingHelper(private val activity: Activity) {
                                     (r.data.stations[0].seed?.metadataSeed?.artist?.name ?:
                                     r.data.stations[0].seed?.metadataSeed?.album?.name ?:
                                     r.data.stations[0].seed?.metadataSeed?.playlist?.name
-                                    ?: r.data.stations[0].name) + " radio"
-                    )
+                                    ?: r.data.stations[0].name) + " radio")
+
+                    currentSeedType = seedType
+                    currentRadioReason = reason
+                    currentRadioSeed = seed
 
                 }, { err ->
                     Timber.d(err)
@@ -297,7 +252,7 @@ class NowPlayingHelper(private val activity: Activity) {
     }
 
     /**
-     * Bind to a service if the service is not started
+     * Bind to the service if the service is not started
      */
     private fun maybeBind(intent: Intent) {
         Timber.d("Should bind to service?")
@@ -308,43 +263,16 @@ class NowPlayingHelper(private val activity: Activity) {
         } else Timber.d("Not binding to service, already started")
     }
 
-    fun maybeHandleVolumeEvent() {
-        /*if (volumePercent() != lastVolumePercent) {
-            activity.nowplaying_frame.volume_fab.animate()
-                    .x(((1f - volumePercent()) * dispW / 4f) +
-                            (volumePercent() * (dispW - dispW / 4f - 2 * buttonHalfWidth)))
-                    .setDuration(250).setInterpolator(FastOutSlowInInterpolator()).start()
-        }*/
-    }
+    fun maybeHandleVolumeEvent() {}
 
-    /**
-     * TODO we should also update the UI here instead of waiting for the system to notify us
-     */
-    fun handleVolumeEvent(event: Int): Boolean {
-        /*if (event == KeyEvent.KEYCODE_VOLUME_DOWN || event == KeyEvent.KEYCODE_VOLUME_UP) {
-            if (activity.nowplaying_frame.isUp) {
-                audioManager.adjustStreamVolume(
-                        AudioManager.STREAM_MUSIC,
-                        if (event == KeyEvent.KEYCODE_VOLUME_UP) AudioManager.ADJUST_RAISE
-                        else AudioManager.ADJUST_LOWER,
-                        AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE)
-                return true
-            }
-        }*/
-        return false
-    }
+    fun handleVolumeEvent(event: Int) = false
 
-    fun volumePercent(): Float {
-        return audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() /
-                audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).toFloat()
-    }
 
     private fun revealPlayerUI() {
-
+        // In the future, we should do a cool transition here
         AnimUtils.expand(activity.bottomNavContainer.nowplaying_frame, heightPx)
         activity.nowplaying_frame.initialHeight= heightPx
         activity.npui_recycler.initialY = dispW * 1.5f
-
     }
 
     private fun newIntent(): Intent = Intent(activity, MusicPlayerService::class.java)
@@ -482,6 +410,19 @@ class NowPlayingHelper(private val activity: Activity) {
                             .into(activity.npui_thumb)
 
                     queueAdapter?.setPlaying((curTracK as ParcelableTrack).queuePosition)
+                    trackQueue.position = (curTracK as ParcelableTrack).queuePosition
+
+                    if(trackQueue.position > trackQueue.size - 10 && currentRadioSeed != null) {
+                        Protocol.radioFeed(activity, currentRadioSeed!!, 25,
+                                currentRadioReason!!, currentSeedType!!, null)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe ({ r ->
+                                    insertAtEnd(r.data.stations[0].tracks)
+                                }, { err ->
+                                    Timber.d(err)
+                                })
+                    }
 
                     activity.npui_song.text = curTracK!!.title
                     activity.npui_artist.text = curTracK!!.artist
@@ -542,6 +483,7 @@ class NowPlayingHelper(private val activity: Activity) {
     private fun setupQueueAdapter(tracks: List<ParcelableTrack>) {
 
         queueAdapter = NowPlayingQueueAdapter(activity, tracks, { pos ->
+            /* When an item in the queue has been clicked **/
             val intent = newIntent().apply {
 
                 action = Constants.ACTION.SKIP_TO_TRACK
@@ -550,18 +492,17 @@ class NowPlayingHelper(private val activity: Activity) {
             }
 
             ContextCompat.startForegroundService(activity, intent)
-        }, { vh ->
+        }, { vh -> /* When the drag handle is touched **/
             touchHelper.startDrag(vh)
-        }, { pos ->
+        }, { pos -> /* When an item is removed via swipe **/
             trackQueue.remove(pos)
-        },
-        { from, to ->
+        }, { from, to -> /* When an item has been drag-reordered **/
             trackQueue.reorder(from, to)
         })
 
         activity.npui_recycler.adapter = queueAdapter!!
         val callback = QueueItemTouchCallback(queueAdapter!!)
-        touchHelper = ItemTouchHelper(callback)
+        touchHelper = ItemTouchHelper(callback) /** Manages drag and swipe for queue **/
         touchHelper.attachToRecyclerView(activity.npui_recycler)
     }
 

@@ -36,7 +36,6 @@ import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager
-import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.utils.addToAutoDispose
@@ -51,7 +50,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_songgroup.view.*
-import kotlinx.android.synthetic.main.nowplaying.*
 import kotlinx.android.synthetic.main.songgroup_details.view.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -315,10 +313,7 @@ class AlbumController(
         val setupRecycler = {
             val params = root.songgroup_recycler.layoutParams
             params.height = (tracks.size * MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP)) +
-                    IdentityUtils.getNavbarHeight(resources) +
-                    MathUtils.dpToPx2(resources,
-                            if ((activity as MainActivity).nowplaying_frame.visibility == View.VISIBLE)
-                                NowPlayingHelper.HEIGHT_DP else 0)
+                    IdentityUtils.getNavbarHeight(resources) + (activity as MainActivity).bottomInset
 
 
             mAdapter = SongListAdapter(tracks) { (_, pos) ->

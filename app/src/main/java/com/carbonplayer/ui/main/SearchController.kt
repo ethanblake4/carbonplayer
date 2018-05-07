@@ -48,7 +48,8 @@ class SearchController(
                         MathUtils.dpToPx2(resources, 56), 0, 0)
 
         view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight,
-                view.paddingBottom + IdentityUtils.getNavbarHeight(view.resources))
+                view.paddingBottom + IdentityUtils.getNavbarHeight(view.resources) +
+                        (activity as MainActivity).bottomInset)
 
         view.searchHeader.text =
                 resources?.getString(R.string.search_header, searchTerm) ?:

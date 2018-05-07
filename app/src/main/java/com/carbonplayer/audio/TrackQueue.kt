@@ -8,6 +8,12 @@ import io.realm.Realm
 
 /**
  * Track queue which mirrors data in [MusicPlayerService]
+ *
+ * The function of this class is imperfect. Whenever anything is added to
+ * the queue, this class ensures it is also added to the database, because
+ * all downloaded tracks are required to have a local ID. Which is probably
+ * not a good idea, because it makes it rather slow to add things to the queue.
+ * This is something that should be fixed eventually.
  */
 class TrackQueue(val callback: TrackQueueCallback) {
 
@@ -62,15 +68,6 @@ class TrackQueue(val callback: TrackQueueCallback) {
     fun remove(pos: Int, noCallback: Boolean = false) {
         queue.removeAt(pos)
         if(!noCallback) callback.remove(pos)
-    }
-
-
-    fun prevtrack() {
-        position--
-    }
-
-    fun nexttrack() {
-        position++
     }
 
     fun currentTrack(): ITrack {

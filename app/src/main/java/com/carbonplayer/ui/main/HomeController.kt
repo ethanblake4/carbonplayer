@@ -7,17 +7,21 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.exception.ServerRejectionException
-import com.carbonplayer.model.entity.proto.identifiers.*
+import com.carbonplayer.model.entity.proto.identifiers.AlbumReleaseIdV1Proto
+import com.carbonplayer.model.entity.proto.identifiers.ArtistIdV1Proto
+import com.carbonplayer.model.entity.proto.identifiers.PlayableItemIdV1Proto
 import com.carbonplayer.model.entity.proto.identifiers.PlayableItemIdV1Proto.PlayableItemId.TypeCase.*
 import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId.TypeCase.*
 import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId.TypeCase.ARTIST
 import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId.TypeCase.TYPE_NOT_SET
+import com.carbonplayer.model.entity.proto.identifiers.TrackIdV1Proto
 import com.carbonplayer.model.entity.proto.innerjam.ContentPageV1Proto.ContentPage.PageTypeCase
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeResponse
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto
@@ -68,15 +72,16 @@ class HomeController : Controller() {
 
         view.main_recycler.recycledViewPool.setMaxRecycledViews(0, 2)
 
-        view.main_recycler.setPadding(
-                0, 0, 0, IdentityUtils.getNavbarHeight(resources))
+        view.main_recycler.setPadding(0, 0, 0,
+                IdentityUtils.getNavbarHeight(resources) +
+                        (activity as MainActivity).bottomInset)
 
         view.swipeRefreshLayout.setOnRefreshListener {
             Timber.d("Will refresh")
             refresh()
         }
 
-        requestManager = Glide.with(activity)
+        requestManager = Glide.with(activity!!)
 
         CarbonPlayerApplication.instance.homeLastResponse?.let {
             Timber.d("Has cached gethomeresponse")
@@ -135,15 +140,17 @@ class HomeController : Controller() {
                             }
                         },
                         { mod: FullBleedModuleV1Proto.FullBleedModule ->
+                            Toast.makeText(activity, "This action is not supported yet",
+                                    Toast.LENGTH_LONG).show()
                             Timber.d("Clicked module")
                         }, { mod, cb ->
                             playSingleSection(mod.singleSection)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe { cb.run() }
                         }, requestManager, v.main_recycler)
-                    .apply {
-                    currentScrollCallback = this.scrollCallback
-                }
+                        .apply {
+                            currentScrollCallback = this.scrollCallback
+                        }
 
             }
             else -> {
@@ -189,25 +196,25 @@ class HomeController : Controller() {
                         }
                     }
                     ALBUMRELEASE -> {
-                        when(itemId.radioSeed.albumRelease.typeCase) {
+                        return when(itemId.radioSeed.albumRelease.typeCase) {
                             AlbumReleaseIdV1Proto.AlbumReleaseId.TypeCase.CATALOG -> {
-                                return helper.startRadio(RadioSeed.TYPE_ALBUM,
+                                helper.startRadio(RadioSeed.TYPE_ALBUM,
                                         itemId.radioSeed.albumRelease.catalog.metajamCompactKey)
                             }
-                            else -> return errorPlaying()
+                            else -> errorPlaying()
                         }
                     }
                     CURATED -> {
-                        helper.startRadio(RadioSeed.TYPE_CURATED_STATION,
+                        return helper.startRadio(RadioSeed.TYPE_CURATED_STATION,
                                 itemId.radioSeed.curated.metajamCompactKey)
                     }
                     ARTIST -> {
-                        when(itemId.radioSeed.artist.typeCase) {
+                        return when(itemId.radioSeed.artist.typeCase) {
                             ArtistIdV1Proto.ArtistId.TypeCase.CATALOG -> {
                                 helper.startRadio(RadioSeed.TYPE_ARTIST,
                                         itemId.radioSeed.artist.catalog.metajamCompactKey)
                             }
-                            else -> return errorPlaying()
+                            else -> errorPlaying()
                         }
                     }
                     GENRE -> {
@@ -230,11 +237,11 @@ class HomeController : Controller() {
             PlayableItemIdV1Proto.PlayableItemId.TypeCase.TYPE_NOT_SET -> return errorPlaying()
             else -> return errorPlaying()
         }
-
-        return errorPlaying()
     }
 
     private fun errorPlaying(): Completable {
+        Toast.makeText(activity, "Playing this item is not supported yet", Toast.LENGTH_LONG)
+                .show()
         Timber.e("Could not play")
         return Completable.timer(1, TimeUnit.MILLISECONDS)
     }
