@@ -5,7 +5,9 @@ import android.app.Notification
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Bitmap
+import android.media.AudioManager
 import android.media.MediaMetadata
 import android.net.wifi.WifiManager
 import android.os.*
@@ -24,6 +26,8 @@ import com.google.common.collect.Queues
 import org.parceler.Parcels
 import timber.log.Timber
 import java.util.*
+
+
 
 /**
  * Music player foreground service
@@ -64,6 +68,15 @@ class MusicPlayerService : Service(), MusicFocusable {
     private var sendStateOnRegistered = false
 
     internal val messenger = Messenger(IncomingHandler())
+
+    private val noisyIntentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+
+    private val noisyAudioStreamReceiver = BecomingNoisyReceiver({
+        playback.pause()
+        audioFocusHelper.abandonFocus()
+        if(wifiLock.isHeld) wifiLock.release()
+        if(wakeLock.isHeld) wakeLock.release()
+    })
 
 
     /** This is called any time we receive a command from the app **/
@@ -210,6 +223,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                     audioFocusHelper.abandonFocus()
                     if (wifiLock.isHeld) wifiLock.release()
                     if (wakeLock.isHeld) wakeLock.release()
+                    unregisterReceiver(noisyAudioStreamReceiver)
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_NONE,
                                     playback.getCurrentPosition(), 1.0f).build())
@@ -241,6 +255,8 @@ class MusicPlayerService : Service(), MusicFocusable {
                                     playback.getCurrentPosition(), 1.0f).build())
 
                     emit(if (playback.isUnpaused()) Constants.EVENT.Playing else Constants.EVENT.Paused)
+
+                    registerReceiver(noisyAudioStreamReceiver, noisyIntentFilter)
                 }
                 MusicPlayback.PlayState.CONTINUE -> { // From position change
                     mediaSession.setPlaybackState(stateBuilder.setState(if (playback.isUnpaused())
