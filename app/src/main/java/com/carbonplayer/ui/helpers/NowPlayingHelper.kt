@@ -15,7 +15,6 @@ import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.text.TextUtils
-import android.view.KeyEvent
 import android.view.View
 import android.widget.Scroller
 import com.bumptech.glide.Glide
@@ -479,7 +478,7 @@ class NowPlayingHelper(private val activity: Activity) {
                     curTracK?.let {
                         activity.nowplaying_frame.seekSlider.translationX =
                                 ((positionMillis.toDouble() / it.durationMillis.toDouble())
-                                        * dispW * 0.92).toFloat()
+                                        * dispW * 0.85).toFloat()
 
                     }
                 }

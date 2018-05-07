@@ -261,12 +261,7 @@ class MainActivity : AppCompatActivity() {
                         searchQuery.applicationWindowToken, 0)
                 val frag = SearchController(searchQuery.text.toString())
 
-                router.pushController(RouterTransaction.with(frag)
-                        .pushChangeHandler(SimpleScaleTransition(this))
-                        .popChangeHandler(SimpleScaleTransition(this)))
-
-                lastAppbarText = main_actionbar_text.text.toString()
-                main_actionbar_text.text = ""
+                goto(frag)
 
                 closeSearch()
             }
@@ -305,6 +300,13 @@ class MainActivity : AppCompatActivity() {
                     suggestionsRecycler.adapter = SuggestionsAdapter(suggestions.take(6),{ itm ->
                         if(itm.entity?.album != null) gotoAlbum(itm.entity.album,
                                 PaletteUtil.DEFAULT_SWATCH_PAIR)
+                        else { itm.suggestion_string?.let { s ->
+                            val frag = SearchController(s)
+
+                            goto(frag)
+
+                            closeSearch()
+                        } }
                     }, Glide.with(this))
                 }, { err ->
                     Timber.e(err)
@@ -339,31 +341,13 @@ class MainActivity : AppCompatActivity() {
 
     // When an album is selected
     fun gotoAlbum(album: IAlbum, swatchPair: PaletteUtil.SwatchPair) {
-
-        scrollCb(0)
-
-        val frag = AlbumController(album, swatchPair)
-
-        router.pushController(RouterTransaction.with(frag)
-                .pushChangeHandler(SimpleScaleTransition(this))
-                .popChangeHandler(SimpleScaleTransition(this)))
-
-        lastAppbarText = main_actionbar_text.text.toString()
-        main_actionbar_text.text = ""
+        goto(AlbumController(album, swatchPair))
 
     }
 
     fun gotoStation(station: SkyjamStation, swatchPair: PaletteUtil.SwatchPair) {
-        scrollCb(0)
 
-        val frag = StationController(station, swatchPair)
-
-        router.pushController(RouterTransaction.with(frag)
-                .pushChangeHandler(SimpleScaleTransition(this))
-                .popChangeHandler(SimpleScaleTransition(this)))
-
-        lastAppbarText = main_actionbar_text.text.toString()
-        main_actionbar_text.text = ""
+        goto(StationController(station, swatchPair))
     }
 
     // When an artist is selected
@@ -380,14 +364,7 @@ class MainActivity : AppCompatActivity() {
             ArtistController(futureArtist as Observable<IArtist>, swatchPair)
         }
 
-        scrollCb(0)
-
-        router.pushController(RouterTransaction.with(frag)
-                .pushChangeHandler(SimpleScaleTransition(this))
-                .popChangeHandler(SimpleScaleTransition(this)))
-
-        lastAppbarText = main_actionbar_text.text.toString()
-        main_actionbar_text.text = ""
+        goto(frag)
     }
 
     fun scrollCb(dy: Int) {
@@ -452,11 +429,15 @@ class MainActivity : AppCompatActivity() {
     fun goto(controller: Controller) {
         scrollCb(0)
 
+        Timber.d("goto controller with backstack size ${router.backstackSize}")
+
+        if(router.backstackSize == 1) lastAppbarText = main_actionbar_text.text.toString()
+
         router.pushController(RouterTransaction.with(controller)
                 .pushChangeHandler(SimpleScaleTransition(this))
                 .popChangeHandler(SimpleScaleTransition(this)))
 
-        lastAppbarText = main_actionbar_text.text.toString()
+
         main_actionbar_text.text = ""
     }
 
@@ -565,7 +546,7 @@ class MainActivity : AppCompatActivity() {
         // get the final radius for the clipping circle
         val finalRadius = (IdentityUtils.displayWidth2(this)).toFloat()
 
-        // create the animator for this view (the start radius is zero)
+        // create the animator for this view (the end radius is zero)
         val anim = ViewAnimationUtils
                 .createCircularReveal(searchToolbar, cx, cy, finalRadius, 0f)
 
@@ -585,13 +566,13 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        if(router.backstackSize == 2) {
+            main_actionbar_text.text = lastAppbarText
+        }
+
         if(router.backstackSize > 0){
             router.popCurrentController()
         } else this.finish()
 
-        if(router.backstackSize == 1) {
-
-            main_actionbar_text.text = lastAppbarText
-        }
     }
 }

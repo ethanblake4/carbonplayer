@@ -14,6 +14,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.entity.SuggestResponse
 import com.carbonplayer.model.entity.utils.MediaTypeUtil
 import kotlinx.android.synthetic.main.search_song_layout.view.*
+import kotlinx.android.synthetic.main.text_suggestion.view.*
 
 /**
  * Displays list of tracks w/ ranking
@@ -30,6 +31,9 @@ internal class SuggestionsAdapter(
             v.songLayoutRoot?.setOnClickListener { _ ->
                 clicked(dataset[adapterPosition])
             }
+            v.suggestionTextContainer?.setOnClickListener {
+                clicked(dataset[adapterPosition])
+            }
         }
     }
 
@@ -42,7 +46,7 @@ internal class SuggestionsAdapter(
         val v = LayoutInflater.from(parent.context)
                 .inflate(
                         if(viewType == 1) R.layout.search_song_layout
-                        else android.R.layout.simple_list_item_1, parent, false)
+                        else R.layout.text_suggestion, parent, false)
 
         return ViewHolder(v)
     }
@@ -84,7 +88,7 @@ internal class SuggestionsAdapter(
 
 
         } else {
-            holder.itemView.findViewById<TextView>(android.R.id.text1)
+            holder.itemView.findViewById<TextView>(R.id.suggestionText)
                     .text = t.suggestion_string
         }
 

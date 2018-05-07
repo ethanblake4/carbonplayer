@@ -78,6 +78,7 @@ class SearchController(
                         view.suggestedQueryText.text = results.suggestedQuery
                         view.suggestedQueryText.setOnClickListener {
                             clearForNext(view)
+                            view.suggestedContainer.visibility = View.GONE
                             view.searchLoader.visibility = View.VISIBLE
                             runSearch(view, results.suggestedQuery)
                         }
@@ -184,10 +185,11 @@ class SearchController(
                 })
     }
 
-    fun clearForNext(view: View) {
-        (0..view.searchResults.childCount).map { i ->
+    private fun clearForNext(view: View) {
+        (0..view.searchResults.childCount).forEach { i ->
             view.searchResults.getChildAt(i)?.let {
-                if(it.id != R.id.searchHeader && it.id != R.id.suggestedContainer) {
+                Timber.d("View at $i is id = ${it.id}")
+                if(it.id == View.NO_ID) {
                     view.searchResults.removeViewAt(i)
                 }
             }

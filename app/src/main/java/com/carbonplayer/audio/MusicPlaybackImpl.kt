@@ -3,10 +3,7 @@ package com.carbonplayer.audio
 import android.app.Service
 import android.net.Uri
 import android.os.Handler
-import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.ParcelableTrack
-import com.carbonplayer.model.entity.SongID
-import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.exception.PlaybackException
 import com.carbonplayer.model.network.StreamManager
@@ -23,7 +20,6 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultAllocator
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import io.reactivex.disposables.Disposable
-import io.realm.Realm
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -268,6 +264,7 @@ class MusicPlaybackImpl(
         mirroredContentQueue.removeAt(from)
         mirroredContentQueue.add(to, ogContent)
         dynamicSource.moveMediaSource(from, to)
+        if(from == trackNum) trackNum = to
     }
 
     fun setDucked() {

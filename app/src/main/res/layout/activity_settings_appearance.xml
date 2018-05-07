@@ -10,6 +10,42 @@
         android:orientation="vertical">
 
         <LinearLayout
+            android:id="@+id/settings_appearance_theme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_marginTop="16dp"
+                android:text="Base theme"
+
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/settings_appearance_theme_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:text="Material Mixed"
+                android:fontFamily="sans-serif"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="@color/colorAccent" />
+
+        <LinearLayout
             android:id="@+id/settings_appearance_primaryColor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -35,6 +71,7 @@
                 android:layout_marginBottom="16dp"
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:text="@string/opt_quality_high"
+                android:fontFamily="sans-serif"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -69,6 +106,7 @@
                 android:layout_marginBottom="16dp"
                 android:layout_marginStart="@dimen/activity_horizontal_margin"
                 android:text="@string/opt_quality_medium"
+                android:fontFamily="sans-serif"
                 android:textSize="12sp" />
         </LinearLayout>
 
