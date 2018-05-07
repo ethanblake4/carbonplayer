@@ -82,6 +82,11 @@ class NowPlayingHelper(private val activity: Activity) {
     private lateinit var touchHelper: ItemTouchHelper
     private var curTracK: ITrack? = null
 
+    private var queueAdapter: NowPlayingQueueAdapter? = null
+    private var currentSeedType: Int? = null
+    private var currentRadioSeed: String? = null
+    private var currentRadioReason: RadioFeedReason? = null
+
     private var recyclerIsUp = false
     private val recyclerScroller = Scroller(activity, FastOutSlowInInterpolator())
 
@@ -238,12 +243,19 @@ class NowPlayingHelper(private val activity: Activity) {
         activity.npui_recycler.postOnAnimation(queueSwipeRunnable)
     }
 
-    fun newQueue(tracks: List<ITrack>, pos: Int, local: Boolean = true) {
+    fun newQueue(tracks: List<ITrack>, pos: Int, local: Boolean = true,
+                 descriptor: String = "") {
+        activity.nowplaying_frame.npui_mixDescriptor.text = descriptor
         trackQueue.replace(tracks, pos, false, local)
     }
 
     fun startRadio(seedType: Int, seed: String,
-                   reason: RadioFeedReason = RadioFeedReason.INSTANT_MIX): Completable {
+                   reason: RadioFeedReason = RadioFeedReason.INSTANT_MIX ): Completable {
+
+        currentSeedType = seedType
+        currentRadioReason = reason
+        currentRadioSeed = seed
+
 
         val completer = CompletableSubject.create()
 
@@ -253,7 +265,14 @@ class NowPlayingHelper(private val activity: Activity) {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe ({ r ->
                     completer.onComplete()
-                    newQueue(r.data.stations[0].tracks, 0, false)
+                    newQueue(r.data.stations[0].tracks, 0, false,
+                            "Playing from " +
+                                    (r.data.stations[0].seed?.metadataSeed?.artist?.name ?:
+                                    r.data.stations[0].seed?.metadataSeed?.album?.name ?:
+                                    r.data.stations[0].seed?.metadataSeed?.playlist?.name
+                                    ?: r.data.stations[0].name) + " radio"
+                    )
+
                 }, { err ->
                     Timber.d(err)
                 })
@@ -426,6 +445,7 @@ class NowPlayingHelper(private val activity: Activity) {
                     curTracK = msg.obj as ParcelableTrack
                     val second = (curTracK!!.durationMillis / 1000) % 60
                     val minute = (curTracK!!.durationMillis / (1000 * 60)) % 60
+
                     activity.nowplaying_frame.songDuration.text =
                             String.format("%02d:%02d", minute, second)
                     requestMgr.load(curTracK!!.albumArtURL)
@@ -439,6 +459,7 @@ class NowPlayingHelper(private val activity: Activity) {
                                     PaletteUtil.crossfadeTitle(
                                             activity.npui_song, pair.primary)
                                     PaletteUtil.crossfadeSubtitle(activity.npui_artist, pair.primary)
+                                    PaletteUtil.crossfadeSubtitle(activity.npui_mixDescriptor, pair.primary)
                                     val tintList = ColorStateList(
                                             arrayOf(IntArray(1, { -android.R.attr.state_checked }),
                                                     IntArray(1, {android.R.attr.state_checked})),
@@ -459,6 +480,8 @@ class NowPlayingHelper(private val activity: Activity) {
                                     .diskCacheStrategy(DiskCacheStrategy.ALL))
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(activity.npui_thumb)
+
+                    queueAdapter?.setPlaying((curTracK as ParcelableTrack).queuePosition)
 
                     activity.npui_song.text = curTracK!!.title
                     activity.npui_artist.text = curTracK!!.artist
@@ -518,7 +541,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
     private fun setupQueueAdapter(tracks: List<ParcelableTrack>) {
 
-        val adapter = NowPlayingQueueAdapter(tracks, { pos ->
+        queueAdapter = NowPlayingQueueAdapter(activity, tracks, { pos ->
             val intent = newIntent().apply {
 
                 action = Constants.ACTION.SKIP_TO_TRACK
@@ -536,8 +559,8 @@ class NowPlayingHelper(private val activity: Activity) {
             trackQueue.reorder(from, to)
         })
 
-        activity.npui_recycler.adapter = adapter
-        val callback = QueueItemTouchCallback(adapter)
+        activity.npui_recycler.adapter = queueAdapter!!
+        val callback = QueueItemTouchCallback(queueAdapter!!)
         touchHelper = ItemTouchHelper(callback)
         touchHelper.attachToRecyclerView(activity.npui_recycler)
     }

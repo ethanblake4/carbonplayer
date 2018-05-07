@@ -257,6 +257,7 @@ class MusicPlayerService : Service(), MusicFocusable {
             }
         }, { num, track ->
             // When the track is changed
+
             emit(Constants.EVENT.TrackPlaying, track)
             loadImageAndDoUpdates(track)
         }, { bufferProgress ->

@@ -1,5 +1,9 @@
 package com.carbonplayer.model.entity.radio
 
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamArtist
+import com.carbonplayer.model.entity.skyjam.SkyjamPlaylist
+
 @Suppress("DataClassPrivateConstructor")
 data class RadioSeed private constructor(
         val albumId: String?,
@@ -9,8 +13,15 @@ data class RadioSeed private constructor(
         val playlistShareToken: String?,
         val seedType: Int,
         val trackId: String?,
-        val trackLockerId: String?
+        val trackLockerId: String?,
+        val metadataSeed: RadioSeedMetadata? = null
 ) {
+
+    data class RadioSeedMetadata(
+            val artist: SkyjamArtist? = null,
+            val album: SkyjamAlbum? = null,
+            val playlist: SkyjamPlaylist? = null
+    )
 
     companion object {
 

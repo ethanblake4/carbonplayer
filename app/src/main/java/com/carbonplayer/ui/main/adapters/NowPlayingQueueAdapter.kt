@@ -1,6 +1,9 @@
 package com.carbonplayer.ui.main.adapters
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Typeface
+import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.widget.TextView
@@ -21,6 +24,7 @@ import java.util.*
  * Album / playlist adapter
  */
 internal class NowPlayingQueueAdapter(
+        var context: Context,
         var dataset: List<ITrack>,
         private val clicked: (Pair<ITrack, Int>) -> Unit,
         private val handlePressed: (ViewHolder) -> Unit,
@@ -28,6 +32,8 @@ internal class NowPlayingQueueAdapter(
         private val itemReordered: (Int, Int) -> Unit
 )
     : RecyclerView.Adapter<NowPlayingQueueAdapter.ViewHolder>(), ItemTouchHelperAdapter {
+
+    private var queuePosition = 0
 
     internal inner class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
         var trackName: TextView = v.findViewById<View>(R.id.trackName) as TextView
@@ -82,8 +88,20 @@ internal class NowPlayingQueueAdapter(
                         .into(holder.itemView.trackThumb)
             }
         }
+        if(position == queuePosition) {
+            val rennerBold = ResourcesCompat.getFont(context, R.font.renner_bold)
+            holder.trackName.typeface = rennerBold
+            holder.itemView.artistName.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
+        }
         holder.pos = position
 
+    }
+
+    fun setPlaying(position: Int) {
+        val prevQueuePosition = queuePosition
+        queuePosition = position
+        this.notifyItemChanged(prevQueuePosition)
+        this.notifyItemChanged(queuePosition)
     }
 
     override fun onItemDismiss(position: Int) {

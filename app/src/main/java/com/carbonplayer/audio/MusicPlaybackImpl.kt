@@ -116,7 +116,7 @@ class MusicPlaybackImpl(
         mirroredContentQueue.clear()
         add(queue, track, initFirst)
 
-        ontrackchanged(trackNum, mirroredQueue[trackNum])
+        ontrackchanged(trackNum, mirroredQueue[trackNum].apply { queuePosition = trackNum })
         playerIsPrepared = false
     }
 
@@ -138,7 +138,7 @@ class MusicPlaybackImpl(
             exoPlayer.seekTo(index, 0L)
             trackNum = index
 
-            ontrackchanged(index, mirroredQueue[index])
+            ontrackchanged(index, mirroredQueue[index].apply { queuePosition = trackNum })
             todo()
         }
     }
@@ -157,7 +157,7 @@ class MusicPlaybackImpl(
             exoPlayer.seekTo(trackNum + 1, 0L)
             trackNum++
 
-            ontrackchanged(trackNum, mirroredQueue[trackNum])
+            ontrackchanged(trackNum, mirroredQueue[trackNum].apply { queuePosition = trackNum })
         }
     }
 
@@ -174,7 +174,7 @@ class MusicPlaybackImpl(
 
             exoPlayer.seekTo(trackNum - 1, 0L)
             trackNum--
-            ontrackchanged(trackNum, mirroredQueue[trackNum])
+            ontrackchanged(trackNum, mirroredQueue[trackNum].apply { queuePosition = trackNum })
 
             // This is not an automatic track change
             disallowNextAutoInc = true
@@ -293,7 +293,7 @@ class MusicPlaybackImpl(
                     Timber.d("Position: %s", exoPlayer.currentPosition)
                 }
 
-                if(inc % 5 == 0) callback(MusicPlayback.PlayState.CONTINUE)
+                if(inc % 6 == 0) callback(MusicPlayback.PlayState.CONTINUE)
 
                 if (exoPlayer.currentPosition > DELAY_ADD_ITEM &&
                         mirroredQueue.size > trackNum + 1
@@ -365,7 +365,7 @@ class MusicPlaybackImpl(
         if (exoPlayer.currentWindowIndex == lastKnownWindowIndex + 1 && !disallowNextAutoInc) {
             trackNum++
             Timber.i("Discontinuity -> Next Track")
-            ontrackchanged(trackNum, mirroredQueue[trackNum])
+            ontrackchanged(trackNum, mirroredQueue[trackNum].apply { queuePosition = trackNum })
             if (mirroredContentQueue[trackNum].isDownloaded) {
                 onbuffer(1.0f)
             } else {

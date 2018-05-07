@@ -4,15 +4,10 @@ package com.carbonplayer.model.entity
 import android.annotation.SuppressLint
 import android.os.Parcelable
 import android.support.v4.media.MediaMetadataCompat
-
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import io.realm.Realm
-import kotlinx.android.parcel.IgnoredOnParcel
 import kotlinx.android.parcel.Parcelize
-import org.parceler.Parcel
-
-import java.util.Objects
 
 /**
  * Simplified Track object for passing to/from background service
@@ -57,7 +52,8 @@ class ParcelableTrack (
         override var estimatedSize: Int = 0,
         override val trackAvailableForPurchase: Boolean?,
         override val trackAvailableForSubscription: Boolean?,
-        override val trackType: String?
+        override val trackType: String?,
+        var queuePosition: Int = 0
 
 ) : ITrack, Parcelable {
 

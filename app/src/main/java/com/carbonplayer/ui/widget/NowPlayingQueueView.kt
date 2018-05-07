@@ -38,6 +38,8 @@ class NowPlayingQueueView: RecyclerView {
     constructor(context: Context, attrs: AttributeSet, def: Int) : super(context, attrs, def)
 
     init {
+        clipToPadding = false
+        setPadding(0, 0, 0, maxY)
         dragHandleMaxX = MathUtils.dpToPx2(resources, 40)
         runner = Runnable {
             if(runThread) {
