@@ -304,7 +304,10 @@ class MainActivity : AppCompatActivity() {
                             val frag = SearchController(s)
 
                             goto(frag)
-
+                            val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE)
+                                as InputMethodManager
+                            inputMethodManager.hideSoftInputFromWindow(
+                                    searchQuery.applicationWindowToken, 0)
                             closeSearch()
                         } }
                     }, Glide.with(this))
