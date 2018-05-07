@@ -21,7 +21,7 @@ import kotlinx.android.synthetic.main.search_song_layout.view.*
  */
 internal class SearchSongAdapter(
         private val mDataset: List<ITrack>,
-        private val clicked: (Int) -> Unit,
+        private val clicked: (ITrack) -> Unit,
         private val menuClicked: (View, ITrack) -> Unit
 ) : RecyclerView.Adapter<SearchSongAdapter.ViewHolder>() {
 
@@ -29,7 +29,7 @@ internal class SearchSongAdapter(
 
         init {
             v.songLayoutRoot.setOnClickListener { _ ->
-                clicked(adapterPosition)
+                clicked(mDataset[adapterPosition])
             }
             v.songLayoutMenu.setOnClickListener {
                 menuClicked(it, mDataset[adapterPosition])
@@ -53,14 +53,14 @@ internal class SearchSongAdapter(
         //holder.id = SongID(t)
 
         when (t) {
-            is SkyjamTrack -> t.albumArtRef?.first()?.url?.let {
+            is SkyjamTrack -> t.albumArtRef?.firstOrNull()?.url?.let {
                 Glide.with(holder.itemView)
                         .load(it)
                         .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                         .transition(DrawableTransitionOptions.withCrossFade(200))
                         .into(holder.itemView.trackThumb)
             }
-            is Track -> t.albums?.first()?.albumArtRef?.let {
+            is Track -> t.albums?.firstOrNull()?.albumArtRef?.let {
                 Glide.with(holder.itemView)
                         .load(it)
                         .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))

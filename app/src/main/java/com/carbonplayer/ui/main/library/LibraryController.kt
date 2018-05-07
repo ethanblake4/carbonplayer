@@ -68,6 +68,10 @@ class LibraryController : Controller() {
                                 val albums = AlbumPageController()
                                 router.setRoot(RouterTransaction.with(albums))
                             }
+                            3 -> {
+                                val songs = SongsPageController()
+                                router.setRoot(RouterTransaction.with(songs))
+                            }
                         }
                     }
                 }
@@ -77,6 +81,7 @@ class LibraryController : Controller() {
                         0 -> "Playlists"
                         1 -> "Artists"
                         2 -> "Albums"
+                        3 -> "Songs"
                         else -> ""
                     }
 
@@ -86,7 +91,7 @@ class LibraryController : Controller() {
                 }
 
                 override fun getCount(): Int {
-                    return 3
+                    return 4
                 }
 
             }

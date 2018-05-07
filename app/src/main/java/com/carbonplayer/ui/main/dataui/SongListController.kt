@@ -12,7 +12,6 @@ import com.carbonplayer.R
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.base.ITrack
-import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.SearchSongAdapter
@@ -60,8 +59,11 @@ class SongListController(
                 songList,
                 { pos -> musicManager.fromTracks(songList, pos, songList.first() is Track) },
                 { v, track -> (activity as MainActivity).showTrackPopup(v, track) }
-
         )
+
+        root.main_recycler.setPadding(0, 0, 0,
+                IdentityUtils.getNavbarHeight(resources) +
+                        (activity as MainActivity).bottomInset)
 
         return root
 

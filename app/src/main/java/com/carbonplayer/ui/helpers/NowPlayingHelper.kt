@@ -151,6 +151,14 @@ class NowPlayingHelper(private val activity: Activity) {
             activity.nowplaying_frame.visibility = View.GONE
         }
 
+        activity.seekBar.callback = { p ->
+            activity.nowplaying_frame.seekSlider.translationX = p * dispW * 0.85f
+        }
+
+        activity.seekBar.upCallback = { p ->
+            activity.nowplaying_frame.seekSlider.translationX = p * dispW * 0.85f
+        }
+
         activity.npui_recycler.translationY = dispW * 1.5f
 
         activity.npui_recycler.isNestedScrollingEnabled = false
@@ -419,9 +427,7 @@ class NowPlayingHelper(private val activity: Activity) {
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribe ({ r ->
                                     insertAtEnd(r.data.stations[0].tracks)
-                                }, { err ->
-                                    Timber.d(err)
-                                })
+                                }, { err -> Timber.d(err) })
                     }
 
                     activity.npui_song.text = curTracK!!.title

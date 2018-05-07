@@ -1,10 +1,8 @@
 package com.carbonplayer.ui.main.dataui
 
-import android.os.Bundle
 import android.support.annotation.Keep
 import android.support.design.widget.AppBarLayout
 import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -58,6 +56,10 @@ class AlbumListController(
                 activity as MainActivity,
                 Glide.with(activity!!)
         )
+
+        root.main_recycler.setPadding(0, 0, 0,
+                IdentityUtils.getNavbarHeight(resources) +
+                        (activity as MainActivity).bottomInset)
 
         return root
 

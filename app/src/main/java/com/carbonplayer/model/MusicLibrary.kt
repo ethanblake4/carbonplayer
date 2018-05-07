@@ -501,6 +501,14 @@ object MusicLibrary {
     }
 
     @UiThread
+    fun loadSongs(): Flowable<RealmResults<Track>> {
+        return Realm.getDefaultInstance().where(Track::class.java)
+                .sort("title", Sort.ASCENDING)
+                .findAllAsync()
+                .asFlowable()
+    }
+
+    @UiThread
     fun loadArtists(): Flowable<RealmResults<Artist>> {
         return Realm.getDefaultInstance().where(Artist::class.java)
                 .equalTo("inLibrary", true)

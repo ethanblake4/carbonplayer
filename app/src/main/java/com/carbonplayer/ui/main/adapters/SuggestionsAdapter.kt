@@ -75,7 +75,7 @@ internal class SuggestionsAdapter(
                     }
                 }
                 MediaTypeUtil.TYPE_ALBUM -> {
-                    it.album?.albumArtRef?.firstOrNull()?.let {
+                    it.album?.albumArtRef?.let {
                         requestManager.load(it)
                                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                                 .transition(DrawableTransitionOptions.withCrossFade(200))

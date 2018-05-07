@@ -77,9 +77,6 @@ class NowPlayingFrame : FrameLayout {
         runThread = false
     }
 
-
-
-
     override fun onTouchEvent(event: MotionEvent?): Boolean {
 
         //Timber.d("On touch event: %d", event?.actionMasked)

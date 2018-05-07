@@ -14,6 +14,7 @@
         android:id="@+id/trackThumb"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:scaleType="centerCrop"
         android:layout_marginStart="8dp"
         app:layout_constraintBottom_toTopOf="@+id/artistName"
         app:layout_constraintStart_toStartOf="parent"

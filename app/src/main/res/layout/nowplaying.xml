@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.carbonplayer.ui.widget.NowPlayingFrame xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:sothree="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nowplaying_frame"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -89,7 +88,7 @@
         android:layout_gravity="center_horizontal"
         android:alpha="0.8" />
 
-    <FrameLayout
+    <com.carbonplayer.ui.widget.SeekFrame
         android:id="@+id/seekBar"
         android:layout_width="match_parent"
         android:layout_height="16dp"
@@ -125,7 +124,7 @@
 
 
 
-    </FrameLayout>
+    </com.carbonplayer.ui.widget.SeekFrame>
 
     <!--android.support.design.widget.FloatingActionButton
         android:id="@+id/volume_fab"
@@ -146,10 +145,6 @@
 
 
     </com.carbonplayer.ui.widget.NowPlayingQueueView>
-
-
-
-
-
+    
 
 </com.carbonplayer.ui.widget.NowPlayingFrame>
