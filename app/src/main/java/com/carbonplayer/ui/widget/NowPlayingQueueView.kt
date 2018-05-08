@@ -18,7 +18,7 @@ class NowPlayingQueueView: RecyclerView {
     private var activePointerId = MotionEvent.INVALID_POINTER_ID
     private var lastY = 0f
     private var last2Y = 0f
-    public var initialY = -2f
+    var initialY = -2f
     private val scroller = Scroller(context, FastOutSlowInInterpolator())
     private val dragHandleMaxX: Int
     var scrollHasControl = false
@@ -202,6 +202,4 @@ class NowPlayingQueueView: RecyclerView {
 
         return true
     }
-
-
 }

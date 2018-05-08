@@ -23,6 +23,7 @@ import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.utils.*
 import com.google.common.collect.Queues
+import io.realm.Realm
 import org.parceler.Parcels
 import timber.log.Timber
 import java.util.*
@@ -37,6 +38,8 @@ class MusicPlayerService : Service(), MusicFocusable {
 
     internal lateinit var audioFocusHelper: AudioFocusHelper
     internal var audioFocus = AudioFocus.NoFocusNoDuck
+
+    private val realm = Realm.getDefaultInstance()
 
     internal enum class AudioFocus {
         NoFocusNoDuck,
@@ -62,6 +65,8 @@ class MusicPlayerService : Service(), MusicFocusable {
     private var lastBitmap: Bitmap? = null
     private var lastNotifiedTrack: ITrack? = null
     private var bufferedPosition: Long = 0
+
+    private var recieverRegistered = false
 
     var clients = ArrayList<Messenger>()
     private var messageQueue = Queues.newLinkedBlockingQueue<Pair<Int, Any?>>()
@@ -96,12 +101,10 @@ class MusicPlayerService : Service(), MusicFocusable {
                 if (!playback.isUnpaused()) {
                     playback.play()
                 }
-                //emit(Constants.EVENT.PrevSong)
             }
             Constants.ACTION.PLAYPAUSE -> {
                 Timber.i("Clicked Play/Pause")
                 val isPlaying = playback.isUnpaused()
-                //emit(if (isPlaying) Constants.EVENT.Paused else Constants.EVENT.Playing)
                 if (isPlaying) {
                     playback.pause()
                     audioFocusHelper.abandonFocus()
@@ -120,7 +123,6 @@ class MusicPlayerService : Service(), MusicFocusable {
                 if (!playback.isUnpaused()) {
                     playback.play()
                 }
-                //emit(Constants.EVENT.NextSong)
             }
             Constants.ACTION.INSERT_NEXT -> {
                 Timber.i("Insert next")
@@ -227,6 +229,10 @@ class MusicPlayerService : Service(), MusicFocusable {
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_NONE,
                                     playback.getCurrentPosition(), 1.0f).build())
+                    if(recieverRegistered) {
+                        unregisterReceiver(noisyAudioStreamReceiver)
+                        recieverRegistered = false
+                    }
                     emit(Constants.EVENT.Paused)
                 }
                 MusicPlayback.PlayState.STARTING -> {
@@ -254,9 +260,20 @@ class MusicPlayerService : Service(), MusicFocusable {
                                 PlaybackStateCompat.STATE_PAUSED,
                                     playback.getCurrentPosition(), 1.0f).build())
 
+                    if(playback.isUnpaused()) {
+                        if(!recieverRegistered) {
+                            registerReceiver(noisyAudioStreamReceiver, noisyIntentFilter)
+                            recieverRegistered = true
+                        }
+                    } else {
+                        if(recieverRegistered) {
+                            unregisterReceiver(noisyAudioStreamReceiver)
+                            recieverRegistered = false
+                        }
+                    }
+
                     emit(if (playback.isUnpaused()) Constants.EVENT.Playing else Constants.EVENT.Paused)
 
-                    registerReceiver(noisyAudioStreamReceiver, noisyIntentFilter)
                 }
                 MusicPlayback.PlayState.CONTINUE -> { // From position change
                     mediaSession.setPlaybackState(stateBuilder.setState(if (playback.isUnpaused())
@@ -273,6 +290,14 @@ class MusicPlayerService : Service(), MusicFocusable {
             }
         }, { num, track ->
             // When the track is changed
+            val localTrack = realm
+                    .where(Track::class.java)
+                    .equalTo(Track.LOCAL_ID, (track as ParcelableTrack).localId)
+                    .findFirst()
+
+                realm.executeTransaction {
+                    localTrack?.addPlay()
+                }
 
             emit(Constants.EVENT.TrackPlaying, track)
             loadImageAndDoUpdates(track)

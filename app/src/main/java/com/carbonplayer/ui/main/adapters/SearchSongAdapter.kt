@@ -21,7 +21,7 @@ import kotlinx.android.synthetic.main.search_song_layout.view.*
  */
 internal class SearchSongAdapter(
         private val mDataset: List<ITrack>,
-        private val clicked: (ITrack) -> Unit,
+        private val clicked: (ITrack, Int) -> Unit,
         private val menuClicked: (View, ITrack) -> Unit
 ) : RecyclerView.Adapter<SearchSongAdapter.ViewHolder>() {
 
@@ -29,7 +29,7 @@ internal class SearchSongAdapter(
 
         init {
             v.songLayoutRoot.setOnClickListener { _ ->
-                clicked(mDataset[adapterPosition])
+                clicked(mDataset[adapterPosition], adapterPosition)
             }
             v.songLayoutMenu.setOnClickListener {
                 menuClicked(it, mDataset[adapterPosition])

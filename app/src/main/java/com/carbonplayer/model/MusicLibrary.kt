@@ -504,6 +504,7 @@ object MusicLibrary {
     fun loadSongs(): Flowable<RealmResults<Track>> {
         return Realm.getDefaultInstance().where(Track::class.java)
                 .sort("title", Sort.ASCENDING)
+                .equalTo("inLibrary", true)
                 .findAllAsync()
                 .asFlowable()
     }

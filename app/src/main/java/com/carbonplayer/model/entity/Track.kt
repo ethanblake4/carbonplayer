@@ -181,6 +181,7 @@ open class Track(
 
     fun addPlay() {
         localPlays.add(System.currentTimeMillis())
+        playCount++
     }
 
     fun getCachedFileQuality(): StreamQuality {

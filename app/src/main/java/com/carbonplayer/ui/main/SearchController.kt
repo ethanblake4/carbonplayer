@@ -120,7 +120,7 @@ class SearchController(
                             v.clusterEntries.adapter = when (cDetail.cluster?.type) {
                                 MediaTypeUtil.TYPE_SONG -> SearchSongAdapter(
                                         entries.mapNotNull { it.track }.take(5),
-                                        { pos ->
+                                        { track, pos ->
                                             musicManager.fromTracks(entries.mapNotNull { it.track },
                                                     pos)
                                         },

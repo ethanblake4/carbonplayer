@@ -23,19 +23,28 @@ import timber.log.Timber;
 
 public class TrackCache {
 
+    private static File[] cacheFiles;
+
     public static boolean has(Context context, SongID id, StreamQuality quality) {
 
         Timber.d("Does trackCache have %d?", id.getLocalId());
 
-        File[] cacheFiles = context.getCacheDir()
-                .listFiles((dir, name) -> name.startsWith(String.valueOf(id.getLocalId())));
+        if(cacheFiles == null) cacheFiles = context.getCacheDir().listFiles();
 
-        if (cacheFiles.length == 0) {
+        LinkedList<File> thisCacheFiles = new LinkedList<>();
+
+        for(File f: cacheFiles) {
+            if(f.getName().split("--")[0].equals(String.valueOf(id.getLocalId()))) {
+                thisCacheFiles.add(f);
+            }
+        }
+
+        if (thisCacheFiles.size() == 0) {
             Timber.d("Will run!");
             return false;
         }
-        if (cacheFiles.length > 1) {
-            File newFile = removeLowerQualities(cacheFiles);
+        if (thisCacheFiles.size() > 1) {
+            File newFile = removeLowerQualities((File[]) thisCacheFiles.toArray());
             String name = newFile == null ? null : newFile.getName();
 
             if (name != null && Integer.parseInt(

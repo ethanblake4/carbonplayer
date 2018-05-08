@@ -157,6 +157,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
         activity.seekBar.upCallback = { p ->
             activity.nowplaying_frame.seekSlider.translationX = p * dispW * 0.85f
+
         }
 
         activity.npui_recycler.translationY = dispW * 1.5f

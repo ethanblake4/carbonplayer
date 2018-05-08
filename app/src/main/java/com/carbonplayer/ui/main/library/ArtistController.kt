@@ -27,7 +27,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
-import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.Artist
@@ -70,11 +69,11 @@ import java.util.concurrent.TimeUnit
  */
 class ArtistController(
         var artist: Either<Observable<IArtist>, IArtist>,
-        val textColor: Int,
-        val mainColor: Int,
-        val bodyColor: Int,
-        val secondaryColor: Int,
-        val secondaryTextColor: Int
+        var textColor: Int,
+        var mainColor: Int,
+        var bodyColor: Int,
+        var secondaryColor: Int,
+        var secondaryTextColor: Int
 ) : Controller() {
 
     internal lateinit var root: View
@@ -163,22 +162,6 @@ class ArtistController(
             setupView(root)
         }
 
-        root.primaryText.setTextColor(textColor)
-        root.secondaryText.setTextColor(textColor)
-        root.constraintLayout6.background = ColorDrawable(mainColor)
-        root.songgroup_grad.background = GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
-                intArrayOf(mainColor, ColorUtils.modifyAlpha(mainColor, 200),
-                        ColorUtils.modifyAlpha(mainColor, 0)))
-
-        root.artistTracksHeader.visibility = View.VISIBLE
-
-        root.downloadButton.imageTintList = ColorStateList.valueOf(textColor)
-        root.overflowButton.imageTintList = ColorStateList.valueOf(textColor)
-        root.expandDescriptionChevron.imageTintList = ColorStateList.valueOf(bodyColor)
-
-        root.play_fab.backgroundTintList = ColorStateList.valueOf(secondaryColor)
-        root.play_fab.imageTintList = ColorStateList.valueOf(secondaryTextColor)
-
         root.downloadButton.setOnClickListener {
             activity?.let { Toast.makeText(it,
                     "Downloading is not supported yet", Toast.LENGTH_LONG).show() }
@@ -204,7 +187,27 @@ class ArtistController(
 
         root.play_fab.visibility = View.INVISIBLE
 
+        tintView(root)
+
         return root
+    }
+
+    private fun tintView(view: View) {
+        view.primaryText.setTextColor(textColor)
+        view.secondaryText.setTextColor(textColor)
+        view.constraintLayout6.background = ColorDrawable(mainColor)
+        view.songgroup_grad.background = GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
+                intArrayOf(mainColor, ColorUtils.modifyAlpha(mainColor, 200),
+                        ColorUtils.modifyAlpha(mainColor, 0)))
+
+        view.artistTracksHeader.visibility = View.VISIBLE
+
+        view.downloadButton.imageTintList = ColorStateList.valueOf(textColor)
+        view.overflowButton.imageTintList = ColorStateList.valueOf(textColor)
+        view.expandDescriptionChevron.imageTintList = ColorStateList.valueOf(bodyColor)
+
+        view.play_fab.backgroundTintList = ColorStateList.valueOf(secondaryColor)
+        view.play_fab.imageTintList = ColorStateList.valueOf(secondaryTextColor)
     }
 
     private fun setupView(view: View): View {
@@ -213,8 +216,8 @@ class ArtistController(
             val aId = realArtist.artistId
             Protocol.getNautilusArtist(activity!!, realArtist.artistId)
                     .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
                     .delay(300, TimeUnit.MILLISECONDS) /* Prevent animation interrupt */
+                    .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({ a ->
 
                         val rlm = Realm.getDefaultInstance()
@@ -223,12 +226,9 @@ class ArtistController(
                                 .equalTo(Artist.ID, aId)
                                 .findFirst()!!
 
-                        rlm.executeTransaction {
-                            artistProxy.updateFrom(a, it)
-                        }
+                        rlm.executeTransaction { artistProxy.updateFrom(a, it) }
 
-                        if(artistProxy.artistBio != null
-                                && artistProxy.artistBio!!.isNotBlank()) {
+                        if(artistProxy.artistBio != null && artistProxy.artistBio!!.isNotBlank()) {
                             val const = ConstraintSet().apply {
                                 clone(view.constraintLayout6)
                                 setMargin(R.id.primaryText, ConstraintSet.TOP,
@@ -254,82 +254,9 @@ class ArtistController(
                                     animate().alpha(1f).setDuration(250).start()
                                 }
                             }
-
                         }
 
-                        if(artistProxy.topTracks.isNotEmpty()) {
-
-                            val tpTracks = artistProxy.topTracks.toList()
-
-                            view.post {
-                                val params = root.songgroup_recycler.layoutParams
-                                params.height = (tpTracks.take(5).size * MathUtils.dpToPx2(resources, 59)) +
-                                        IdentityUtils.getNavbarHeight(resources) +
-                                        (activity as MainActivity).bottomInset
-
-                            }
-
-                            this.activity!!.runOnUiThread {
-                                mAdapter = SongListAdapter(extractTopTracks(realArtist).take(5), {
-                                    manager.fromTracks(extractTopTracks(realArtist), it.second)
-                                })
-
-                                // use a linear layout manager
-                                mLayoutManager = LinearLayoutManager(activity)
-
-                                root.songgroup_recycler.layoutManager = mLayoutManager
-
-                                root.songgroup_recycler.adapter = mAdapter
-                            }
-                        }
-
-                        if(extractRelatedArtists(artistProxy).isNotEmpty()) {
-                            val params = root.songgroup_recycler.layoutParams
-                            params.height = (extractTopTracks(artistProxy)
-                                    .take(5).size *
-                                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
-                            root.artistgroup_recycler.setPadding(0, 0, 0,
-                                    IdentityUtils.getNavbarHeight(resources) +
-                                            (activity as MainActivity).bottomInset)
-                            root.artistArtistsHeader.visibility = View.VISIBLE
-                            root.artistgroup_recycler.visibility = View.VISIBLE
-                            root.artistgroup_recycler.layoutManager = LinearLayoutManager(activity)
-                            root.artistgroup_recycler.adapter = LinearArtistAdapter(
-                                    activity!!,
-                                    extractRelatedArtists(artistProxy).take(5),
-                                    { (artist, swPair) ->
-                                        (activity as MainActivity).gotoArtist(artist,
-                                                swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)})
-                            root.artistgroup_recycler.requestLayout()
-                        }
-
-                        if(extractAllAlbums(artistProxy).isNotEmpty()) {
-                            val params = root.songgroup_recycler.layoutParams
-                            params.height = (extractTopTracks(artistProxy)
-                                    .take(5).size *
-                                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
-                            root.artistgroup_recycler.setPadding(0, 0, 0, 0)
-                            root.albumgroup_recycler.setPadding(0, 0, 0,
-                                    IdentityUtils.getNavbarHeight(resources) +
-                                            (activity as MainActivity).bottomInset)
-                            root.artistAlbumsHeader.visibility = View.VISIBLE
-                            root.albumgroup_recycler.visibility = View.VISIBLE
-                            root.albumgroup_recycler.layoutManager = GridLayoutManager(activity, 2)
-                            root.albumgroup_recycler.adapter = if(realArtist is Artist) AlbumAdapterJ(
-                                    extractAllAlbums(artistProxy).take(4) as List<Album>,
-                                    activity as MainActivity, requestMgr) else TopChartsAlbumAdapter(
-                                    extractAllAlbums(artistProxy).take(4) as List<SkyjamAlbum>,
-                                    activity as MainActivity,
-                                    requestMgr)
-                            if(extractAllAlbums(realArtist).size < 4) {
-                                root.artistAllAlbums.visibility = View.INVISIBLE
-                            } else root.artistAllAlbums.setOnClickListener {
-                                (activity as MainActivity).goto(AlbumListController(
-                                        extractAllAlbums(realArtist),
-                                        swatchPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR
-                                ))
-                            }
-                        }
+                        setupWithArtist(root, artistProxy)
                     }, {
                         err -> Timber.e(err)
                     }).addToAutoDispose()
@@ -340,76 +267,6 @@ class ArtistController(
         root.songgroup_loader.visibility = View.INVISIBLE
         root.main_backdrop.visibility = View.VISIBLE
         root.songgroup_scrollview.visibility = View.VISIBLE
-
-        if(extractTopTracks(realArtist).isNotEmpty()) {
-            val params = root.songgroup_recycler.layoutParams
-            params.height = (extractTopTracks(realArtist)
-                    .take(5).size * MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP)) +
-                    IdentityUtils.getNavbarHeight(resources) + (activity as MainActivity).bottomInset
-
-            mAdapter = SongListAdapter(extractTopTracks(realArtist).take(5), {
-                manager.fromTracks(extractTopTracks(realArtist), it.second, realArtist is Artist)
-            })
-
-            // use a linear layout manager
-            mLayoutManager = LinearLayoutManager(activity)
-
-            root.songgroup_recycler.layoutManager = mLayoutManager
-
-            root.songgroup_recycler.adapter = mAdapter
-        }
-
-        if(extractRelatedArtists(realArtist).isNotEmpty()) {
-            val params = root.songgroup_recycler.layoutParams
-            params.height = (extractTopTracks(realArtist)
-                    .take(5).size *
-                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
-            root.artistgroup_recycler.setPadding(0, 0, 0,
-                    IdentityUtils.getNavbarHeight(resources) +
-                            MathUtils.dpToPx2(resources,
-                                    if ((activity as MainActivity).nowplaying_frame
-                                            .visibility == View.VISIBLE)
-                                        NowPlayingHelper.HEIGHT_DP else 0))
-            root.artistArtistsHeader.visibility = View.VISIBLE
-            root.artistgroup_recycler.visibility = View.VISIBLE
-            root.artistgroup_recycler.layoutManager = LinearLayoutManager(activity)
-            root.artistgroup_recycler.adapter = LinearArtistAdapter(
-                    activity!!,
-                    extractRelatedArtists(realArtist).take(5),
-                    { (artist, swPair) ->
-                        (activity as MainActivity).gotoArtist(artist,
-                                swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)
-                    }, true)
-
-        }
-
-        if(extractAllAlbums(realArtist).isNotEmpty()) {
-            val params = root.songgroup_recycler.layoutParams
-            params.height = (extractTopTracks(realArtist)
-                    .take(5).size *
-                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
-            root.artistgroup_recycler.setPadding(0, 0, 0, 0)
-            root.albumgroup_recycler.setPadding(0, 0, 0,
-                    IdentityUtils.getNavbarHeight(resources) +
-                            (activity as MainActivity).bottomInset)
-            root.artistAlbumsHeader.visibility = View.VISIBLE
-            root.albumgroup_recycler.visibility = View.VISIBLE
-            root.albumgroup_recycler.layoutManager = GridLayoutManager(activity, 2)
-            root.albumgroup_recycler.adapter = if(realArtist is Artist) AlbumAdapterJ(
-                    extractAllAlbums(realArtist as Artist).take(4) as List<Album>,
-                    activity as MainActivity, requestMgr) else TopChartsAlbumAdapter(
-                        extractAllAlbums(realArtist).take(4) as List<SkyjamAlbum>,
-                        activity as MainActivity,
-                        requestMgr)
-            if(extractAllAlbums(realArtist).size < 4) {
-                root.artistAllAlbums.visibility = View.INVISIBLE
-            } else root.artistAllAlbums.setOnClickListener {
-                (activity as MainActivity).goto(AlbumListController(
-                        extractAllAlbums(realArtist),
-                        swatchPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR
-                ))
-            }
-        }
 
         val preImageWidth = IdentityUtils.displayWidthDp(activity as Activity) - 4
 
@@ -422,28 +279,20 @@ class ArtistController(
                                 .use(0)
                                 .intoCallBack({ palette -> if (palette != null) {
                                     val pair = PaletteUtil.getSwatches(activity!!, palette)
-                                    this@ArtistController.swatchPair = pair
-                                    PaletteUtil.crossfadeBackground(
-                                            root.constraintLayout6, pair.primary)
-                                PaletteUtil.crossfadeTitle(
-                                        root.primaryText, pair.primary)
-                                PaletteUtil.crossfadeSubtitle(root.secondaryText, pair.secondary)
-
-                                if(ColorUtils.isDark(pair.primary.bodyTextColor)) {
-                                    root.overflowButton.imageTintList =
-                                            CarbonPlayerApplication.instance.darkCSL
-                                }
+                                    mainColor = pair.primary.rgb
+                                    bodyColor = pair.primary.bodyTextColor
+                                    secondaryColor = pair.secondary.rgb
+                                    textColor = pair.primary.titleTextColor
+                                    secondaryTextColor = pair.secondary.bodyTextColor
+                                    tintView(root)
                             }
-                        })
-                        )
-                        }
-                    }
-                    .into(root.main_backdrop)
+                        }))
+                    }}.into(root.main_backdrop)
         }
 
+        setupWithArtist(root, realArtist)
 
         if(!realArtist.artistBio.isNullOrBlank()) {
-
             val const = ConstraintSet().apply {
                 clone(root.constraintLayout6)
                 setMargin(R.id.primaryText, ConstraintSet.TOP, MathUtils.dpToPx2(resources, 32))
@@ -474,9 +323,7 @@ class ArtistController(
         root.songgroup_recycler.isNestedScrollingEnabled = false
 
         root.expandDescriptionChevron.setOnClickListener {
-
             ogHeight = root.constraintLayout6.measuredHeight
-
             val anim = ValueAnimator.ofInt(
                     root.constraintLayout6.measuredHeight,
                     if(!expanded) root.constraintLayout6.measuredHeight + root.descriptionText.height
@@ -496,6 +343,80 @@ class ArtistController(
         }
 
         return root
+    }
+
+    private fun setupWithArtist(view: View, artist: IArtist) {
+
+        if(extractTopTracks(realArtist).isNotEmpty()) {
+            val params = root.songgroup_recycler.layoutParams
+            params.height = (extractTopTracks(realArtist)
+                    .take(5).size * MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP)) +
+                    IdentityUtils.getNavbarHeight(resources) + (activity as MainActivity).bottomInset
+
+            mAdapter = SongListAdapter(extractTopTracks(realArtist).take(5), {
+                manager.fromTracks(extractTopTracks(realArtist), it.second, realArtist is Artist)
+            })
+
+            // use a linear layout manager
+            mLayoutManager = LinearLayoutManager(activity)
+
+            activity!!.runOnUiThread {
+                root.songgroup_recycler.layoutManager = mLayoutManager
+                root.songgroup_recycler.adapter = mAdapter
+            }
+        }
+
+        if(extractRelatedArtists(artist).isNotEmpty()) {
+            val params = view.songgroup_recycler.layoutParams
+            params.height = (extractTopTracks(artist)
+                    .take(5).size *
+                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
+            view.artistgroup_recycler.setPadding(0, 0, 0,
+                    IdentityUtils.getNavbarHeight(resources) +
+                            MathUtils.dpToPx2(resources,
+                                    if ((activity as MainActivity).nowplaying_frame
+                                            .visibility == View.VISIBLE)
+                                        NowPlayingHelper.HEIGHT_DP else 0))
+            view.artistArtistsHeader.visibility = View.VISIBLE
+            view.artistgroup_recycler.visibility = View.VISIBLE
+            view.artistgroup_recycler.layoutManager = LinearLayoutManager(activity)
+            view.artistgroup_recycler.adapter = LinearArtistAdapter(
+                    activity!!,
+                    extractRelatedArtists(artist).take(5),
+                    { (artist, swPair) ->
+                        (activity as MainActivity).gotoArtist(artist,
+                                swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)
+                    }, true)
+
+        }
+
+        if(extractAllAlbums(artist).isNotEmpty()) {
+            val params = root.songgroup_recycler.layoutParams
+            params.height = (extractTopTracks(artist)
+                    .take(5).size *
+                    MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP))
+            root.artistgroup_recycler.setPadding(0, 0, 0, 0)
+            root.albumgroup_recycler.setPadding(0, 0, 0,
+                    IdentityUtils.getNavbarHeight(resources) +
+                            (activity as MainActivity).bottomInset)
+            root.artistAlbumsHeader.visibility = View.VISIBLE
+            root.albumgroup_recycler.visibility = View.VISIBLE
+            root.albumgroup_recycler.layoutManager = GridLayoutManager(activity, 2)
+            root.albumgroup_recycler.adapter = if(artist is Artist) AlbumAdapterJ(
+                    extractAllAlbums(artist).take(4) as List<Album>,
+                    activity as MainActivity, requestMgr) else TopChartsAlbumAdapter(
+                    extractAllAlbums(artist).take(4) as List<SkyjamAlbum>,
+                    activity as MainActivity,
+                    requestMgr)
+            if(extractAllAlbums(artist).size < 4) {
+                root.artistAllAlbums.visibility = View.INVISIBLE
+            } else root.artistAllAlbums.setOnClickListener {
+                (activity as MainActivity).goto(AlbumListController(
+                        extractAllAlbums(artist),
+                        swatchPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR
+                ))
+            }
+        }
     }
 
     override fun onAttach(view: View) {

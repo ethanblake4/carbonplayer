@@ -57,7 +57,7 @@ class SongListController(
         root.main_recycler.layoutManager = LinearLayoutManager(activity)
         root.main_recycler.adapter = SearchSongAdapter(
                 songList,
-                { pos -> musicManager.fromTracks(songList, pos, songList.first() is Track) },
+                { track, pos -> musicManager.fromTracks(songList, pos, songList.first() is Track) },
                 { v, track -> (activity as MainActivity).showTrackPopup(v, track) }
         )
 

@@ -84,10 +84,10 @@ class SongsPageController : Controller() {
         songSubscription?.dispose()
         songSubscription = MusicLibrary.loadSongs()
                 .subscribe { songs ->
-                    adapter = SearchSongAdapter(songs,  {
-                        musicManager.fromTracks(listOf(it), 0)
+                    adapter = SearchSongAdapter(songs, { track, pos ->
+                        musicManager.fromTracks(listOf(track), 0)
                     }, { v, track ->
-
+                        (activity as MainActivity).showTrackPopup(v, track)
                     })
                     view.main_recycler.adapter = adapter
                     view.fastscroll.setRecyclerView(view.main_recycler)
