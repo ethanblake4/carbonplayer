@@ -124,6 +124,11 @@ class MusicPlayerService : Service(), MusicFocusable {
                     playback.play()
                 }
             }
+            Constants.ACTION.SEEK -> {
+                Timber.i("Seek")
+                val position = intent.extras.getLong(Constants.KEY.POSITION)
+                playback.seekTo(position)
+            }
             Constants.ACTION.INSERT_NEXT -> {
                 Timber.i("Insert next")
                 val bundle = intent.extras
@@ -225,7 +230,6 @@ class MusicPlayerService : Service(), MusicFocusable {
                     audioFocusHelper.abandonFocus()
                     if (wifiLock.isHeld) wifiLock.release()
                     if (wakeLock.isHeld) wakeLock.release()
-                    unregisterReceiver(noisyAudioStreamReceiver)
                     mediaSession.setPlaybackState(
                             stateBuilder.setState(PlaybackStateCompat.STATE_NONE,
                                     playback.getCurrentPosition(), 1.0f).build())

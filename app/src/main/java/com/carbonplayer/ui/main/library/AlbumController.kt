@@ -124,6 +124,19 @@ class AlbumController(
         aId = album.albumId
     }
 
+    private fun setupRecycler(view: View, forceRemote: Boolean = false) {
+        val params = view.songgroup_recycler.layoutParams
+        params.height = (tracks.size * MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP)) +
+                IdentityUtils.getNavbarHeight(resources) + (activity as MainActivity).bottomInset
+
+        mAdapter = SongListAdapter(tracks) { (_, pos) ->
+            if(album is Album && !forceRemote) manager.fromAlbum(album, pos)
+            else manager.fromTracks(tracks, pos, false)
+        }
+
+        view.songgroup_recycler.adapter = mAdapter
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
         root = inflater.inflate(R.layout.activity_songgroup, container, false)
@@ -137,23 +150,37 @@ class AlbumController(
 
         root.underlayAppbar.setPadding(0, IdentityUtils.getStatusBarHeight(resources), 0, 0)
 
-        if(album.description == null && album is Album) {
+        tracks = MusicLibrary.getAllAlbumTracks(album)
+
+        if(album is Album && (album.description == null || tracks.isEmpty())) {
+
+            Timber.d("album is Album and we're getting a SkyjamAlbum")
 
             Protocol.getNautilusAlbum(activity!!, album.albumId)
                     .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.from(this.activity!!.mainLooper))
                     .delay(300, TimeUnit.MILLISECONDS) /* Prevent animation interrupt */
+                    .observeOn(AndroidSchedulers.from(this.activity!!.mainLooper))
                     .subscribe({ a ->
+
                         val rlm = Realm.getDefaultInstance()
 
                         albumProxy = rlm.where(Album::class.java)
                                 .equalTo(Album.ID, aId)
                                 .findFirst()!!
+
                         rlm.executeTransaction {
                             (albumProxy as Album).updateFrom(a, it)
                         }
 
-                        if (view != null && albumProxy.description != null && albumProxy.description!!.isNotBlank()) {
+                        if(tracks.isEmpty()) {
+                            tracks = a.tracks ?: listOf()
+                            setupRecycler(view!!, true)
+                        }
+
+                        if (view != null
+                                && album.description == null
+                                && albumProxy.description != null
+                                && albumProxy.description!!.isNotBlank()) {
                             val const = ConstraintSet().apply {
                                 clone(view!!.constraintLayout6)
                                 setMargin(R.id.primaryText, ConstraintSet.TOP,
@@ -169,18 +196,15 @@ class AlbumController(
 
                             val desc = albumProxy.description
 
-                            view!!.post {
-                                const.applyTo(view!!.constraintLayout6)
+                            const.applyTo(view!!.constraintLayout6)
 
-                                view!!.descriptionText.run {
-                                    text = desc
-                                    setTextColor(bodyColor)
-                                    visibility = View.VISIBLE
-                                    alpha = 0.0f
-                                    animate().alpha(1f).setDuration(250).start()
-                                }
+                            view!!.descriptionText.run {
+                                text = desc
+                                setTextColor(bodyColor)
+                                visibility = View.VISIBLE
+                                alpha = 0.0f
+                                animate().alpha(1f).setDuration(250).start()
                             }
-
                         }
                     }, {
                         err -> Timber.e(err)
@@ -212,11 +236,6 @@ class AlbumController(
             (activity as? MainActivity)?.showAlbumPopup(v, album)
         }
 
-        root.main_backdrop.transitionName = album.albumId + "i"
-        root.constraintLayout6.transitionName = album.albumId + "cr"
-        root.primaryText.transitionName = album.albumId + "t"
-        root.secondaryText.transitionName = album.albumId + "d"
-
         root.songgroup_scrollview.setScrollViewCallbacks(object : ObservableScrollViewCallbacks {
             override fun onUpOrCancelMotionEvent(scrollState: ScrollState?) {}
 
@@ -233,12 +252,6 @@ class AlbumController(
         fabOffset = MathUtils.dpToPx(activity, 28)
 
         val preImageWidth = IdentityUtils.displayWidthDp(activity as Activity) - 4
-
-        //val handler = DetailSharedElementEnterCallback(this)
-        //handler.addTextViewSizeResource(root.primaryText,
-        //        R.dimen.small_text_size, R.dimen.large_text_size)
-        //handler.addTextViewSizeResource(root.secondaryText,
-        //        R.dimen.small_text_2, R.dimen.large_text_2)
 
         requestMgr = Glide.with(activity as Activity)
 
@@ -308,31 +321,16 @@ class AlbumController(
 
         root.songgroup_recycler.layoutManager = mLayoutManager
 
-        tracks = MusicLibrary.getAllAlbumTracks(album)
-
-        val setupRecycler = {
-            val params = root.songgroup_recycler.layoutParams
-            params.height = (tracks.size * MathUtils.dpToPx2(resources, SongListAdapter.SONG_HEIGHT_DP)) +
-                    IdentityUtils.getNavbarHeight(resources) + (activity as MainActivity).bottomInset
-
-
-            mAdapter = SongListAdapter(tracks) { (_, pos) ->
-                if(album is Album) manager.fromAlbum(album, pos)
-                else manager.fromTracks(tracks, pos, false)
-            }
-
-            root.songgroup_recycler.adapter = mAdapter
-        }
-
         if(album is SkyjamAlbum && tracks.isEmpty()) {
+            Timber.d("album is SkyjamAlbum and we're getting a SkyjamAlbum")
             Protocol.getNautilusAlbum(root.context, album.albumId)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.from(this.activity!!.mainLooper))
                     .subscribe({ a -> a.tracks?.let {
                             tracks = it
-                            setupRecycler()
+                            setupRecycler(root)
                         }})
-        } else setupRecycler()
+        } else if(tracks.isNotEmpty()) setupRecycler(root)
 
         root.play_fab.setOnClickListener {
             if(album is Album) manager.fromAlbum(album, 0)

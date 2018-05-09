@@ -21,6 +21,7 @@ public final class Constants {
         String PLAYPAUSE = "PLAYPAUSE";
         String NEXT = "NEXT";
         String SKIP_TO_TRACK = "SKIP_TO_TRACK";
+        String SEEK = "SEEK";
 
         String SEND_QUEUE = "SEND_QUEUE";
         String SEND_STATE = "SEND_STATE";

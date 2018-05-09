@@ -73,7 +73,7 @@ class ParcelableTrack (
     constructor(source: Track) : this (
         source.localId, 0, source.id, source.clientId, source.nid, source.storeId,
             source.title, source.artist, source.artists?.map {it.artistId},
-            source.artists?.first()?.artistArtRef?.let { listOf(it) },
+            source.artists?.firstOrNull()?.artistArtRef?.let { listOf(it) },
             source.album, source.year, source.trackNumber,
             source.genre, source.durationMillis, source.albums?.firstOrNull()?.albumArtRef,
             source.rating, source.albumArtist, source.albumId, source.audioAd,

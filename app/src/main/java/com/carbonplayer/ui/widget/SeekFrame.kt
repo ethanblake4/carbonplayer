@@ -24,6 +24,6 @@ class SeekFrame : FrameLayout {
                 it((maxOf(minOf(f, 0.925f), 0.075f) - 0.075f) * (1.0f/0.85f))
             }
         }
-        return super.onTouchEvent(event)
+        return true
     }
 }

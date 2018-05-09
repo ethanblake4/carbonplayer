@@ -226,6 +226,7 @@ class ArtistController(
                                 .equalTo(Artist.ID, aId)
                                 .findFirst()!!
 
+                        Timber.d("Running artistProxy update")
                         rlm.executeTransaction { artistProxy.updateFrom(a, it) }
 
                         if(artistProxy.artistBio != null && artistProxy.artistBio!!.isNotBlank()) {

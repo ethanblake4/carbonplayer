@@ -65,6 +65,7 @@ class SearchController(
     private fun runSearch(view: View, term: String) {
         Protocol.search(activity!!, term)
                 .subscribeOn(Schedulers.io())
+                .retry(2)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe ({ results ->
                     view.searchLoader.visibility = View.GONE

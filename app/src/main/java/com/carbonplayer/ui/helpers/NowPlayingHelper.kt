@@ -157,6 +157,14 @@ class NowPlayingHelper(private val activity: Activity) {
 
         activity.seekBar.upCallback = { p ->
             activity.nowplaying_frame.seekSlider.translationX = p * dispW * 0.85f
+            curTracK?.let {
+                val intent = newIntent().apply {
+                    action = Constants.ACTION.SEEK
+                    putExtra(Constants.KEY.POSITION, (p.toDouble() * it.durationMillis).toLong())
+                    maybeBind(this)
+                }
+                ContextCompat.startForegroundService(activity, intent)
+            }
 
         }
 

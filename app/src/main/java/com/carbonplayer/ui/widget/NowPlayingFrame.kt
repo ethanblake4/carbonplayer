@@ -84,7 +84,6 @@ class NowPlayingFrame : FrameLayout {
             MotionEvent.ACTION_DOWN -> {
                 /* On a touch, set the current active pointer and remove control from
                  * the scroller */
-                Timber.d("ACTION_DOWN")
                 scrollHasControl = false
                 val ac = event.actionIndex
                 last2Y = lastY
@@ -97,7 +96,6 @@ class NowPlayingFrame : FrameLayout {
                 /*
                  * When movement occurs, change our height and callback the new position
                  */
-                Timber.d("ACTION_MOVE")
                 val dy = event.rawY - lastY
                 if(!eventHasMotion && (event.rawY > eventInitialY + 1
                         || event.rawY < eventInitialY - 1)) eventHasMotion = true
@@ -116,7 +114,6 @@ class NowPlayingFrame : FrameLayout {
                 lastY = event.rawY
             }
             MotionEvent.ACTION_UP -> {
-                Timber.d("ACTION_UP")
 
                 /* On an up event:
                 *   - If there was motion, start a fling with the current velocity
@@ -174,12 +171,10 @@ class NowPlayingFrame : FrameLayout {
             }
 
             MotionEvent.ACTION_CANCEL -> {
-                Timber.d("ACTION_CANCEL")
                 activePointerId = MotionEvent.INVALID_POINTER_ID
             }
 
             MotionEvent.ACTION_POINTER_UP -> {
-                Timber.d("ACTION_PTR_UP")
                 if (event.getPointerId(event.actionIndex) == activePointerId) {
                     // This was our active pointer going up. Choose a new
                     // active pointer and adjust accordingly.

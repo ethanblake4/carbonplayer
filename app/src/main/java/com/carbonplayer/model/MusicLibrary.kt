@@ -29,12 +29,15 @@ import io.realm.Sort
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 
 object MusicLibrary {
 
     private const val UNKNOWN_ARTIST_ID = "unknownArtistId"
     const val UNKNOWN_ALBUM_ID = "unknownAlbumId"
+
+    private var cachedLocalTrackId: AtomicLong? = null
 
     fun config(context: Activity, onError: Consumer<Throwable>, onSuccess: Action) {
         val failed = FinalBool()
@@ -348,21 +351,29 @@ object MusicLibrary {
      */
     fun processTracks(tracks: List<SkyjamTrack>, realm: Realm): RealmList<Track> {
         return tracks.mapTo(RealmList<Track>()) {
+            var nmo = false
             realm.where(Track::class.java)
-                    .equalTo(Track.TRACK_ID, it.id)
-                    .or().equalTo(Track.CLIENT_ID, it.clientId)
-                    .or().equalTo(Track.NAUTILUS_ID, it.nid)
-                    .or().equalTo(Track.STORE_ID, it.storeId)
+                    // Attempt to find the track in the database using its store or library ID
+                    .let { q -> if(it.storeId != null) {
+                            nmo = true
+                            q.equalTo(Track.STORE_ID, it.storeId)
+                        } else q }
+                    .let { q -> if(it.id != null) {
+                            if (nmo) q.or().equalTo(Track.TRACK_ID, it.id)
+                            else q.equalTo(Track.TRACK_ID, it.id)
+                        } else q }
+                    // If we can't find it, construct a new track
                     .findFirst() ?: Track(nextLocalIdForTrack(realm), it)
         }
     }
 
     private fun nextLocalIdForTrack(realm: Realm) =
-            realm.where(Track::class.java).max(Track.LOCAL_ID)?.toLong()?.plus(1) ?: 0
+            cachedLocalTrackId?.incrementAndGet() ?:
+            { (realm.where(Track::class.java).max(Track.LOCAL_ID)?.toLong()
+                    ?.plus(1) ?: 0).let { cachedLocalTrackId = AtomicLong(it); it }}()
 
     private fun nextLocalIdForPlaylist(realm: Realm) =
             realm.where(Playlist::class.java).max(Playlist.LOCAL_ID)?.toLong()?.plus(1) ?: 0
-
 
     private fun insertOrUpdateTrack(realm: Realm, src: SkyjamTrack): Track {
 

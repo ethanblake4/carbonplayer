@@ -3,10 +3,8 @@ package com.carbonplayer.model.network.entity
 import android.content.Context
 import android.os.SystemClock
 import com.carbonplayer.CarbonPlayerApplication
-import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.SongID
-import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.TrackCache
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.enums.StorageType
@@ -20,7 +18,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.exceptions.Exceptions
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import io.realm.Realm
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.Okio
@@ -207,11 +204,13 @@ class Stream (
     @Synchronized
     @Throws(InterruptedException::class)
     fun waitForData(amount: Long) {
-        while (!isFinished && completed < extraChunkSize + amount && waitAllowed && downloadRequest != null) {
+        while (!isFinished && completed < extraChunkSize + amount && waitAllowed
+                && downloadRequest != null) {
             val uptimeMs = SystemClock.uptimeMillis()
-            if (lastWait < uptimeMs) {
+            if (lastWait + 1000 < uptimeMs) {
                 this.lastWait = uptimeMs
-                Timber.i("current $completed, waiting for ${amount + extraChunkSize} bytes in file $filepath")
+                Timber.i("current $completed, " +
+                        "waiting for ${amount + extraChunkSize} bytes in file $filepath")
             }
             (this@Stream as java.lang.Object).wait()
         }
