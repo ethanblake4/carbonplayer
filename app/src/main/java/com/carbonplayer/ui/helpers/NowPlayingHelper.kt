@@ -188,6 +188,8 @@ class NowPlayingHelper(private val activity: Activity) {
             activity.nowplaying_frame.npui_artist.alpha = 1f - up
 
             try {
+                if(!bottomBarIsUp) activity.bottomNavContainer.translationY = (heightPx * (1f-up))
+
                 activity.bottom_nav.layoutParams.height = (heightPx * (1f - up)).toInt()
 
                 activity.nowplaying_frame.npui_fastrewind.run {
@@ -203,7 +205,7 @@ class NowPlayingHelper(private val activity: Activity) {
                         x = ((dispW - (dispW / 4f) - buttonHalfWidth)) * up + (nextInitialX * (1f - up))
                 }
             } catch (e: NullPointerException) {
-                Timber.e("NPE in nowplayinghelper -> why does this happen? ", e)
+                Timber.e(e, "NPE in nowplayinghelper -> why does this happen? ")
             }
 
         }
@@ -235,11 +237,7 @@ class NowPlayingHelper(private val activity: Activity) {
                 .subscribe ({ r ->
                     completer.onComplete()
                     newQueue(r.data.stations[0].tracks, 0, false,
-                            "Playing from " +
-                                    (r.data.stations[0].seed?.metadataSeed?.artist?.name ?:
-                                    r.data.stations[0].seed?.metadataSeed?.album?.name ?:
-                                    r.data.stations[0].seed?.metadataSeed?.playlist?.name
-                                    ?: r.data.stations[0].name) + " radio")
+                            "Playing from " + (r.data.stations[0].bestName) + " radio")
 
                     currentSeedType = seedType
                     currentRadioReason = reason
@@ -396,6 +394,7 @@ class NowPlayingHelper(private val activity: Activity) {
                     requestMgr.load(curTracK!!.albumArtURL)
                             .listener(GlidePalette.with(curTracK!!.albumArtURL)
                             .use(0)
+                            .setPaletteBuilderInterceptor { it.clearFilters() }
                             .intoCallBack{ palette -> if (palette != null) {
                                 activity.nowplaying_frame.post {
                                     val pair = PaletteUtil.getSwatches(activity, palette)
@@ -565,5 +564,7 @@ class NowPlayingHelper(private val activity: Activity) {
 
     companion object {
         const val HEIGHT_DP = 56
+
+        var bottomBarIsUp = true
     }
 }

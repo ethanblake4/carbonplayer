@@ -71,7 +71,6 @@ open class Album (
             source.description_attribution,
             source.explicitType,
             source.contentType
-
     )
 
     fun updateFrom(source: SkyjamAlbum, realm: Realm) : Album {

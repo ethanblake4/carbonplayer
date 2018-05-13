@@ -2,6 +2,7 @@ package com.carbonplayer.ui.main
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
@@ -16,21 +17,18 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import com.bluelinelabs.conductor.Conductor
-import com.bluelinelabs.conductor.Controller
-import com.bluelinelabs.conductor.Router
-import com.bluelinelabs.conductor.RouterTransaction
+import androidx.core.os.bundleOf
+import com.bluelinelabs.conductor.*
 import com.bumptech.glide.Glide
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
-import com.carbonplayer.model.entity.Album
-import com.carbonplayer.model.entity.Artist
-import com.carbonplayer.model.entity.ParcelableTrack
-import com.carbonplayer.model.entity.Track
+import com.carbonplayer.model.entity.*
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.IArtist
+import com.carbonplayer.model.entity.base.IPlaylist
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.enums.MediaType
 import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.entity.radio.SkyjamStation
@@ -42,18 +40,19 @@ import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
 import com.carbonplayer.ui.main.adapters.SuggestionsAdapter
-import com.carbonplayer.ui.main.library.AlbumController
-import com.carbonplayer.ui.main.library.ArtistController
-import com.carbonplayer.ui.main.library.LibraryController
-import com.carbonplayer.ui.main.library.StationController
+import com.carbonplayer.ui.main.library.*
 import com.carbonplayer.ui.settings.Settings
 import com.carbonplayer.ui.transition.SimpleScaleTransition
 import com.carbonplayer.utils.addToAutoDispose
+import com.carbonplayer.utils.carbonAnalytics
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
+import com.carbonplayer.utils.logEntityEvent
 import com.carbonplayer.utils.newIntent
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.carbonplayer.utils.ui.VolumeObserver
+import com.crashlytics.android.Crashlytics
+import com.google.firebase.analytics.FirebaseAnalytics
 import icepick.Icepick
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -96,6 +95,10 @@ class MainActivity : AppCompatActivity() {
             val i = Intent(this@MainActivity, IntroActivity::class.java)
             startActivity(i)
             Timber.d("Started IntroActivity")
+        } else {
+            if (CarbonPlayerApplication.instance.preferences.isCarbonTester)
+                Crashlytics.setString("mtoken",
+                        CarbonPlayerApplication.instance.preferences.masterToken)
         }
 
         // Setup view
@@ -275,8 +278,10 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
+        val f = HomeController()
+
         Timber.d("Adding HomeController")
-        router.setRoot(RouterTransaction.with(HomeController()))
+        router.setRoot(RouterTransaction.with(f))
 
         KeyboardVisibilityEvent.registerEventListener(this, { isOpen ->
             if(!isOpen) closeSearch()
@@ -352,12 +357,21 @@ class MainActivity : AppCompatActivity() {
     // When an album is selected
     fun gotoAlbum(album: IAlbum, swatchPair: PaletteUtil.SwatchPair) {
         goto(AlbumController(album, swatchPair))
-
     }
 
     fun gotoStation(station: SkyjamStation, swatchPair: PaletteUtil.SwatchPair) {
-
         goto(StationController(station, swatchPair))
+    }
+
+    fun gotoPlaylist(playlist: IPlaylist, drawable: Drawable?, swatchPair: PaletteUtil.SwatchPair) {
+        if(playlist is Playlist)
+            goto(PlaylistController(this, drawable, playlist, swatchPair))
+        else {
+            val futurePlaylist = Protocol.getNautilusPlaylist(this, playlist.shareToken)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+            goto(PlaylistController(this, playlist, futurePlaylist, swatchPair))
+        }
     }
 
     // When an artist is selected
@@ -370,8 +384,7 @@ class MainActivity : AppCompatActivity() {
             val futureArtist = Protocol.getNautilusArtist(this, artist.artistId)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-
-            ArtistController(futureArtist as Observable<IArtist>, swatchPair)
+            ArtistController(artist, futureArtist as Observable<IArtist>, swatchPair)
         }
 
         goto(frag)
@@ -391,6 +404,8 @@ class MainActivity : AppCompatActivity() {
         val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
         pop.inflate(R.menu.album_popup)
 
+        carbonAnalytics.logEntityEvent("album_popup", album)
+
         pop.setOnMenuItemClickListener { item ->
 
             val trackList = MusicLibrary.getAllAlbumTracks(album)
@@ -403,11 +418,7 @@ class MainActivity : AppCompatActivity() {
                     npHelper.insertAtEnd(trackList)
                 }
                 R.id.menu_share -> {
-                    val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
-                    sharingIntent.type = "text/plain"
-                    val shareBody = "https://play.google.com/music/m/${album.albumId}?signup_if_needed=1"
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
-                    startActivity(Intent.createChooser(sharingIntent, "Share via"))
+                    shareItem(album.albumId, album.name, MediaType.ALBUM)
                 }
                 R.id.menu_go_to_artist -> {
                     if(album is Album)
@@ -436,7 +447,21 @@ class MainActivity : AppCompatActivity() {
         pop.show()
     }
 
+    private fun shareItem(id: String, name: String, type: String) {
+        carbonAnalytics.logEvent(FirebaseAnalytics.Event.SHARE, bundleOf(
+                FirebaseAnalytics.Param.ITEM_ID to id,
+                FirebaseAnalytics.Param.ITEM_NAME to name,
+                FirebaseAnalytics.Param.ITEM_CATEGORY to type
+        ))
+        val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
+        sharingIntent.type = "text/plain"
+        val shareBody = "https://play.google.com/music/m/${id}?signup_if_needed=1"
+        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
+        startActivity(Intent.createChooser(sharingIntent, "Share via"))
+    }
+
     fun goto(controller: Controller) {
+
         scrollCb(0)
 
         Timber.d("goto controller with backstack size ${router.backstackSize}")
@@ -447,7 +472,6 @@ class MainActivity : AppCompatActivity() {
                 .pushChangeHandler(SimpleScaleTransition(this))
                 .popChangeHandler(SimpleScaleTransition(this)))
 
-
         main_actionbar_text.text = ""
     }
 
@@ -456,15 +480,13 @@ class MainActivity : AppCompatActivity() {
         val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
         pop.inflate(R.menu.artist_popup)
 
+        carbonAnalytics.logEntityEvent("popup", artist)
+
         pop.setOnMenuItemClickListener { item ->
 
             when (item.itemId) {
                 R.id.menu_share -> {
-                    val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
-                    sharingIntent.type = "text/plain"
-                    val shareBody = "https://play.google.com/music/m/${artist.artistId}?signup_if_needed=1"
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
-                    startActivity(Intent.createChooser(sharingIntent, "Share via"))
+                    shareItem(artist.artistId, artist.name, MediaType.ARTIST)
                 }
                 R.id.menu_start_radio -> {
                     npHelper.startRadio(RadioSeed.TYPE_ARTIST, artist.artistId)
@@ -484,19 +506,44 @@ class MainActivity : AppCompatActivity() {
         pop.show()
     }
 
+    fun showPlaylistPopup(view: View, playlist: IPlaylist) {
+
+        val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
+        pop.inflate(R.menu.playlist_popup)
+
+        carbonAnalytics.logEntityEvent("popup", playlist)
+
+        pop.setOnMenuItemClickListener { item ->
+
+            when (item.itemId) {
+                R.id.menu_start_radio -> {
+                    playlist.id?.let {
+                        npHelper.startRadio(RadioSeed.TYPE_PLAYLIST, it)
+                    } ?: Toast.makeText(this, "Could not start radio",
+                            Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    Toast.makeText(this, "This action is not supported yet",
+                            Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            return@setOnMenuItemClickListener true
+        }
+        pop.show()
+    }
+
     fun showTrackPopup(view: View, track: ITrack) {
         val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
         pop.inflate(R.menu.remote_song_popup)
+
+        carbonAnalytics.logEntityEvent("popup", track)
 
         pop.setOnMenuItemClickListener { item ->
 
             when (item.itemId) {
                 R.id.menu_share -> {
-                    val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
-                    sharingIntent.type = "text/plain"
-                    val shareBody = "https://play.google.com/music/m/${track.storeId}?signup_if_needed=1"
-                    sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
-                    startActivity(Intent.createChooser(sharingIntent, "Share via"))
+                    shareItem(track.storeId!!, track.title, MediaType.TRACK)
                 }
                 R.id.menu_start_radio -> {
                     track.storeId?.let {
@@ -582,6 +629,23 @@ class MainActivity : AppCompatActivity() {
 
         if(router.backstackSize > 0){
             router.popCurrentController()
+            router.addChangeListener(object: ControllerChangeHandler.ControllerChangeListener {
+
+                override fun onChangeStarted(to: Controller?, from: Controller?,
+                                             isPush: Boolean, container: ViewGroup,
+                                             handler: ControllerChangeHandler) {}
+
+                override fun onChangeCompleted(to: Controller?, from: Controller?,
+                                               isPush: Boolean, container: ViewGroup,
+                                               handler: ControllerChangeHandler) {
+                    to?.let {
+                        carbonAnalytics.setCurrentScreen(this@MainActivity,
+                                it.javaClass.simpleName, it.javaClass.canonicalName)
+                    }
+
+                }
+            })
+
         } else this.finish()
 
     }

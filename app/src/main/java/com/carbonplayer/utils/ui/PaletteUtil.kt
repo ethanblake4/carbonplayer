@@ -15,8 +15,8 @@ import com.carbonplayer.model.entity.enums.PaletteMode
 
 object PaletteUtil {
 
-    val DEFAULT_SWATCH_PAIR = SwatchPair(Palette.Swatch(Color.GRAY, 32),
-            Palette.Swatch(Color.GRAY, 32))
+    val DEFAULT_SWATCH_PAIR = SwatchPair(Palette.Swatch(Color.DKGRAY, 32),
+            Palette.Swatch(Color.LTGRAY, 32))
 
     data class SwatchPair (
             val primary: Palette.Swatch,

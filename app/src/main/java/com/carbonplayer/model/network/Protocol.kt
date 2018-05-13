@@ -5,10 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.net.http.AndroidHttpClient
 import com.carbonplayer.CarbonPlayerApplication
-import com.carbonplayer.model.entity.ConfigEntry
-import com.carbonplayer.model.entity.SearchResponse
-import com.carbonplayer.model.entity.SuggestRequest
-import com.carbonplayer.model.entity.SuggestResponse
+import com.carbonplayer.model.entity.*
 import com.carbonplayer.model.entity.enums.NetworkType
 import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.entity.enums.StreamQuality
@@ -302,6 +299,48 @@ object Protocol {
         }
     }
 
+    fun getSharedPlentries(context: Context, sharedToken: String) : Observable<List<SkyjamPlentry>> {
+        val client = CarbonPlayerApplication.instance.okHttpClient
+
+        return Observable.create { subscriber ->
+            val getParams = Uri.Builder()
+                    .appendQueryParameter("alt", "json")
+                    .appendDefaults()
+
+            val adapter = CarbonPlayerApplication.moshi.adapter(SharedPlentryResponse::class.java)
+            val rqAdapter = CarbonPlayerApplication.moshi.adapter(SharedPlentryRequest::class.java)
+
+            var continuationToken: String? = null
+
+            do {
+                val rqJson = SharedPlentryRequest.Entry (
+                        250, sharedToken, continuationToken, 0L)
+                        .asRequest()
+                val request = defaultBuilder(context)
+                        .url(SJ_URL + "plentries/shared?" + getParams)
+                        .header("Content-Type", "application/json")
+                        .post(RequestBody.create(TYPE_JSON, rqAdapter.toJson(rqJson).toByteArray()))
+                        .build()
+                val response = client.newCall(request).execute()
+                if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                    response.body()?.let { body ->
+                        body.source()?.let {
+                            val s = adapter.fromJson(it)
+                            body.close()
+                            s?.entries?.firstOrNull()?.playlistEntry?.let { e ->
+                                subscriber.onNext(e)
+                            }
+                            continuationToken = s?.entries?.firstOrNull()?.nextPageToken
+                        }
+                    }
+                }
+            } while(continuationToken != null)
+
+            subscriber.onComplete()
+
+        }
+    }
+
     fun getNautilusAlbum(context: Context, nid: String): Observable<SkyjamAlbum> {
         return Observable.fromCallable {
             val client = CarbonPlayerApplication.instance.okHttpClient
@@ -355,6 +394,39 @@ object Protocol {
 
             val request = defaultBuilder(context)
                     .url(SJ_URL + "fetchartist?" + getParams)
+                    .header("Content-Type", "application/json")
+                    .build()
+
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+                response.body()?.let { body ->
+                    body.source()?.let {
+                        val s = adapter.fromJson(it)
+                        body.close()
+                        return@fromCallable s
+                    }
+                }
+            }
+            if (response.code() in 400..499) {
+                throw handle400(context, response.code(),
+                        response.header("X-Rejection-Reason"))
+            }
+            throw ResponseCodeException(response.body()!!.string())
+        }
+    }
+
+    fun getNautilusPlaylist(context: Context, shareToken: String): Observable<SkyjamPlaylist> {
+
+        return Observable.fromCallable {
+            val client = CarbonPlayerApplication.instance.okHttpClient
+            val adapter = CarbonPlayerApplication.moshi.adapter(SkyjamPlaylist::class.java)
+
+            val getParams = Uri.Builder()
+                    .appendQueryParameter("alt", "json")
+                    .appendDefaults()
+
+            val request = defaultBuilder(context)
+                    .url(SJ_URL + "playlists/$shareToken" + getParams)
                     .header("Content-Type", "application/json")
                     .build()
 
@@ -516,10 +588,12 @@ object Protocol {
                             it
                     } ?: {
                             Timber.d("ending 2")
+                            subscriber.onNext(Either.Right(Unit))
                             subscriber.onComplete()
                             it
                         }.invoke() } ?: {
                         Timber.d("ending 3")
+                        subscriber.onNext(Either.Right(Unit))
                         subscriber.onComplete()
                     }.invoke()
 
@@ -541,9 +615,13 @@ object Protocol {
         val adapter = CarbonPlayerApplication.moshi.adapter(PagedTrackResponse::class.java)
         return rawPagedFeed<PagedTrackResponseData?, PagedTrackResponse>(context, "trackfeed", adapter)
                 .map { response ->
-                    if(response is Either.Left)
+                    if(response is Either.Left){
+                        Timber.d("mapped existent optional")
                         com.google.common.base.Optional.fromNullable(response.value?.items)
-                    else com.google.common.base.Optional.absent()
+                    } else {
+                        Timber.d("mapped nonexistent optional")
+                        com.google.common.base.Optional.absent()
+                    }
                 }
     }
 

@@ -61,8 +61,6 @@ open class Artist(
 
         this.artistBio = src.artistBio
         this.artistBioAttribution = src.artist_bio_attribution?.let { realm.copyToRealm(it) }
-
-        this.albums = MusicLibrary.processAlbums(src.albums.map { a-> Album(a) }, realm)
     }
 
     companion object {

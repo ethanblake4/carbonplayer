@@ -11,6 +11,7 @@ import io.realm.Realm
 import io.realm.RealmList
 import io.realm.RealmObject
 import io.realm.RealmResults
+import io.realm.annotations.Index
 import io.realm.annotations.LinkingObjects
 import io.realm.annotations.PrimaryKey
 
@@ -21,10 +22,10 @@ open class Track(
 
         @PrimaryKey var localId: Long = 0,
         override var inLibrary: Boolean = false,
-        override var id: String? = null,
+        @Index override var id: String? = null,
         override var clientId: String? = null,
         override var nid: String? = null,
-        override var storeId: String? = null,
+        @Index override var storeId: String? = null,
         override var audioAd: Boolean? = null,
         override var recentTimestamp: Long? = null,
         override var isDeleted: Boolean = false,

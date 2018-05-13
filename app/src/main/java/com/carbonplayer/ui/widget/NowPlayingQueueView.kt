@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.Scroller
+import com.carbonplayer.utils.carbonAnalytics
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import timber.log.Timber
@@ -51,7 +52,11 @@ class NowPlayingQueueView: RecyclerView {
                     lastUpFraction = upFraction
 
                     callback?.invoke(upFraction)
+                    val prevWasUp = isUp
                     isUp = upFraction > 0.99f
+
+                    if(prevWasUp != isUp) carbonAnalytics.logEvent(
+                            if(isUp) "open_queue" else "close_queue", null)
 
                     //Timber.d("scroller: %d", scroller.currY)
                 }

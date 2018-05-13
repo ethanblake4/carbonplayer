@@ -23,22 +23,8 @@ class LibraryController : Controller() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
 
-        /*Timber.d("Library - onCreateView. savedInstanceState= %s",
-                if(savedInstanceState == null) "null" else "not null")*/
-
         val view = inflater.inflate(R.layout.activity_main, container, false)
 
-        //view.toolbar.inflateMenu(R.menu.menu_main)
-
-        /*view.toolbar.setPadding(view.toolbar.paddingLeft, view.toolbar.paddingTop +
-                IdentityUtils.getStatusBarHeight(resources) * 2,
-                view.toolbar.paddingRight, view.toolbar.paddingBottom)*/
-
-        //view.toolbar.layoutParams.height += IdentityUtils.getStatusBarHeight(resources)
-        //(view.app_bar.layoutParams as CoordinatorLayout.LayoutParams).topMargin +=
-        //        IdentityUtils.getStatusBarHeight(resources) / 2
-        /*(view.toolbar.layoutParams as AppBarLayout.LayoutParams).bottomMargin +=
-                IdentityUtils.getStatusBarHeight(resources) / 2*/
         (view.tab_layout.layoutParams as AppBarLayout.LayoutParams).topMargin +=
                 IdentityUtils.getStatusBarHeight(resources) / 2
 
@@ -46,8 +32,6 @@ class LibraryController : Controller() {
             (activity as MainActivity).scrollCb(i)
 
         })
-
-        //view.statusBarCover.layoutParams.height = IdentityUtils.getStatusBarHeight(resources)
 
         if(adapter == null) {
             adapter = object : RouterPagerAdapter(this) {
@@ -102,60 +86,15 @@ class LibraryController : Controller() {
         view.libraryPager.adapter = adapter
         view.tab_layout.setupWithViewPager(view.libraryPager)
 
-        /*view.libraryPager.addOnPageChangeListener(object: ViewPager.OnPageChangeListener {
-            override fun onPageSelected(position: Int) {
-
-                Handler().postDelayed({
-
-                    val recycler  = when(position) {
-                        0 -> playlists.view?.main_recycler
-                        1 -> artists.view?.main_recycler
-                        2 -> albums.view?.main_recycler
-                        else -> null
-                    }
-
-                    recycler?.let {
-                        view.fastscroll.setRecyclerView(it)
-                        view.fastscroll.visibility = View.VISIBLE
-                        view.fastscroll.invalidate()
-                    }
-                }, 500)
-
-            }
-
-            override fun onPageScrollStateChanged(state: Int) { }
-
-            override fun onPageScrolled(position: Int, positionOffset: Float, offsetPixels: Int) { }
-        })*/
-
         view.libraryPager.currentItem = curPage
-        //adapter!!.clearCache()
 
         return view
     }
 
-    /*override fun onPause() {
-        super.onPause()
-        Timber.d("Library frag on pause state")
-
-    }*/
 
     override fun onDestroyView(view: View) {
         curPage = view.libraryPager.currentItem
         super.onDestroyView(view)
         Timber.d("Library ctrl on destroy view")
     }
-
-    /*override fun onSaveInstanceState(outState: Bundle?) {
-        Timber.d("Library frag saving self state")
-//        outState?.putParcelable("pager", view.libraryPager.onSaveInstanceState())
-        super.onSaveInstanceState(outState)
-    }
-
-    override fun onResume() {
-        Timber.d("Library frag - on resume")
-        super.onResume()
-        //view.libraryPager.adapter.notifyDataSetChanged()
-
-    }*/
 }

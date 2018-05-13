@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
@@ -18,9 +19,11 @@ import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.adapters.*
 import com.carbonplayer.ui.main.dataui.AlbumListController
 import com.carbonplayer.ui.main.dataui.SongListController
+import com.carbonplayer.utils.carbonAnalytics
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.PaletteUtil
+import com.google.firebase.analytics.FirebaseAnalytics
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.controller_search.view.*
@@ -35,7 +38,7 @@ class SearchController(
     constructor() : this("")
 
     lateinit var requestManager: RequestManager
-    lateinit var musicManager: MusicManager
+    private lateinit var musicManager: MusicManager
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
 
@@ -58,6 +61,10 @@ class SearchController(
         requestManager = Glide.with(view)
 
         runSearch(view, searchTerm)
+
+        carbonAnalytics.logEvent(FirebaseAnalytics.Event.SEARCH, bundleOf(
+                FirebaseAnalytics.Param.SEARCH_TERM to searchTerm
+        ))
 
         return view
     }
@@ -121,7 +128,7 @@ class SearchController(
                             v.clusterEntries.adapter = when (cDetail.cluster?.type) {
                                 MediaTypeUtil.TYPE_SONG -> SearchSongAdapter(
                                         entries.mapNotNull { it.track }.take(5),
-                                        { track, pos ->
+                                        { _, pos ->
                                             musicManager.fromTracks(entries.mapNotNull { it.track },
                                                     pos)
                                         },
@@ -150,8 +157,17 @@ class SearchController(
                                 MediaTypeUtil.TYPE_PLAYLIST -> SearchPlaylistAdapter(
                                         activity!!,
                                         entries.mapNotNull { it.playlist }.take(4),
-                                        { playlist -> },
-                                        { v, playlist -> }
+                                        { playlist ->
+                                            (activity as MainActivity).gotoPlaylist(
+                                                    playlist, null,
+                                                    PaletteUtil.DEFAULT_SWATCH_PAIR
+                                            )
+                                        },
+                                        { v, playlist ->
+                                            (activity as MainActivity).showPlaylistPopup(
+                                                    v, playlist
+                                            )
+                                        }
                                 )
                                 else -> null
                             }

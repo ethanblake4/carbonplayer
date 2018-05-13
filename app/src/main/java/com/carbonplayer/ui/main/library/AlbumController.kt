@@ -39,13 +39,16 @@ import com.carbonplayer.ui.helpers.MusicManager
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.ui.main.adapters.SongListAdapter
 import com.carbonplayer.utils.addToAutoDispose
+import com.carbonplayer.utils.carbonAnalytics
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
+import com.carbonplayer.utils.logEntityEvent
 import com.carbonplayer.utils.ui.ColorUtils
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.github.florent37.glidepalette.GlidePalette
 import com.github.ksoichiro.android.observablescrollview.ObservableScrollViewCallbacks
 import com.github.ksoichiro.android.observablescrollview.ScrollState
+import com.google.firebase.analytics.FirebaseAnalytics
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.realm.Realm
@@ -122,6 +125,8 @@ class AlbumController(
 
     init {
         aId = album.albumId
+
+        carbonAnalytics.logEntityEvent(FirebaseAnalytics.Event.VIEW_ITEM, album)
     }
 
     private fun setupRecycler(view: View, forceRemote: Boolean = false) {
@@ -310,7 +315,7 @@ class AlbumController(
         }, 600)
 
 
-        root.secondaryText.text = if (album is Album) (album as Album).artists?.first()?.name ?:
+        root.secondaryText.text = if (album is Album) (album as Album).artists?.firstOrNull()?.name ?:
                 album.albumArtist else album.albumArtist
         root.primaryText.text = album.name
 
@@ -335,8 +340,9 @@ class AlbumController(
         root.play_fab.setOnClickListener {
             if(album is Album) manager.fromAlbum(album, 0)
             else manager.fromTracks(tracks, 0, false)
-        }
 
+            carbonAnalytics.logEntityEvent("play_fab", album)
+        }
 
         root.expandDescriptionChevron.setOnClickListener {
 

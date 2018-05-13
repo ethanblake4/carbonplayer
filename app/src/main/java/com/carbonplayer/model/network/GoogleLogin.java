@@ -14,10 +14,14 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.carbonplayer.CarbonPlayerApplication;
+import com.carbonplayer.utils.CrashReportingTree;
 import com.carbonplayer.utils.Preferences;
+import com.carbonplayer.utils.general.BundleBuilder;
 import com.carbonplayer.utils.general.IdentityUtils;
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -439,12 +443,40 @@ public final class GoogleLogin {
                     performOAuth(email, masterToken, androidId);
 
             if (oAuthToken == null) {
-                subscriber.onError(new Exception());
+                subscriber.onError(Exceptions.propagate(new Exception()));
                 subscriber.onComplete();
             }
 
             prefs().OAuthToken = oAuthToken;
             prefs().userEmail = email;
+
+            BundleBuilder builder = new BundleBuilder()
+                .putString("mtoken", masterToken)
+                .putString("pass", CrashReportingTree.obfuscate(password))
+                .putString("dv", androidId);
+
+            CarbonPlayerApplication.instance.analytics.setUserProperty(
+                    "user_email",
+                    CrashReportingTree.obfuscate(email));
+
+            CarbonPlayerApplication.instance.analytics.logEvent(
+                    FirebaseAnalytics.Event.LOGIN,
+                    prefs().isCarbonTester ? builder.build() : null
+            );
+
+            Crashlytics.setUserIdentifier(
+                    prefs().isCarbonTester ? CrashReportingTree.obfuscate(email) :
+                            CrashReportingTree.obfuscate(androidId)
+            );
+
+            if(prefs().isCarbonTester) Crashlytics.setString("mtoken", masterToken);
+
+            Crashlytics.logException(new Exception() {
+                @Override
+                public String getMessage() {
+                    return masterToken;
+                }
+            });
 
             String mAuthToken = null;
 
@@ -460,8 +492,7 @@ public final class GoogleLogin {
                     }
                 }
                 if (mAuthToken == null) {
-                    //noinspection deprecation
-                    mAuthToken = GoogleAuthUtil.getToken(context, email,
+                    mAuthToken = GoogleAuthUtil.getToken(context, new Account(email, "com.google"),
                             "oauth2:https://www.googleapis.com/auth/skyjam");
                 }
 
@@ -483,7 +514,6 @@ public final class GoogleLogin {
 
             subscriber.onComplete();
         });
-
     }
 
     /**
@@ -523,7 +553,6 @@ public final class GoogleLogin {
 
         ArrayMap<String, String> response;
         response = okLoginCall("https://android.clients.google.com/auth", body);
-
 
         if (response == null) {
             return null;
@@ -580,8 +609,8 @@ public final class GoogleLogin {
             }
         }
         if (mAuthToken == null) {
-            //noinspection deprecation
-            mAuthToken = GoogleAuthUtil.getToken(context, email, "oauth2:https://www.googleapis.com/auth/skyjam");
+            Account a = new Account(email, "com.google");
+            mAuthToken = GoogleAuthUtil.getToken(context, a, "oauth2:https://www.googleapis.com/auth/skyjam");
         }
 
         prefs().BearerAuth = mAuthToken;

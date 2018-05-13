@@ -1,5 +1,6 @@
 package com.carbonplayer.model.entity
 
+import com.carbonplayer.model.entity.base.IPlaylist
 import com.carbonplayer.model.entity.skyjam.SkyjamPlaylist
 import io.realm.RealmList
 import io.realm.RealmObject
@@ -12,27 +13,27 @@ import io.realm.annotations.PrimaryKey
 open class Playlist(
 
         @PrimaryKey var localId: Long = 0,
-        var id: String? = "",
-        var clientId: String? = "",
-        var kind: String = "",
-        var name: String = "",
-        var deleted: Boolean? = null,
-        var type: String? = null, /* MAGIC, SHARED, or USER_GENERATED */
-        var lastModifiedTimestamp: Long? = null,
-        var recentTimestamp: Long? = null,
-        var shareToken: String = "",
-        var ownerProfilePhotoUrl: String? = null,
-        var ownerName: String? = null,
-        var accessControlled: Boolean = false,
-        var shareState: String? = null, /* PRIVATE or PUBLIC*/
-        var creationTimestamp: Long? = null,
+        override var id: String? = "",
+        override var clientId: String? = "",
+        override var kind: String = "",
+        override var name: String = "",
+        override var deleted: Boolean? = null,
+        override var type: String? = null, /* MAGIC, SHARED, or USER_GENERATED */
+        override var lastModifiedTimestamp: Long? = null,
+        override var recentTimestamp: Long? = null,
+        override var shareToken: String = "",
+        override var ownerProfilePhotoUrl: String? = null,
+        override var ownerName: String? = null,
+        override var accessControlled: Boolean = false,
+        override var shareState: String? = null, /* PRIVATE or PUBLIC*/
+        override var creationTimestamp: Long? = null,
         var albumArtRef: RealmList<Image>? = null,
         var entries: RealmList<PlaylistEntry> = RealmList(),
-        var description: String = "",
-        var explicitType: String? = null,
-        var contentType: String? = null
+        override var description: String? = null,
+        override var explicitType: String? = null,
+        override var contentType: String? = null
 
-) : RealmObject() {
+) : RealmObject(), IPlaylist {
 
     constructor(source: SkyjamPlaylist, localId: Long) : this (
             localId,

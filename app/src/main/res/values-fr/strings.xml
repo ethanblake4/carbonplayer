@@ -122,6 +122,7 @@
     <string name="media_type_best_match">Best match</string>
     <string name="action_shuffle_artist">Shuffle artist</string>
     <string name="action_go_to_album">Go to album</string>
+    <string name="action_delete">Delete</string>
 
 
 </resources>

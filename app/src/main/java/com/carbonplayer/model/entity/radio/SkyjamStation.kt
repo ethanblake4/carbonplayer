@@ -27,6 +27,11 @@ data class SkyjamStation(
 
 ) {
 
+    val bestName: String? get() = seed?.metadataSeed?.artist?.name ?:
+            seed?.metadataSeed?.album?.name ?:
+            seed?.metadataSeed?.playlist?.name ?:
+            name
+
     data class AdTargeting (
             val keywords: List<String>?
     )

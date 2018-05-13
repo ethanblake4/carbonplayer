@@ -1,26 +1,32 @@
 package com.carbonplayer.model.entity.skyjam
 
+import android.annotation.SuppressLint
+import android.os.Parcelable
 import com.carbonplayer.model.entity.Image
+import com.carbonplayer.model.entity.base.IPlaylist
+import kotlinx.android.parcel.Parcelize
 
+@SuppressLint("ParcelCreator")
+@Parcelize
 data class SkyjamPlaylist (
 
-        var id: String? = "",
-        var clientId: String? = "",
-        var kind: String = "",
-        var name: String = "",
-        var deleted: Boolean?,
-        var type: String?,
-        var lastModifiedTimestamp: Long?,
-        var recentTimestamp: Long?,
-        var shareToken: String = "",
-        var ownerProfilePhotoUrl: String?,
-        var ownerName: String?,
-        var accessControlled: Boolean = false,
-        var shareState: String?,
-        var creationTimestamp: Long?,
+        override var id: String? = "",
+        override var clientId: String? = "",
+        override var kind: String = "",
+        override var name: String = "",
+        override var deleted: Boolean?,
+        override var type: String?,
+        override var lastModifiedTimestamp: Long?,
+        override var recentTimestamp: Long?,
+        override var shareToken: String = "",
+        override var ownerProfilePhotoUrl: String?,
+        override var ownerName: String?,
+        override var accessControlled: Boolean = false,
+        override var shareState: String?,
+        override var creationTimestamp: Long?,
         var albumArtRef: List<Image>?,
-        var description: String?,
-        var explicitType: String?,
-        var contentType: String?
+        override var description: String?,
+        override var explicitType: String?,
+        override var contentType: String?
 
-)
+) : IPlaylist, Parcelable

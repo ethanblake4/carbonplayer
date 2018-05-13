@@ -8,16 +8,17 @@ import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import com.carbonplayer.ui.helpers.NowPlayingHelper
 import kotlinx.android.synthetic.main.controller_main.view.*
 import kotlinx.android.synthetic.main.nowplaying.view.*
 
 @Keep
 class BottomNavigationBehavior : CoordinatorLayout.Behavior<View> {
 
-    var shown: Boolean = true
-
+    @Keep
     constructor() : super()
 
+    @Keep
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
     override fun layoutDependsOn(parent: CoordinatorLayout, child: View, dependency: View): Boolean {
@@ -48,13 +49,19 @@ class BottomNavigationBehavior : CoordinatorLayout.Behavior<View> {
         val height = if(view.nowplaying_frame.visibility == View.VISIBLE) view.bottom_nav.height
                         else view.height
 
+
+
         view.animate().translationY(height.toFloat()).interpolator = FastOutSlowInInterpolator()
-        view.bottom_nav.animate().alpha(0.0f).interpolator = FastOutSlowInInterpolator()
+        view.bottom_nav.animate().alpha(0.0f).withEndAction {
+            NowPlayingHelper.bottomBarIsUp = false
+        }.interpolator = FastOutSlowInInterpolator()
 
     }
 
     private fun showBottomNavigationView(view: View) {
         view.animate().translationY(0f).interpolator = FastOutSlowInInterpolator()
-        view.bottom_nav.animate().alpha(1.0f)
+        view.bottom_nav.animate().withEndAction {
+            NowPlayingHelper.bottomBarIsUp = true
+        }.alpha(1.0f)
     }
 }

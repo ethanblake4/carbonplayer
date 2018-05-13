@@ -3,6 +3,7 @@ package com.carbonplayer.ui.main.adapters;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.support.annotation.ColorInt;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -19,7 +20,6 @@ import com.bumptech.glide.request.RequestOptions;
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
 import com.carbonplayer.model.entity.base.IAlbum;
-import com.carbonplayer.model.entity.skyjam.SkyjamAlbum;
 import com.carbonplayer.ui.main.MainActivity;
 import com.carbonplayer.utils.general.MathUtils;
 import com.carbonplayer.utils.ui.ColorUtils;
@@ -142,6 +142,7 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
                     .transition(DrawableTransitionOptions.withCrossFade(200))
                     .listener(GlidePalette.with(a.getAlbumArtRef())
                             .use(GlidePalette.Profile.VIBRANT)
+                            .setPaletteBuilderInterceptor(Palette.Builder::clearFilters)
                             .intoCallBack(palette -> {
                                 if (palette != null) {
                                     PaletteUtil.SwatchPair pair =

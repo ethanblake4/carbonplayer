@@ -35,4 +35,3 @@ data class PagedPlentryResponse (
 data class PagedPlentryResponseData (
         val items: List<SkyjamPlentry>
 )
-

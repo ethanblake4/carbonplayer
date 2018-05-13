@@ -58,8 +58,6 @@ class AlbumPageController : Controller() {
 
     override fun onSaveViewState(view: View, outState: Bundle) {
 
-        Timber.d("onSaveViewState")
-
         Timber.d("Album - onSaveViewState = saving self state")
         outState.putParcelable("recycler", view.main_recycler.layoutManager.onSaveInstanceState())
 

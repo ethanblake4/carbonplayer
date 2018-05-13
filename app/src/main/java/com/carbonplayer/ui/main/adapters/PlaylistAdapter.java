@@ -4,7 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.RectF;
 import android.support.annotation.ColorInt;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -37,6 +39,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.realm.Realm;
+import io.realm.RealmResults;
+import timber.log.Timber;
 
 /**
  * Displays albums in variable-size grid view
@@ -58,6 +62,8 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
         @BindView(R.id.primaryText) TextView titleText;
         @BindView(R.id.detailText) TextView detailText;
         Playlist playlist;
+        RealmResults<Track> tracks;
+        List<String> artUrls;
         PaletteUtil.SwatchPair swatchPair;
         int size;
 
@@ -65,25 +71,9 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
             super(v);
             ButterKnife.bind(this, v);
 
-
-            layoutRoot.setOnClickListener(view -> {
-
-                thumb.setTransitionName(playlist.getId() + "i");
-                contentRoot.setTransitionName(playlist.getId() + "cr");
-                titleText.setTransitionName(playlist.getId() + "t");
-                detailText.setTransitionName(playlist.getId() + "d");
-
-
-            });
-
-            /*ViewTreeObserver vto = thumb.getViewTreeObserver();
-            vto.addOnPreDrawListener(() -> {
-                size = thumb.getMeasuredWidth();
-                ((FrameLayout.LayoutParams) contentRoot.getLayoutParams())
-                        .setMargins(0, size, 0, 0);
-                contentRoot.postInvalidate();
-                return true;
-            });*/
+            layoutRoot.setOnClickListener(view ->
+                    context.gotoPlaylist(playlist, thumb.getDrawable(),
+                            PaletteUtil.INSTANCE.getDEFAULT_SWATCH_PAIR()));
 
             titleText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 50)));
             detailText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 32)));
@@ -105,7 +95,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
     @Override
     public void onViewRecycled(ViewHolder v) {
-        requestManager.clear(v.thumb);
+        v.thumb.setImageBitmap(null);
     }
 
     // Create new views (invoked by the layout manager)
@@ -136,6 +126,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
 
         Playlist playlist = dataset.get(position);
         holder.titleText.setText(playlist.getName());
+        holder.detailText.setText(playlist.getEntries().size() + " songs");
         holder.playlist = playlist;
 
         if (playlist.getAlbumArtRef() != null && playlist.getAlbumArtRef().size() > 0
@@ -147,6 +138,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
                     .listener(
                             GlidePalette.with(playlist.getAlbumArtRef().first().getUrl())
                                     .use(GlidePalette.Profile.VIBRANT)
+                                    .setPaletteBuilderInterceptor(Palette.Builder::clearFilters)
                                     .intoCallBack(palette -> {
                                         if (palette != null) {
                                             PaletteUtil.SwatchPair pair =
@@ -163,74 +155,118 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.ViewHo
                     .into(holder.thumb);
 
         } else {
-            List<String> artUrls = new ArrayList<>();
-            for(PlaylistEntry p: playlist.getEntries()) {
-                Track t;
-                t = p.getTrack();
-                if(t == null) {
-                    t = realm.where(Track.class)
-                            .equalTo(Track.STORE_ID, p.getTrackId())
-                            .or().equalTo(Track.TRACK_ID, p.getTrackId())
-                            .findFirst();
+
+            holder.artUrls = new ArrayList<>();
+
+            List<String> trackIds = new ArrayList<>();
+
+            for (PlaylistEntry p : playlist.getEntries()) {
+                trackIds.add(p.getTrackId());
+            }
+
+            if(trackIds.isEmpty()) {
+                holder.thumb.setImageResource(R.drawable.unknown_music_track);
+                return;
+            }
+
+            String[] trackIdArray = trackIds.toArray(new String[0]);
+
+            holder.tracks = realm.where(Track.class)
+                    .in(Track.TRACK_ID, trackIdArray)
+                    .or()
+                    .in(Track.STORE_ID, trackIdArray)
+                    .findAllAsync();
+
+            if (!holder.tracks.isLoaded()) {
+                holder.tracks.addChangeListener(xTracks -> {
+                    for (Track t : xTracks) {
+                        String a = t.getAlbumArtURL();
+                        if (a != null) holder.artUrls.add(a);
+                        if (holder.artUrls.size() == 4) break;
+                    }
+                    loadArts(holder.artUrls, holder.thumb);
+                });
+            } else {
+                for (Track t : holder.tracks) {
+                    String a = t.getAlbumArtURL();
+                    if (a != null) holder.artUrls.add(a);
+                    if (holder.artUrls.size() == 4) break;
                 }
-                if(t==null) continue;
-                if(t.getAlbumArtURL() == null) continue;
-                if(!artUrls.contains(t.getAlbumArtURL())) artUrls.add(t.getAlbumArtURL());
-                if(artUrls.size() == 4) break;
+
+                loadArts(holder.artUrls, holder.thumb);
             }
 
-            int numArts = Math.min(4, artUrls.size());
-
-            final AtomicReference<Bitmap> bit1 = Atomics.newReference();
-            final AtomicReference<Bitmap> bit2 = Atomics.newReference();
-            final AtomicReference<Bitmap> bit3 = Atomics.newReference();
-
-            for(String url: artUrls.subList(0, numArts)) {
-                requestManager
-                        .asBitmap()
-                        .load(url)
-                        .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
-                        .into(new SimpleTarget<Bitmap>() {
-                            @Override
-                            public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                                if(bit1.get() == null) {
-                                    bit1.set(resource);
-                                    if(numArts < 2) {
-                                        combineBitmaps(resource, resource, resource, resource, holder.thumb);
-                                    }
-                                } else if (bit2.get() == null) {
-                                    bit2.set(resource);
-                                    if(numArts < 3) {
-                                        Bitmap bit1b = bit1.get();
-                                        combineBitmaps(bit1b, resource, bit1b, resource, holder.thumb);
-                                    }
-                                } else if(bit3.get() == null) {
-                                    bit3.set(resource);
-                                    if(numArts < 4) {
-                                        Bitmap bit1b = bit1.get();
-                                        Bitmap bit2b = bit2.get();
-                                        combineBitmaps(bit1b, bit2b, resource, bit2b, holder.thumb);
-                                    }
-                                } else {
-                                    combineBitmaps(bit1.get(), bit2.get(), bit3.get(), resource, holder.thumb);
-                                }
-                            }
-                        });
-
-            }
+            Timber.d("after iterate");
         }
     }
 
-    public void combineBitmaps(Bitmap b1, Bitmap b2, Bitmap b3, Bitmap b4, ImageView view) {
-        Bitmap big = Bitmap.createBitmap(b1.getWidth() * 2, b2.getHeight() * 2,
+    private void loadArts(List<String> artUrls, ImageView view) {
+
+        if(artUrls.isEmpty()) {
+            view.setImageResource(R.drawable.unknown_music_track);
+            return;
+        }
+
+        int numArts = Math.min(4, artUrls.size());
+
+        final AtomicReference<Bitmap> bit1 = Atomics.newReference();
+        final AtomicReference<Bitmap> bit2 = Atomics.newReference();
+        final AtomicReference<Bitmap> bit3 = Atomics.newReference();
+
+        for(String url: artUrls.subList(0, numArts)) {
+            requestManager
+                .asBitmap()
+                .load(url)
+                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
+                .into(new SimpleTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                        if(bit1.get() == null) {
+                            bit1.set(resource);
+                            if(numArts < 2) {
+                                combineAndSet(resource, resource, resource, resource, view);
+                            }
+                        } else if (bit2.get() == null) {
+                            bit2.set(resource);
+                            if(numArts < 3) {
+                                Bitmap bit1b = bit1.get();
+                                combineAndSet(bit1b, resource, bit1b, resource, view);
+                            }
+                        } else if(bit3.get() == null) {
+                            bit3.set(resource);
+                            if(numArts < 4) {
+                                Bitmap bit1b = bit1.get();
+                                Bitmap bit2b = bit2.get();
+                                combineAndSet(bit1b, bit2b, resource, bit2b, view);
+                            }
+                        } else {
+                            combineAndSet(bit1.get(), bit2.get(), bit3.get(), resource, view);
+                        }
+                    }
+                });
+        }
+    }
+
+    private void combineAndSet(Bitmap b1, Bitmap b2, Bitmap b3, Bitmap b4, ImageView view) {
+        Bitmap big = Bitmap.createBitmap(b1.getWidth(), b1.getWidth(),
                 Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(big);
-        canvas.drawBitmap(b1, 0, 0, null);
-        canvas.drawBitmap(b2, b1.getWidth(), 0, null);
-        canvas.drawBitmap(b3, 0, b1.getHeight(), null);
-        canvas.drawBitmap(b4, b1.getWidth(), b1.getHeight(), null);
-        //new DrawableCrossFadeTransition()
+
+        float half = b1.getWidth()/2f;
+
+        RectF rect1 = new RectF(0, 0, half, half);
+        RectF rect2 = new RectF(half, 0, half*2, half);
+        RectF rect3 = new RectF(0, half, half, half*2);
+        RectF rect4 = new RectF(half, half, half*2, half*2);
+
+        canvas.drawBitmap(b1, null, rect1, null);
+        canvas.drawBitmap(b2, null, rect2, null);
+        canvas.drawBitmap(b3, null, rect3, null);
+        canvas.drawBitmap(b4, null, rect4, null);
+
         view.setImageBitmap(big);
+        view.setAlpha(0.0f);
+        view.animate().alpha(1.0f).start();
     }
 
     // Return the size of your dataset (invoked by the layout manager)

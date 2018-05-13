@@ -2,11 +2,13 @@ package com.carbonplayer.model
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.support.annotation.UiThread
 import android.util.Pair
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.model.entity.*
 import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.base.IPlaylist
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.exception.NoNautilusException
 import com.carbonplayer.model.entity.primitive.FinalBool
@@ -18,6 +20,7 @@ import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.utils.addToAutoDispose
 import io.reactivex.Flowable
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
@@ -456,8 +459,10 @@ object MusicLibrary {
                 if (netsecComplete.get()) updatePlentries(context, onError, onSuccess)
             }
             onProgress.accept(Pair(true, received.value()))
-        }
-        }, onError, Action { netsecComplete.set(true) }).addToAutoDispose()
+        } else {
+            onProgress.accept(Pair(true, received.value()))
+            updatePlentries(context, onError, onSuccess)
+        } }, onError, Action { netsecComplete.set(true) }).addToAutoDispose()
     }
 
     private fun updatePlentries(context: Activity, onError: Consumer<Throwable>, onSuccess: Action) {
@@ -477,13 +482,13 @@ object MusicLibrary {
                     val plentry = PlaylistEntry(sjPlentry, track)
 
                     val playlist = realm.where(Playlist::class.java)
-                            .equalTo(Playlist.REMOTE_ID, sjPlentry.playlistId)
+                            .equalTo(Playlist.REMOTE_ID, sjPlentry.playlistId!!)
                             .findFirst()
 
                     if (playlist == null) Timber.d(
                             "updatePlentries could not find PLID ${sjPlentry.playlistId}")
 
-                    playlist?.entries?.add(realm.copyToRealm(plentry))
+                    playlist?.entries?.add(realm.copyToRealmOrUpdate(plentry))
                 }
 
             }
@@ -518,6 +523,41 @@ object MusicLibrary {
                 .equalTo("inLibrary", true)
                 .findAllAsync()
                 .asFlowable()
+    }
+
+    @UiThread
+    fun loadPlentries(context: Context, playlist: IPlaylist): Observable<List<ITrack>> {
+        Timber.d("Loading plentries")
+        if(playlist is SkyjamPlaylist) {
+            Timber.d("Loading from network")
+            return Protocol.getSharedPlentries(context, playlist.shareToken)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .flatMap { Observable.fromIterable(it) }
+                    .filter { it.track != null }
+                    .map { it.track!! as ITrack }
+                    .toList()
+                    .toObservable()
+
+        } else {
+            Timber.d("Loading from db")
+            val realm = Realm.getDefaultInstance()
+            return (playlist as Playlist).entries.asFlowable()
+                    .toObservable()
+                    .flatMap { Observable.fromIterable(it) }
+                    .map { it.trackId }.toList()
+                    .map {
+                        val arr = it.toTypedArray()
+
+                        realm.where(Track::class.java)
+                            .`in`(Track.STORE_ID, arr)
+                            .or()
+                            .`in`(Track.TRACK_ID, arr)
+                            .findAll()
+                            .asFlowable()
+                            .toObservable()
+                    }.flatMapObservable { it }
+        }
     }
 
     @UiThread

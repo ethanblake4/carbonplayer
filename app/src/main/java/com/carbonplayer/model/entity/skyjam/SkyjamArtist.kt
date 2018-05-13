@@ -20,5 +20,5 @@ data class SkyjamArtist(
 
 ) : IArtist {
     override val bestArtistArtUrl: String?
-        get() = artistArtRef ?: artistArtRefs.first().url
+        get() = artistArtRef ?: artistArtRefs.firstOrNull()?.url
 }

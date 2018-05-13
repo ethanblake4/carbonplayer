@@ -23,7 +23,7 @@ open class PlaylistEntry(
     constructor(source: SkyjamPlentry, track: Track?) : this (
             source.kind,
             source.id,
-            source.clientId,
+            source.clientId!!,
             null,
             source.absolutePosition,
             source.trackId,

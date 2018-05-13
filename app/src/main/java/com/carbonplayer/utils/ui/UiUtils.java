@@ -1,14 +1,70 @@
 package com.carbonplayer.utils.ui;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.RectF;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
 
-/**
- * Created by ethanelshyeb on 4/25/18.
- */
+import java.util.LinkedList;
+import java.util.concurrent.Callable;
+
+import kotlin.Pair;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 
 public class UiUtils {
+
+    private static LinkedList<Pair<Callable<Bitmap>, Function1<Bitmap, Unit>>> runnables =
+            new LinkedList<>();
+
+    private static Runnable r = () -> {
+        while(true) {
+            if (!runnables.isEmpty()) {
+                try {
+                    Bitmap b = runnables.getFirst().getFirst().call();
+                    runnables.getFirst().getSecond().invoke(b);
+                    runnables.removeFirst();
+                } catch (Exception e) {}
+            }
+            try {
+                Thread.sleep(16);
+            } catch (InterruptedException e) {
+                // shouldnt happen
+            }
+        }
+    };
+
+    private static Thread t = new Thread(r);
+
+    public static void combineBitmaps(Bitmap b1, Bitmap b2, Bitmap b3, Bitmap b4,
+                                      Function1<Bitmap, Unit> callback) {
+        runnables.add(new Pair<>(() -> {
+            Bitmap big = Bitmap.createBitmap(b1.getWidth(), b1.getWidth(),
+                    Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(big);
+
+            float half = b1.getWidth()/2f;
+
+            RectF rect1 = new RectF(0, 0, half, half);
+            RectF rect2 = new RectF(half, 0, half*2, half);
+            RectF rect3 = new RectF(0, half, half, half*2);
+            RectF rect4 = new RectF(half, half, half*2, half*2);
+
+            canvas.drawBitmap(b1, null, rect1, null);
+            Thread.sleep(4);
+            canvas.drawBitmap(b2, null, rect2, null);
+            Thread.sleep(4);
+            canvas.drawBitmap(b3, null, rect3, null);
+            Thread.sleep(4);
+            canvas.drawBitmap(b4, null, rect4, null);
+
+            return big;
+        }, callback));
+
+        if(!t.isAlive()) t.start();
+    }
 
 
     /**

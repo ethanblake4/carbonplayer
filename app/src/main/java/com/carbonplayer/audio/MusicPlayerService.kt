@@ -96,6 +96,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 fromNewQueue(tracks, bundle.getInt(Constants.KEY.POSITION))
             }
             Constants.ACTION.PREVIOUS -> {
+                carbonAnalytics.logEvent("click_prev_track", null)
                 Timber.i("Clicked Previous")
                 playback.prevTrack()
                 if (!playback.isUnpaused()) {
@@ -103,6 +104,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 }
             }
             Constants.ACTION.PLAYPAUSE -> {
+                carbonAnalytics.logEvent("click_playpause", null)
                 Timber.i("Clicked Play/Pause")
                 val isPlaying = playback.isUnpaused()
                 if (isPlaying) {
@@ -118,6 +120,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 }
             }
             Constants.ACTION.NEXT -> {
+                carbonAnalytics.logEvent("click_next_track", null)
                 Timber.i("Clicked Next")
                 playback.nextTrack()
                 if (!playback.isUnpaused()) {
@@ -302,6 +305,8 @@ class MusicPlayerService : Service(), MusicFocusable {
                 realm.executeTransaction {
                     localTrack?.addPlay()
                 }
+
+            carbonAnalytics.logEntityEvent("track_playing", track)
 
             emit(Constants.EVENT.TrackPlaying, track)
             loadImageAndDoUpdates(track)

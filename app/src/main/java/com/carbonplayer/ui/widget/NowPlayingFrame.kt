@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import android.widget.Scroller
+import com.carbonplayer.utils.carbonAnalytics
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
 import kotlinx.android.synthetic.main.nowplaying.view.*
@@ -47,7 +48,11 @@ class NowPlayingFrame : FrameLayout {
                     val upFraction = ((scroller.currY - initialHeight).toFloat() / (
                             maxHeight - initialHeight).toFloat())
                     callback?.invoke(upFraction)
+                    val prevWasUp = isUp
                     isUp = upFraction > 0.99f
+
+                    if(prevWasUp != isUp) carbonAnalytics.logEvent(
+                            if(isUp) "open_npui" else "close_npui", null)
 
                     //Timber.d("scroller: %d", scroller.currY)
                 }

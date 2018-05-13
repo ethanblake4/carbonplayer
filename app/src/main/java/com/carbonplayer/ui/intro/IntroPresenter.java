@@ -117,7 +117,7 @@ class IntroPresenter {
                         REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
             });
         } else {
-            Timber.e("Login Exception unandled");
+            Timber.e(t, "Login Exception unhandled");
             t.printStackTrace();
             mActivity.makeLibraryError(R.string.intro_slide3_issue);
         }
@@ -128,6 +128,7 @@ class IntroPresenter {
             jsonCallbackCompleted = true;
             MusicLibrary.INSTANCE.config(mActivity,
                     t -> {
+                        Timber.e(t, "Login Exception in doConfig");
                         if (t instanceof NoNautilusException)
                             mActivity.makeLibraryError(R.string.intro_slide3_no_nautilus);
                         else mActivity.makeLibraryError(R.string.intro_slide3_issue);

@@ -5,14 +5,20 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
-import android.os.Bundle
 import android.os.Parcelable
+import androidx.core.os.bundleOf
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.base.IArtist
+import com.carbonplayer.model.entity.base.IPlaylist
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.enums.MediaType
+import com.carbonplayer.model.entity.radio.SkyjamStation
+import com.google.firebase.analytics.FirebaseAnalytics
 import io.reactivex.disposables.Disposable
 import io.realm.Realm
 import org.json.JSONArray
@@ -27,6 +33,47 @@ fun JSONObject.maybeGetDouble (key: String?): Double? = maybeGet (key, { getDoub
 fun JSONObject.maybeGetLong (key: String?): Long? = maybeGet (key, { getLong(key) })
 fun JSONObject.maybeGetObj (key: String?): JSONObject? = maybeGet (key, { getJSONObject(key) })
 fun JSONObject.maybeGetArray (key: String?): JSONArray? = maybeGet (key, { getJSONArray(key) })
+
+val Any.carbonAnalytics: FirebaseAnalytics
+    get() = CarbonPlayerApplication.instance.analytics
+
+
+fun FirebaseAnalytics.logEntityEvent(event: String, artist: IArtist) =
+        logEvent(event, bundleOf(
+                FirebaseAnalytics.Param.ITEM_ID to artist.artistId,
+                FirebaseAnalytics.Param.ITEM_NAME to artist.name,
+                FirebaseAnalytics.Param.ITEM_CATEGORY to MediaType.ARTIST
+        ))
+
+fun FirebaseAnalytics.logEntityEvent(event: String, album: IAlbum) =
+        logEvent(event, bundleOf(
+                FirebaseAnalytics.Param.ITEM_ID to album.albumId,
+                FirebaseAnalytics.Param.ITEM_NAME to album.name,
+                FirebaseAnalytics.Param.ITEM_CATEGORY to MediaType.ALBUM
+        ))
+
+fun FirebaseAnalytics.logEntityEvent(event: String, track: ITrack) =
+        logEvent(event, bundleOf(
+                FirebaseAnalytics.Param.ITEM_ID to track.storeId,
+                FirebaseAnalytics.Param.ITEM_NAME to track.title,
+                FirebaseAnalytics.Param.ITEM_CATEGORY to MediaType.TRACK
+        ))
+
+fun FirebaseAnalytics.logEntityEvent(event: String, playlist: IPlaylist) =
+        logEvent(event, bundleOf(
+                FirebaseAnalytics.Param.ITEM_ID to playlist.id,
+                FirebaseAnalytics.Param.ITEM_NAME to playlist.name,
+                FirebaseAnalytics.Param.ITEM_CATEGORY to MediaType.PLAYLIST
+        ))
+
+fun FirebaseAnalytics.logEntityEvent(event: String, station: SkyjamStation) =
+        logEvent(event, bundleOf(
+                FirebaseAnalytics.Param.ITEM_ID to station.id,
+                FirebaseAnalytics.Param.ITEM_NAME to station.bestName,
+                FirebaseAnalytics.Param.ITEM_CATEGORY to MediaType.STATION
+        ))
+
+
 
 inline fun <T> JSONObject.maybeGet(
         key: String?,

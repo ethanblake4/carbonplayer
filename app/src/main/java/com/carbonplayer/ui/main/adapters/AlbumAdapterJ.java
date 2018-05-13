@@ -3,6 +3,7 @@ package com.carbonplayer.ui.main.adapters;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.support.annotation.ColorInt;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -152,6 +153,7 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
                     .transition(DrawableTransitionOptions.withCrossFade(200))
                     .listener(GlidePalette.with(a.getAlbumArtRef())
                             .use(GlidePalette.Profile.VIBRANT)
+                            .setPaletteBuilderInterceptor(Palette.Builder::clearFilters)
                             .intoCallBack(palette -> {
                                 if (palette != null) {
                                     PaletteUtil.SwatchPair pair =
