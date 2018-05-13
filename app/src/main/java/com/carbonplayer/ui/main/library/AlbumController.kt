@@ -125,7 +125,6 @@ class AlbumController(
 
     init {
         aId = album.albumId
-
         carbonAnalytics.logEntityEvent(FirebaseAnalytics.Event.VIEW_ITEM, album)
     }
 

@@ -13,7 +13,6 @@ import android.os.Handler
 import android.support.annotation.Keep
 import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -82,9 +81,6 @@ class PlaylistController(
     private var ogHeight = 0
 
     private var swatchPair: PaletteUtil.SwatchPair? = null
-
-    private var mAdapter: RecyclerView.Adapter<*>? = null
-    private var mLayoutManager: RecyclerView.LayoutManager? = null
 
     private lateinit var manager: MusicManager
     private lateinit var requestMgr: RequestManager

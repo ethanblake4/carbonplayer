@@ -547,6 +547,7 @@ object MusicLibrary {
                     .flatMap { Observable.fromIterable(it) }
                     .map { it.trackId }.toList()
                     .map {
+                        Timber.d(it.toString())
                         val arr = it.toTypedArray()
 
                         realm.where(Track::class.java)

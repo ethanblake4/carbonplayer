@@ -290,8 +290,6 @@ class ArtistController(
 
         realArtist.bestArtistArtUrl?.let {
             requestMgr.load(it)
-                    .apply(RequestOptions.overrideOf(preImageWidth, preImageWidth)
-                                    .diskCacheStrategy(DiskCacheStrategy.ALL).dontAnimate())
                     .apply { if(swatchPair == PaletteUtil.DEFAULT_SWATCH_PAIR) {
                         listener(GlidePalette.with(it)
                                 .use(0)

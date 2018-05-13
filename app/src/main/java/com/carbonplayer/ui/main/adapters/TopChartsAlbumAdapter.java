@@ -72,17 +72,6 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
 
             menuButton.setOnClickListener(view -> context.showAlbumPopup(view, album));
 
-
-
-            /*ViewTreeObserver vto = thumb.getViewTreeObserver();
-            vto.addOnPreDrawListener(() -> {
-                size = thumb.getMeasuredWidth();
-                ((FrameLayout.LayoutParams) contentRoot.getLayoutParams())
-                        .setMargins(0, size, 0, 0);
-                contentRoot.postInvalidate();
-                return true;
-            });*/
-
             titleText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 50)));
             detailText.setMaxWidth((screenWidthPx / 2) - (MathUtils.dpToPx(context, 32)));
         }
