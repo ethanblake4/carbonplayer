@@ -27,4 +27,13 @@ data class SkyjamAlbum (
         override val explicitType: String?,
         override val contentType: String?
 
-) : IAlbum
+) : IAlbum {
+    constructor(source: SkyjamTrack) : this(
+            "sj#album", source.inLibrary,
+            source.albumId, source.recentTimestamp,
+            if(source.album.isBlank()) "Unknown Album" else source.album,
+            source.albumArtist, source.albumArtRef?.first()?.url ?: "",
+            source.albumArtist, source.artistId ?: listOf(),
+            source.composer ?: "", source.year, source.genre ?: "",
+            null, null, null, source.explicitType?.toString(), null)
+}

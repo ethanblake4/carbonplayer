@@ -124,6 +124,7 @@ class CarbonPlayerApplication : Application() {
     val useWebAuthDialog = false
     val useOkHttpForLogin = true
     val useSearchClustering = true
+    val useSampleData = false
 
     val darkCSL = ColorStateList.valueOf(Color.DKGRAY)
 

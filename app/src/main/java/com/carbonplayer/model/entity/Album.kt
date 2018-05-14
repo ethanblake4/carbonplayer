@@ -105,5 +105,6 @@ open class Album (
         const val ID = "albumId"
         const val NAME = "name"
         const val TRACKS = "tracks"
+        const val SAMPLE = "sample"
     }
 }

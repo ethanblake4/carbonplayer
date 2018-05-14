@@ -87,4 +87,18 @@ data class SkyjamTrack(
         return t!!
     }
 
+    companion object {
+        fun sample(name: String, pos: Int, artist: String, album: String) = SkyjamTrack (
+                "sj#track", false, false, "999-999-999",
+                "888-888-888", "000-000-000", "000-000-000", name,
+                artist, listOf("000-000-000"), album, MusicLibrary.UNKNOWN_ALBUM_ID,
+                artist, listOf(), listOf(), pos, 10, 1, 1,
+                420120, "", 0, null,
+                false, false, null,
+                null, null, null, null,
+                false, null, null, null, 2000,
+                null, 0
+        )
+    }
+
 }

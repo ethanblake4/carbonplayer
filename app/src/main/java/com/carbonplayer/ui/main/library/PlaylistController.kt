@@ -1,6 +1,5 @@
 package com.carbonplayer.ui.main.library
 
-import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
@@ -155,6 +154,9 @@ class PlaylistController(
         }
 
         entries.subscribe {
+
+            root.descriptionText.text = it.size.toString().plus(" songs")
+
             Timber.d("Recieved entries")
             root.songgroup_recycler.layoutManager = LinearLayoutManager(activity)
             root.songgroup_recycler.adapter =
@@ -176,7 +178,7 @@ class PlaylistController(
 
         root.songgroup_recycler.isNestedScrollingEnabled = false
 
-        root.expandDescriptionChevron.setOnClickListener {
+        /*root.expandDescriptionChevron.setOnClickListener {
             ogHeight = root.constraintLayout6.measuredHeight
             val anim = ValueAnimator.ofInt(
                     root.constraintLayout6.measuredHeight,
@@ -194,7 +196,12 @@ class PlaylistController(
             anim.start()
 
             expanded = !expanded
-        }
+        }*/
+
+        root.secondaryText.text = playlist.ownerName ?: "Playlist"
+
+        root.descriptionText.text = (playlist as? Playlist)?.entries?.size
+                ?.toString()?.plus(" songs") ?: ""
 
         root.downloadButton.setOnClickListener {
             activity?.let { Toast.makeText(it,
@@ -264,8 +271,6 @@ class PlaylistController(
                                 .findFirst()!!
 
                         Timber.d("Running playlistProxy update")
-
-                        setupWithPlaylist(root, playlistProxy)
                     }, {
                         err -> Timber.e(err)
                     }).addToAutoDispose()
@@ -277,8 +282,6 @@ class PlaylistController(
         root.songgroup_scrollview.visibility = View.VISIBLE
 
         val preImageWidth = IdentityUtils.displayWidthDp(activity as Activity) - 4
-
-        setupWithPlaylist(root, realPlaylist)
 
         /*if(!realPlaylist.artistBio.isNullOrBlank()) {
             val const = ConstraintSet().apply {
@@ -314,10 +317,6 @@ class PlaylistController(
         root.primaryText.text = realPlaylist.name
 
         return root
-    }
-
-    private fun setupWithPlaylist(view: View, playlist: IPlaylist) {
-
     }
 
     private val layoutListener = ViewTreeObserver.OnGlobalLayoutListener {

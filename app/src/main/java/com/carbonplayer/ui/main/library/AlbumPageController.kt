@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
+import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.ui.main.MainActivity
@@ -97,16 +98,27 @@ class AlbumPageController : Controller() {
     private fun resubscribe(view: View) {
         Timber.d("Resubscribe")
         albumSubscription?.dispose()
-        albumSubscription = MusicLibrary.loadAlbums()
-                .subscribe { albums ->
-                    adapter = AlbumAdapterJ(albums, activity as MainActivity, requestManager)
-                    view.main_recycler.adapter = adapter
-                    view.fastscroll.setRecyclerView(view.main_recycler)
-                    recyclerState?.let {
-                        view.main_recycler.layoutManager.onRestoreInstanceState(it)
+        if(CarbonPlayerApplication.instance.useSampleData) {
+            adapter = AlbumAdapterJ(MusicLibrary.loadSampleAlbums(),
+                    activity as MainActivity, requestManager)
+            view.main_recycler.adapter = adapter
+            view.fastscroll.setRecyclerView(view.main_recycler)
+            recyclerState?.let {
+                view.main_recycler.layoutManager.onRestoreInstanceState(it)
+            }
+        } else {
+            albumSubscription = MusicLibrary.loadAlbums()
+                    .subscribe { albums ->
+                        adapter = AlbumAdapterJ(albums, activity as MainActivity, requestManager)
+                        view.main_recycler.adapter = adapter
+                        view.fastscroll.setRecyclerView(view.main_recycler)
+                        recyclerState?.let {
+                            view.main_recycler.layoutManager.onRestoreInstanceState(it)
+                        }
                     }
-                }
+        }
         subscribed = true
+
     }
 
     /*override fun onResume() {

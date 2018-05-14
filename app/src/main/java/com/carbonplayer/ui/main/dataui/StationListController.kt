@@ -9,15 +9,15 @@ import android.view.ViewGroup
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.ui.main.MainActivity
-import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
+import com.carbonplayer.ui.main.adapters.SkyjamStationAdapter
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.ui.PaletteUtil
 import kotlinx.android.synthetic.main.controller_single_recycler.view.*
 
-class AlbumListController(
-        val albumList: List<IAlbum>,
+class StationListController(
+        val stationList: List<SkyjamStation>,
         val swatchPair: PaletteUtil.SwatchPair
 ) : Controller() {
 
@@ -46,8 +46,8 @@ class AlbumListController(
         root.fastscroll.setRecyclerView(root.main_recycler)
 
         root.main_recycler.layoutManager = GridLayoutManager(activity, 2)
-        root.main_recycler.adapter = TopChartsAlbumAdapter(
-                albumList,
+        root.main_recycler.adapter = SkyjamStationAdapter(
+                stationList,
                 activity as MainActivity,
                 Glide.with(activity!!)
         )

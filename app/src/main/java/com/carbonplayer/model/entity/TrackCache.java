@@ -67,13 +67,16 @@ public class TrackCache {
                 .equalTo(Track.STORAGE_TYPE, StorageType.CACHE.ordinal())
                 .findAll();
 
+        if(res.size() == 0) return;
+
         File cacheDir = context.getCacheDir();
         File[] fileList = cacheDir.listFiles();
 
         LongSparseArray<LinkedList<File>> fileMap = new LongSparseArray<>();
         for (File f : fileList) {
+            if(f.isDirectory()) continue;
             Long id = Long.parseLong(f.getName().split("--")[0]);
-            if (!(fileMap.get(id) == null)) {
+            if (fileMap.get(id) == null) {
                 LinkedList<File> lis = new LinkedList<>();
                 lis.add(f);
                 fileMap.put(id, lis);

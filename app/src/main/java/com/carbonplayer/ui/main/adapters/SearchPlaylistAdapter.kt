@@ -7,9 +7,8 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.bumptech.glide.Glide
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.skyjam.SkyjamPlaylist
+import com.carbonplayer.model.entity.base.IPlaylist
 import com.carbonplayer.utils.general.MathUtils
 import kotlinx.android.synthetic.main.grid_item_layout.view.*
 
@@ -18,9 +17,9 @@ import kotlinx.android.synthetic.main.grid_item_layout.view.*
  */
 internal class SearchPlaylistAdapter(
         private val context: Activity,
-        private val mDataset: List<SkyjamPlaylist>,
-        private val clicked: (SkyjamPlaylist) -> Unit,
-        private val menuClicked: (View, SkyjamPlaylist) -> Unit
+        private val mDataset: List<IPlaylist>,
+        private val clicked: (IPlaylist) -> Unit,
+        private val menuClicked: (View, IPlaylist) -> Unit
 ) : RecyclerView.Adapter<SearchPlaylistAdapter.ViewHolder>() {
 
     val screenWidthPx: Int
@@ -60,11 +59,6 @@ internal class SearchPlaylistAdapter(
         holder.itemView.primaryText.text = t.name
         holder.itemView.detailText.text = "By ${t.ownerName}"
         //holder.id = SongID(t)
-        t.albumArtRef?.first()?.let {
-            Glide.with(context)
-                    .load(it)
-                    .into(holder.itemView.imgthumb)
-        }
     }
 
     override fun getItemCount(): Int = mDataset.size

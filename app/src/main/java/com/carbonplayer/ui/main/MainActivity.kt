@@ -554,8 +554,8 @@ class MainActivity : AppCompatActivity() {
                 R.id.menu_go_to_album -> {
                     (track as? Track)?.albums?.first()?.let {
                         gotoAlbum(it, PaletteUtil.DEFAULT_SWATCH_PAIR)
-                    } ?: Toast.makeText(this, "Not supported yet for remote tracks",
-                            Toast.LENGTH_SHORT).show()
+                    } ?: gotoAlbum(SkyjamAlbum(track as SkyjamTrack),
+                            PaletteUtil.DEFAULT_SWATCH_PAIR)
                 }
                 R.id.menu_go_to_artist -> {
                     (track as? Track)?.artists?.first()?.let {

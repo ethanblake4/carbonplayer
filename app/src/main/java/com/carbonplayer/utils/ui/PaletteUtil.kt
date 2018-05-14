@@ -31,25 +31,29 @@ object PaletteUtil {
         transition.startTransition(500)
     }
 
-    @JvmStatic fun crossfadeTitle(target: TextView, swatch: Palette.Swatch) {
+    @JvmStatic @JvmOverloads fun crossfadeTitle(target: TextView, swatch: Palette.Swatch,
+                                                    scrimify: Boolean = true) {
         val colorAnim = ObjectAnimator.ofInt(target, "textColor",
-                target.currentTextColor, ColorUtils.scrimify(swatch.bodyTextColor,
-                CarbonPlayerApplication.instance.preferences.scrimifyAmount))
+                target.currentTextColor, if(scrimify) ColorUtils.scrimify(swatch.bodyTextColor,
+                CarbonPlayerApplication.instance.preferences.scrimifyAmount) else
+                swatch.bodyTextColor)
         colorAnim.setEvaluator(ArgbEvaluator())
         colorAnim.start()
     }
 
-    @JvmStatic fun crossfadeText(target: TextView, swatch: Palette.Swatch) {
+    @JvmStatic @JvmOverloads fun crossfadeText(target: TextView, swatch: Palette.Swatch) {
         val colorAnim = ObjectAnimator.ofInt(target, "textColor",
                 target.currentTextColor, swatch.rgb)
         colorAnim.setEvaluator(ArgbEvaluator())
         colorAnim.start()
     }
 
-    @JvmStatic fun crossfadeSubtitle(target: TextView, swatch: Palette.Swatch) {
+    @JvmStatic @JvmOverloads fun crossfadeSubtitle(target: TextView, swatch: Palette.Swatch,
+                                     scrimify: Boolean = true) {
         val colorAnim = ObjectAnimator.ofInt(target, "textColor",
-                target.currentTextColor, ColorUtils.scrimify(swatch.titleTextColor,
-                CarbonPlayerApplication.instance.preferences.scrimifyAmount))
+                target.currentTextColor, if(scrimify) ColorUtils.scrimify(swatch.titleTextColor,
+                CarbonPlayerApplication.instance.preferences.scrimifyAmount)
+                else swatch.titleTextColor)
         colorAnim.setEvaluator(ArgbEvaluator())
         colorAnim.start()
     }

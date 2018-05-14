@@ -14,14 +14,11 @@ import com.bumptech.glide.RequestManager
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.exception.ServerRejectionException
-import com.carbonplayer.model.entity.proto.identifiers.AlbumReleaseIdV1Proto
-import com.carbonplayer.model.entity.proto.identifiers.ArtistIdV1Proto
-import com.carbonplayer.model.entity.proto.identifiers.PlayableItemIdV1Proto
+import com.carbonplayer.model.entity.proto.identifiers.*
 import com.carbonplayer.model.entity.proto.identifiers.PlayableItemIdV1Proto.PlayableItemId.TypeCase.*
 import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId.TypeCase.*
 import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId.TypeCase.ARTIST
 import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId.TypeCase.TYPE_NOT_SET
-import com.carbonplayer.model.entity.proto.identifiers.TrackIdV1Proto
 import com.carbonplayer.model.entity.proto.innerjam.ContentPageV1Proto.ContentPage.PageTypeCase
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeResponse
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto
@@ -204,27 +201,22 @@ class HomeController : Controller() {
                             else -> errorPlaying()
                         }
                     }
-                    CURATED -> {
-                        return helper.startRadio(RadioSeed.TYPE_CURATED_STATION,
+                    CURATED -> return helper.startRadio(RadioSeed.TYPE_CURATED_STATION,
                                 itemId.radioSeed.curated.metajamCompactKey)
-                    }
-                    ARTIST -> {
-                        return when(itemId.radioSeed.artist.typeCase) {
-                            ArtistIdV1Proto.ArtistId.TypeCase.CATALOG -> {
-                                helper.startRadio(RadioSeed.TYPE_ARTIST,
-                                        itemId.radioSeed.artist.catalog.metajamCompactKey)
-                            }
-                            else -> errorPlaying()
+
+                    ARTIST -> return when(itemId.radioSeed.artist.typeCase) {
+                        ArtistIdV1Proto.ArtistId.TypeCase.CATALOG -> {
+                            helper.startRadio(RadioSeed.TYPE_ARTIST,
+                                    itemId.radioSeed.artist.catalog.metajamCompactKey)
                         }
+                        else -> errorPlaying()
                     }
-                    GENRE -> {
-                        return helper.startRadio(RadioSeed.TYPE_GENRE,
+
+                    GENRE -> return helper.startRadio(RadioSeed.TYPE_GENRE,
                                 itemId.radioSeed.genre.id)
-                    }
-                    LOCKERPLAYLIST -> {
-                        return helper.startRadio(RadioSeed.TYPE_PLAYLIST,
+
+                    LOCKERPLAYLIST -> return helper.startRadio(RadioSeed.TYPE_PLAYLIST,
                                 itemId.radioSeed.lockerPlaylist.playlistToken)
-                    }
 
                     FEELINGLUCKY -> return errorPlaying()
                     TYPE_NOT_SET -> return errorPlaying()
@@ -232,7 +224,14 @@ class HomeController : Controller() {
                 }
             }
             AUDIO -> return errorPlaying()
-            AUDIOLIST -> return errorPlaying()
+            AUDIOLIST -> return when (itemId.audioList.typeCase) {
+                AudioListIdV1Proto.AudioListId.TypeCase.SHAREDPLAYLIST ->
+                    helper.fromSharedPlaylist(itemId.audioList.sharedPlaylist.playlistToken)
+                AudioListIdV1Proto.AudioListId.TypeCase.LOCKERPLAYLIST -> {
+                    helper.fromSharedPlaylist(itemId.audioList.lockerPlaylist.playlistToken)
+                }
+                else -> errorPlaying()
+            }
             PlayableItemIdV1Proto.PlayableItemId.TypeCase.ARTIST -> return errorPlaying()
             PlayableItemIdV1Proto.PlayableItemId.TypeCase.TYPE_NOT_SET -> return errorPlaying()
             else -> return errorPlaying()

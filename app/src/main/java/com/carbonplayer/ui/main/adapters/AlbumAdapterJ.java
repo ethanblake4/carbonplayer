@@ -140,10 +140,14 @@ public class AlbumAdapterJ extends RecyclerView.Adapter<AlbumAdapterJ.ViewHolder
 
         Album a = mDataset.get(position);
         holder.titleText.setText(a.getName());
-        RealmResults<Artist> ar = a.getArtists();
-        if(ar != null && ar.size() > 0)
-            holder.detailText.setText(ar.first().getName());
-        else holder.detailText.setText("Unknown artist");
+        if(a.getKind().equals(Album.SAMPLE)) {
+            holder.detailText.setText(a.getAlbumArtist());
+        } else {
+            RealmResults<Artist> ar = a.getArtists();
+            if (ar != null && ar.size() > 0)
+                holder.detailText.setText(ar.first().getName());
+            else holder.detailText.setText("Unknown artist");
+        }
 
         holder.album = a;
 

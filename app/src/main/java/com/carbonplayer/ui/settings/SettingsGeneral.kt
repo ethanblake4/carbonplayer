@@ -3,8 +3,10 @@ package com.carbonplayer.ui.settings
 import android.app.AlertDialog
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.widget.Toast
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
+import com.carbonplayer.model.entity.TrackCache
 import com.carbonplayer.model.entity.enums.StreamQuality
 import kotlinx.android.synthetic.main.activity_settings_general.*
 
@@ -52,10 +54,18 @@ class SettingsGeneral: AppCompatActivity() {
                     .show()
         }
 
+        settings_general_evict_cache.setOnClickListener {
+
+            Toast.makeText(this, "Trimming cache", Toast.LENGTH_LONG).show()
+
+            TrackCache.evictCache(this,
+                    CarbonPlayerApplication.instance.preferences.maxAudioCacheSizeMB.toLong())
+        }
+
         updateTexts()
     }
 
-    fun updateTexts() {
+    private fun updateTexts() {
 
         val app = application as CarbonPlayerApplication
 

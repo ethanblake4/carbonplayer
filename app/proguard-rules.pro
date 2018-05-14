@@ -111,6 +111,14 @@
 -dontwarn javax.inject.**
 -dontwarn sun.misc.Unsafe
 
+-keep class com.carbonplayer.realm.** { *; }
+-keep class io.realm.annotations.RealmModule
+-keep @io.realm.annotations.RealmModule class *
+-keep class io.realm.internal.Keep
+-keep @io.realm.internal.Keep class *
+-dontwarn javax.**
+-dontwarn io.realm.**
+
 # Guava 19.0
 -dontwarn java.lang.ClassValue
 -dontwarn com.google.j2objc.annotations.Weak
@@ -120,6 +128,31 @@
 -keep class org.apache.http.** { *; }
 -dontwarn org.apache.http.**
 -dontwarn android.net.**
+
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keepattributes InnerClasses
+
+-keep class com.firebase.** { *; }
+-keep class org.apache.** { *; }
+-keepnames class com.fasterxml.jackson.** { *; }
+-keepnames class javax.servlet.** { *; }
+-keepnames class org.ietf.jgss.** { *; }
+-dontwarn org.w3c.dom.**
+-dontwarn org.joda.time.**
+-dontwarn org.shaded.apache.**
+-dontwarn org.ietf.jgss.**
+
+-dontwarn com.evernote.android.job.gcm.**
+-dontwarn com.evernote.android.job.GcmAvailableHelper
+
+-keep public class com.evernote.android.job.v21.PlatformJobService
+-keep public class com.evernote.android.job.v14.PlatformAlarmService
+-keep public class com.evernote.android.job.v14.PlatformAlarmReceiver
+-keep public class com.evernote.android.job.JobBootReceiver
+-keep public class com.evernote.android.job.JobRescheduleService
+-keep public class com.evernote.android.job.gcm.PlatformGcmService
 
 -keepclassmembers class com.carbonplayer.ui.transition.**
 -dontwarn com.carbonplayer.**

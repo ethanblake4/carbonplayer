@@ -20,6 +20,7 @@ import com.carbonplayer.R
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.enums.StorageType
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.utils.*
 import com.google.common.collect.Queues
@@ -304,6 +305,8 @@ class MusicPlayerService : Service(), MusicFocusable {
 
                 realm.executeTransaction {
                     localTrack?.addPlay()
+                    localTrack?.hasCachedFile = true
+                    localTrack?.setStorageType(StorageType.CACHE)
                 }
 
             carbonAnalytics.logEntityEvent("track_playing", track)

@@ -7,17 +7,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bluelinelabs.conductor.Controller
-import com.bumptech.glide.Glide
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.base.IPlaylist
 import com.carbonplayer.ui.main.MainActivity
-import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
+import com.carbonplayer.ui.main.adapters.SearchPlaylistAdapter
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.ui.PaletteUtil
 import kotlinx.android.synthetic.main.controller_single_recycler.view.*
 
-class AlbumListController(
-        val albumList: List<IAlbum>,
+class PlaylistListController(
+        val playlistList: List<IPlaylist>,
         val swatchPair: PaletteUtil.SwatchPair
 ) : Controller() {
 
@@ -46,10 +45,13 @@ class AlbumListController(
         root.fastscroll.setRecyclerView(root.main_recycler)
 
         root.main_recycler.layoutManager = GridLayoutManager(activity, 2)
-        root.main_recycler.adapter = TopChartsAlbumAdapter(
-                albumList,
+        root.main_recycler.adapter = SearchPlaylistAdapter(
                 activity as MainActivity,
-                Glide.with(activity!!)
+                playlistList,
+                { playlist -> (activity as MainActivity).gotoPlaylist(playlist, null,
+                            PaletteUtil.DEFAULT_SWATCH_PAIR)
+                },
+                { v, playlist -> (activity as MainActivity).showPlaylistPopup(v, playlist) }
         )
 
         root.main_recycler.setPadding(0, 0, 0,

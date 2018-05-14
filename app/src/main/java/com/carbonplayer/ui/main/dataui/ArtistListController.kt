@@ -2,24 +2,24 @@ package com.carbonplayer.ui.main.dataui
 
 import android.support.annotation.Keep
 import android.support.design.widget.AppBarLayout
-import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bluelinelabs.conductor.Controller
-import com.bumptech.glide.Glide
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.base.IArtist
 import com.carbonplayer.ui.main.MainActivity
-import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
+import com.carbonplayer.ui.main.adapters.LinearArtistAdapter
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.ui.PaletteUtil
 import kotlinx.android.synthetic.main.controller_single_recycler.view.*
 
-class AlbumListController(
-        val albumList: List<IAlbum>,
+class ArtistListController(
+        private val artistList: List<IArtist>,
         val swatchPair: PaletteUtil.SwatchPair
 ) : Controller() {
+
 
     @Keep @Suppress("unused")
     constructor() : this(listOf(), PaletteUtil.DEFAULT_SWATCH_PAIR)
@@ -45,11 +45,13 @@ class AlbumListController(
 
         root.fastscroll.setRecyclerView(root.main_recycler)
 
-        root.main_recycler.layoutManager = GridLayoutManager(activity, 2)
-        root.main_recycler.adapter = TopChartsAlbumAdapter(
-                albumList,
-                activity as MainActivity,
-                Glide.with(activity!!)
+        root.main_recycler.layoutManager = LinearLayoutManager(activity)
+        root.main_recycler.adapter = LinearArtistAdapter(
+                activity!!,
+                artistList,
+                { (artist, swPair) -> (activity as MainActivity).gotoArtist(
+                        artist, swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR
+                ) }
         )
 
         root.main_recycler.setPadding(0, 0, 0,

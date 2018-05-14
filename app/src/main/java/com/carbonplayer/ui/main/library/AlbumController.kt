@@ -62,9 +62,9 @@ import java.util.concurrent.TimeUnit
  */
 class AlbumController(
         var album: IAlbum,
-        val textColor: Int,
-        val mainColor: Int,
-        val bodyColor: Int,
+        var textColor: Int,
+        var mainColor: Int,
+        var bodyColor: Int,
         val secondaryColor: Int,
         val secondaryTextColor: Int
 ) : Controller() {
@@ -271,19 +271,39 @@ class AlbumController(
                                 PaletteUtil.crossfadeBackground(
                                         root.constraintLayout6, pair.primary)
                                 PaletteUtil.crossfadeTitle(
-                                        root.primaryText, pair.primary)
-                                PaletteUtil.crossfadeSubtitle(root.secondaryText, pair.secondary)
+                                        root.primaryText, pair.primary, false)
+                                PaletteUtil.crossfadeSubtitle(root.secondaryText, pair.primary,
+                                        false)
 
                                 if(ColorUtils.isDark(pair.primary.bodyTextColor)) {
                                     root.overflowButton.imageTintList =
                                             CarbonPlayerApplication.instance.darkCSL
                                 }
-                            }
-                            })
+
+                                textColor = pair.primary.titleTextColor
+                                bodyColor = pair.primary.bodyTextColor
+                                mainColor = pair.primary.rgb
+
+                                root.downloadButton.imageTintList =
+                                        ColorStateList.valueOf(textColor)
+                                root.overflowButton.imageTintList =
+                                        ColorStateList.valueOf(textColor)
+                                root.expandDescriptionChevron.imageTintList =
+                                        ColorStateList.valueOf(bodyColor)
+
+                                root.songgroup_grad.background =
+                                        GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
+                                        intArrayOf(mainColor,
+                                                ColorUtils.modifyAlpha(mainColor, 200),
+                                                ColorUtils.modifyAlpha(mainColor, 0)))
+
+                                root.play_fab.backgroundTintList =
+                                        ColorStateList.valueOf(pair.secondary.rgb)
+                                root.play_fab.imageTintList =
+                                        ColorStateList.valueOf(pair.secondary.bodyTextColor)
+                            } })
                     )
-                }
-                }
-                .into(root.main_backdrop)
+                } }.into(root.main_backdrop)
 
         if(album.description != null && album.description!!.isNotBlank()) {
 

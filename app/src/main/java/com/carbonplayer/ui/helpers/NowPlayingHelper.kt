@@ -235,17 +235,33 @@ class NowPlayingHelper(private val activity: Activity) {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe ({ r ->
-                    completer.onComplete()
+
                     newQueue(r.data.stations[0].tracks, 0, false,
                             "Playing from " + (r.data.stations[0].bestName) + " radio")
 
+                    completer.onComplete()
                     currentSeedType = seedType
                     currentRadioReason = reason
                     currentRadioSeed = seed
 
                 }, { err ->
                     Timber.d(err)
+                    completer.onComplete()
                 })
+
+        return completer
+    }
+
+    fun fromSharedPlaylist(shareToken: String): Completable {
+        val completer = CompletableSubject.create()
+
+        Protocol.getSharedPlentries(activity, shareToken)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe ({
+                    newQueue(it.mapNotNull { it.track }, 0, false)
+                    completer.onComplete()
+                }, { completer.onComplete() })
 
         return completer
     }
