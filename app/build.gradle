@@ -29,8 +29,8 @@ if(new File("carbonplayer.properties").exists()) {
             applicationId "com.carbonplayer"
             minSdkVersion 21
             targetSdkVersion 27
-            versionCode 3
-            versionName "0.0.3"
+            versionCode 4
+            versionName "0.1.0"
             buildConfigField "boolean", "RELEASE", "false"
             signingConfig signingConfigs.config
             multiDexEnabled true
@@ -193,6 +193,8 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+    implementation 'com.jakewharton:process-phoenix:2.0.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

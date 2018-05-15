@@ -123,6 +123,12 @@
     <string name="email_or_phone">Email or phone</string>
     <string name="action_go_to_album">Go to album</string>
     <string name="action_delete">Delete</string>
+    <string name="sample_email">user01@gmail.com</string>
+    <string name="sign_out">Sign out</string>
+    <string name="settings_account_sign_out_desc">Sign out of your account</string>
+    <string name="sign_out_confirmation">Are you sure you want to sign out? This will also delete all stored data.</string>
+    <string name="yes">Yes</string>
+    <string name="cancel">Cancel</string>
 
 
 </resources>

@@ -14,6 +14,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.carbonplayer.CarbonPlayerApplication;
+import com.carbonplayer.model.entity.exception.NeedsBrowserException;
 import com.carbonplayer.utils.CrashReportingTree;
 import com.carbonplayer.utils.Preferences;
 import com.carbonplayer.utils.general.BundleBuilder;
@@ -78,6 +79,8 @@ public final class GoogleLogin {
                     "sR8ETQbKLNWgRY0QRNVz34kMJR3P/LgHax/6rmf5AAAAAwEAAQ==";
 
     private static final String LOGIN_SDK_VERSION = String.valueOf(Build.VERSION.SDK_INT);
+
+    private static String browserRecoverUrl;
 
     /**
      * @param login    - your mail, should looks like myemail@gmail.com
@@ -232,12 +235,12 @@ public final class GoogleLogin {
                 .build();
         try {
             Response r = client.newCall(request).execute();
-            if (r.isSuccessful()) {
+            if (true) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(r.body().byteStream()));
                 String line;
                 while ((line = br.readLine()) != null) {
                     Timber.d(line);
-                    String[] s = line.split("=");
+                    String[] s = line.split("=", 2);
                     response.put(s[0], s[1]);
                 }
             } else {
@@ -320,6 +323,7 @@ public final class GoogleLogin {
                     .add("sdk_version", LOGIN_SDK_VERSION)
                     .build();
         } catch (Exception e) {
+            Timber.d("Exception at 1");
             e.printStackTrace();
             return null;
         }
@@ -327,10 +331,78 @@ public final class GoogleLogin {
         ArrayMap<String, String> response;
         response = okLoginCall("https://android.clients.google.com/auth", body);
 
-        if (response == null) return null;
+        if (response == null) {
+            Timber.d("Returning null here");
+            return null;
+        }
 
         if (!response.containsKey("Token")) {
-            Log.d("GPS", "issue");
+            Timber.d( "GSF issue");
+            if(response.containsKey("Error"))  {
+                Timber.d("-"+response.get("Error")+"-");
+                if(response.get("Error").trim().equals("NeedsBrowser")) {
+                    browserRecoverUrl = response.get("Url");
+                }
+            }
+
+            return null;
+        }
+        return response.get("Token");
+    }
+
+    /**
+     * Step 1a: retrieve an Android master token after 2FA
+     * This endpoint is usually called by Google Play services to register a device
+     * on initial activation. The token it gets is used by steps 2 and 4.
+     * @param email user's email
+     * @param token oauth token from web auth
+     * @param androidId the actual Android device ID (not GPS id)
+     * @return the master token
+     */
+    private static String okReperformMasterLogin(String email, String token, String androidId) {
+
+        FormBody body;
+
+        try {
+            body = new FormBody.Builder()
+                    .add("accountType", "HOSTED_OR_GOOGLE")
+                    .add("Email", email)
+                    .add("has_permission", "1")
+                    .add("ACCESS_TOKEN", "1")
+                    .add("Token", token)
+                    .add("service", "ac2dm")
+                    .add("source", "android")
+                    .add("androidId", androidId)
+                    .add("device_country", IdentityUtils.getDeviceCountryCode())
+                    .add("operatorCountry",
+                            IdentityUtils.getOperatorCountryCode(
+                                    CarbonPlayerApplication.Companion.getInstance()))
+                    .add("lang", IdentityUtils.getDeviceLanguage())
+                    .add("sdk_version", LOGIN_SDK_VERSION)
+                    .build();
+        } catch (Exception e) {
+            Timber.d("Exception at 1");
+            e.printStackTrace();
+            return null;
+        }
+
+        ArrayMap<String, String> response;
+        response = okLoginCall("https://android.clients.google.com/auth", body);
+
+        if (response == null) {
+            Timber.d("Returning null here");
+            return null;
+        }
+
+        if (!response.containsKey("Token")) {
+            Timber.d( "GSF issue @ 3");
+            if(response.containsKey("Error"))  {
+                Timber.d("-"+response.get("Error")+"-");
+                if(response.get("Error").trim().equals("NeedsBrowser")) {
+                    browserRecoverUrl = response.get("Url");
+                }
+            }
+
             return null;
         }
         return response.get("Token");
@@ -419,21 +491,29 @@ public final class GoogleLogin {
      * @param password user password
      * @return Observable which will produce err
      */
-    public static Completable login(@NonNull Activity context, @NonNull String email, @NonNull String password) {
+    public static Completable login(@NonNull Activity context, @NonNull String email, @NonNull String password,
+                                    String token) {
         //TODO Rx-ify
         return Completable.create(subscriber -> {
             @SuppressLint("HardwareIds")
             String androidId = Settings.Secure.getString(context.getContentResolver(),
                     Settings.Secure.ANDROID_ID);
 
+
             // Step 1: Get a master token
-            String masterToken = CarbonPlayerApplication.Companion.getInstance().getUseOkHttpForLogin() ?
+            String masterToken = token == null ? (CarbonPlayerApplication.Companion.getInstance().getUseOkHttpForLogin() ?
                     okPerformMasterLogin(email, password, androidId) :
-                    performMasterLogin(email, password, androidId);
+                    performMasterLogin(email, password, androidId)) :
+                    okReperformMasterLogin(email, token, androidId);
 
             if (masterToken == null) {
-                subscriber.onError(Exceptions.propagate(new Exception()));
+
+                if(browserRecoverUrl != null) {
+                    subscriber.onError(new NeedsBrowserException(browserRecoverUrl));
+                } else subscriber.onError(Exceptions.propagate(new Exception()));
+
                 subscriber.onComplete();
+                return;
             }
 
             prefs().masterToken = masterToken;
@@ -567,6 +647,7 @@ public final class GoogleLogin {
     }
 
     public static void retryPlayOAuthSync(@NonNull Context context) {
+        if(prefs().masterToken == null) return;
         prefs().PlayMusicOAuth = getMusicOAuth(context, prefs().masterToken);
         prefs().save();
     }

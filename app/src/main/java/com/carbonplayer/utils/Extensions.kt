@@ -25,6 +25,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.parceler.Parcels
 import timber.log.Timber
+import android.app.Activity
+import android.support.v4.content.ContextCompat.startActivity
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+
+
 
 fun JSONObject.maybeGetInt (key: String?): Int? = maybeGet (key, { getInt(key) })
 fun JSONObject.maybeGetString (key: String?): String? = maybeGet (key, { getString(key) })

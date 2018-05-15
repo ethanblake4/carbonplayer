@@ -24,6 +24,7 @@ import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.Util
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.jakewharton.processphoenix.ProcessPhoenix
 import com.squareup.moshi.KotlinJsonAdapterFactory
 import com.squareup.moshi.Moshi
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider
@@ -54,6 +55,9 @@ class CarbonPlayerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        if (ProcessPhoenix.isPhoenixProcess(this)) return
+
         analytics = FirebaseAnalytics.getInstance(this)
 
         /*if (LeakCanary.isInAnalyzerProcess(this))
@@ -118,8 +122,8 @@ class CarbonPlayerApplication : Application() {
         return DefaultHttpDataSourceFactory(Util.getUserAgent(this, googleUserAgent))
     }
 
-    val googleBuildNumberLong = 49211L
-    val googleBuildNumber = "49211"
+    val googleBuildNumberLong = 68381L
+    val googleBuildNumber = "68381"
     val googleUserAgent = "Android-Music/" + googleBuildNumber + " (" + Build.PRODUCT + " " + Build.ID + "); gzip"
     val useWebAuthDialog = false
     val useOkHttpForLogin = true

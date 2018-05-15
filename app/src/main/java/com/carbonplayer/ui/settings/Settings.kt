@@ -21,7 +21,9 @@ class Settings: AppCompatActivity() {
         settings_item_appearance.setOnClickListener {
             startActivity(newIntent<SettingsAppearance>())
         }
-
+        settings_item_account.setOnClickListener {
+            startActivity(newIntent<SettingsAccount>())
+        }
 
     }
 

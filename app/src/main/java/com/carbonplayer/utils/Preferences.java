@@ -115,7 +115,11 @@ public class Preferences {
         }
     }
 
-    public void save(){
+    public void saveSync() {
+        saveImpl().commit();
+    }
+
+    private SharedPreferences.Editor saveImpl() {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(CarbonPlayerApplication.Companion.getInstance());
         SharedPreferences.Editor edit = prefs.edit();
@@ -148,6 +152,10 @@ public class Preferences {
                 Timber.e(e, "Preferences: failed to save %s \"%s\"", f.getType().toString(), name);
             }
         }
-        edit.apply();
+        return edit;
+    }
+
+    public void save(){
+        saveImpl().apply();
     }
 }

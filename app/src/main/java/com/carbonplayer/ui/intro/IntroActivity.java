@@ -15,6 +15,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
@@ -29,6 +30,10 @@ import com.carbonplayer.ui.intro.fragments.IntroPageThreeFragment;
 import com.carbonplayer.ui.intro.fragments.IntroPageTwoFragment;
 import com.carbonplayer.utils.general.IdentityUtils;
 import com.carbonplayer.utils.general.JavascriptUtils;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -151,36 +156,13 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
     @SuppressLint("SetJavaScriptEnabled")
     public void beginAuthentication() {
 
-        Dialog authDialog = new Dialog(IntroActivity.this);
+        Dialog authDialog;
 
         if (CarbonPlayerApplication.Companion.getInstance().getUseWebAuthDialog()) {
-            authDialog.setContentView(R.layout.auth_dialog);
-
-            presenter.setAuthDialog(authDialog);
-
-            web = authDialog.findViewById(R.id.webv);
-
-            //Setup WebView
-            web.getSettings().setJavaScriptEnabled(true);
-            web.addJavascriptInterface(new GoogleLoginJSInterfaceObject(this), "Android");
-            web.getSettings().setDisplayZoomControls(false);
-            web.getSettings().setUseWideViewPort(true);
-            web.getSettings().setLoadWithOverviewMode(true);
-
-            web.loadUrl("https://accounts.google.com/AddSession?sacu=1");
-            web.setWebViewClient(new WebViewClient() {
-                @Override
-                public void onPageFinished(WebView view, String url) {
-                    Timber.d("Page finished");
-                    super.onPageFinished(view, url);
-                    Handler handler = new Handler();
-                    handler.postDelayed(() -> {
-                        JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/jquery.js");
-                        JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/setUp.js");
-                    }, 5);
-                }
-            });
+            authDialog = showWebDialog("https://accounts.google.com/AddSession?sacu=1",
+                    true);
         } else {
+            authDialog = new Dialog(IntroActivity.this);
             authDialog.setContentView(R.layout.auth_dialog_std);
             presenter.setAuthDialog(authDialog);
             authDialog.findViewById(R.id.sign_in_dialog_button).setOnClickListener(v -> {
@@ -188,12 +170,84 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
                 String pass = ((EditText) authDialog.findViewById(R.id.sign_in_dialog_password)).getText().toString();
                 presenter.tryLogin(user, pass);
             });
-
         }
 
         authDialog.show();
         authDialog.setTitle(getString(R.string.intro_signin));
         authDialog.setCancelable(true);
+    }
+
+    public Dialog showWebDialog(String url, boolean forAuth) {
+
+        Dialog authDialog = new Dialog(IntroActivity.this);
+
+        authDialog.setContentView(R.layout.auth_dialog);
+
+        presenter.setAuthDialog(authDialog);
+
+        if(!forAuth) {
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.setAcceptCookie(true);
+        }
+
+        web = authDialog.findViewById(R.id.webv);
+
+        //Setup WebView
+        web.getSettings().setJavaScriptEnabled(true);
+        if(forAuth) web.addJavascriptInterface(
+                new GoogleLoginJSInterfaceObject(this),
+                "Android"
+        );
+        web.getSettings().setDisplayZoomControls(false);
+        web.getSettings().setUseWideViewPort(true);
+        web.getSettings().setLoadWithOverviewMode(true);
+
+        web.loadUrl(url);
+
+        web.setWebViewClient(new WebViewClient() {
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                Timber.d("Page finished %s", url);
+                super.onPageFinished(view, url);
+
+                if(forAuth) {
+                    Handler handler = new Handler();
+                    handler.postDelayed(() -> {
+                        JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/jquery.js");
+                        JavascriptUtils.injectCovertly(IntroActivity.this, web, "js/setUp.js");
+                    }, 5);
+                } else {
+                    CookieManager manager = CookieManager.getInstance();
+                    String cookies = manager.getCookie(url);
+
+                    if(cookies.contains("oauth_code=") || cookies.contains("oauth_token=")) {
+                        Handler handler = new Handler();
+                        handler.postDelayed(() -> {
+                            String[] cookieses = cookies.split("=");
+                            List<String> cookieseses = new ArrayList<>();
+                            for(String cookiesi: cookieses) {
+                                String[] cookiesies = cookiesi.split(" ");
+                                cookieseses.addAll(Arrays.asList(cookiesies));
+                            }
+                            for(int i=0; i<cookieseses.size();i+=2) {
+                                if(cookieseses.get(i).equals("oauth_token")){
+                                    String token = cookieseses.get(i+1).substring(
+                                            0,
+                                            cookieseses.get(i+1).length()-1
+                                    );
+                                    presenter.tryContinueLogin(token);
+                                }
+                            }
+                            authDialog.dismiss();
+                        }, 400);
+                    }
+
+                }
+            }
+        });
+
+        return authDialog;
     }
 
 

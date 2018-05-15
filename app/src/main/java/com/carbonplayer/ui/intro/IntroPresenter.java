@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 
 import com.carbonplayer.R;
 import com.carbonplayer.model.MusicLibrary;
+import com.carbonplayer.model.entity.exception.NeedsBrowserException;
 import com.carbonplayer.model.entity.exception.NoNautilusException;
 import com.carbonplayer.model.network.GoogleLogin;
 import com.carbonplayer.utils.ExtensionsKt;
@@ -71,7 +72,23 @@ class IntroPresenter {
         mActivity.web = null;
         authDialog = null;
 
-        ExtensionsKt.addToAutoDispose(GoogleLogin.login(mActivity, username, password)
+        ExtensionsKt.addToAutoDispose(GoogleLogin.login(mActivity, username, password, null)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        this::doConfig,
+                        this::handleLoginException
+                ));
+    }
+
+    void tryContinueLogin(String token) {
+        Timber.d("retrieved username=|%s| and token=|%s|", username, token);
+        if (!username.contains("@")) username = username + "@gmail.com";
+
+        mActivity.web = null;
+        authDialog = null;
+
+        ExtensionsKt.addToAutoDispose(GoogleLogin.login(mActivity, username, "", token)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -116,6 +133,12 @@ class IntroPresenter {
                 mActivity.startActivityForResult(intent,
                         REQUEST_CODE_RECOVER_FROM_PLAY_SERVICES_ERROR);
             });
+        } else if(t instanceof NeedsBrowserException) {
+            Timber.d(((NeedsBrowserException) t).getUrl());
+            Dialog dialog =
+                    mActivity.showWebDialog(((NeedsBrowserException) t).getUrl(), false);
+            dialog.show();
+            dialog.setCancelable(false);
         } else {
             Timber.e(t, "Login Exception unhandled");
             t.printStackTrace();
@@ -141,6 +164,7 @@ class IntroPresenter {
         MusicLibrary.INSTANCE.getMusicLibrary(mActivity,
             t -> {
                 t.printStackTrace();
+                Timber.e(t);
                 mActivity.makeLibraryError(R.string.intro_slide3_issue);
             },
             false,
