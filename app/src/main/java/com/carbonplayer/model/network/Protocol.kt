@@ -799,6 +799,7 @@ object Protocol {
     }
 
     private fun bearerBuilder(context: Context): Request.Builder {
+        if(IdentityUtils.isAutomatedTestDevice(context)) return playBuilder(context)
         Timber.d("Bearer token: %s", CarbonPlayerApplication.instance.preferences.BearerAuth)
         Timber.d("DeviceID: ${IdentityUtils.getGservicesId(context, true)}")
         Timber.d("UserAgent: ${CarbonPlayerApplication.instance.googleUserAgent}")

@@ -225,7 +225,8 @@ public final class GoogleLogin {
         OkHttpClient client = CarbonPlayerApplication.Companion.getInstance().getOkHttpClient();
         ArrayMap<String, String> response = new ArrayMap<>();
         Request request = new Request.Builder()
-                .header("User-Agent", CarbonPlayerApplication.Companion.getInstance().getGoogleUserAgent())
+                .header("User-Agent",
+                        CarbonPlayerApplication.Companion.getInstance().getGoogleUserAgent())
                 .url(url)
                 .post(body)
                 .build();
@@ -481,25 +482,27 @@ public final class GoogleLogin {
             String mAuthToken = null;
 
             // Step 3: Get a carbonplayer oAuth master token
-            try {
-                Account[] accounts = AccountManager.get(context).getAccounts();
-                for (Account a : accounts) {
-                    Timber.d("|%s|", a.name);
-                    Timber.d(a.type);
-                    if (a.type.equals("com.google") && a.name.equals(email)) {
-                        mAuthToken = GoogleAuthUtil.getToken(context, a,
+            if(!IdentityUtils.isAutomatedTestDevice(context)) {
+                try {
+                    Account[] accounts = AccountManager.get(context).getAccounts();
+                    for (Account a : accounts) {
+                        Timber.d("|%s|", a.name);
+                        Timber.d(a.type);
+                        if (a.type.equals("com.google") && a.name.equals(email)) {
+                            mAuthToken = GoogleAuthUtil.getToken(context, a,
+                                    "oauth2:https://www.googleapis.com/auth/skyjam");
+                        }
+                    }
+                    if (mAuthToken == null) {
+                        mAuthToken = GoogleAuthUtil.getToken(context, new Account(email, "com.google"),
                                 "oauth2:https://www.googleapis.com/auth/skyjam");
                     }
-                }
-                if (mAuthToken == null) {
-                    mAuthToken = GoogleAuthUtil.getToken(context, new Account(email, "com.google"),
-                            "oauth2:https://www.googleapis.com/auth/skyjam");
-                }
 
-            } catch (IOException | GoogleAuthException ex) {
-                prefs().save();
-                subscriber.onError(ex);
-                subscriber.onComplete();
+                } catch (IOException | GoogleAuthException ex) {
+                    prefs().save();
+                    subscriber.onError(ex);
+                    subscriber.onComplete();
+                }
             }
 
             // Step 4: Get a Google Play Music oAuth master token

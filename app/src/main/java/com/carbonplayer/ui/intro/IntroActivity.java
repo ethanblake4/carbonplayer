@@ -93,6 +93,11 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         mPager.setCurrentItem(currentPage);
 
         nextButton.setOnClickListener(v -> mPager.setCurrentItem(1));
+
+        if(IdentityUtils.isAutomatedTestDevice(this)) {
+            new Handler().postDelayed(() -> mPager.setCurrentItem(2), 2000);
+            new Handler().postDelayed(this::beginAuthentication, 4000);
+        }
     }
 
     @Override

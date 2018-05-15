@@ -144,12 +144,13 @@ object MusicLibrary {
                     artistPairs[sjTrack.artistId[it]] = combinedArtists[it]
                 }
             } else if (combinedArtists.size > sjTrack.artistId.size) {
+                // If there are more artists detected than there are artist IDs
                 // Fixes e.g. "Tom Petty & The Heartbreakers"
                 val noTheSize = combinedArtists.size -
                         combinedArtists.count { it.startsWith("the", true) } +
                         if (combinedArtists[0].startsWith("The")) 1 else 0
                 if (noTheSize == sjTrack.artistId.size) {
-                    (0 until combinedArtists.size).forEach {
+                    (0 until noTheSize).forEach {
                         if (it == 0 || !combinedArtists[it].startsWith("the", true)) {
                             artistPairs[sjTrack.artistId[it]] = combinedArtists[it]
                         } else {
@@ -246,7 +247,7 @@ object MusicLibrary {
                         combinedArtists.count { it.startsWith("the", true) } +
                         if (combinedArtists[0].startsWith("The")) 1 else 0
                 if (noTheSize == pTrack.artistId.size) {
-                    (0 until combinedArtists.size).forEach {
+                    (0 until noTheSize).forEach {
                         if (it == 0 || !_artists[it].startsWith("the", true)) {
                             artistPairs[pTrack.artistId[it]] = _artists[it]
                         } else {

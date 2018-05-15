@@ -30,26 +30,40 @@
         android:textColor="#000"
         android:textSize="13sp" />
 
-    <EditText
-        android:id="@+id/sign_in_username_email"
-        style="@style/Widget.AppCompat.EditText"
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/email_or_phone"
-        android:inputType="textEmailAddress"
-        android:textColor="#555"
-        android:theme="@style/GoogleText"
-        android:textColorHighlight="#4285f4" />
+        android:theme="@style/GoogleText">
 
-    <EditText
-        android:id="@+id/sign_in_dialog_password"
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/sign_in_username_email"
+            style="@style/Widget.AppCompat.EditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/email_or_phone"
+            android:inputType="textEmailAddress"
+            android:textColor="#555"
+            android:textColorHighlight="#4285f4" />
+
+
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/password"
-        android:inputType="textPassword"
-        android:textColor="#555"
-        android:theme="@style/GoogleText"
-        android:textColorHighlight="#4285f4" />
+        android:theme="@style/GoogleText">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/sign_in_dialog_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/password"
+            android:inputType="textPassword"
+            android:textColor="#555"
+            android:textColorHighlight="#4285f4" />
+
+    </android.support.design.widget.TextInputLayout>
+
 
     <Button
         android:id="@+id/sign_in_dialog_button"

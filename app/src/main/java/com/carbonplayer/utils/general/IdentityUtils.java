@@ -70,6 +70,12 @@ public final class IdentityUtils {
         return 0;
     }
 
+    public static boolean isAutomatedTestDevice(Context context) {
+        String testLabSetting =
+                Settings.System.getString(context.getContentResolver(), "firebase.test.lab");
+        return "true".equals(testLabSetting);
+    }
+
     public static boolean isEmulator() {
         return Build.FINGERPRINT.startsWith("generic")
                 || Build.FINGERPRINT.startsWith("unknown")
