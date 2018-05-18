@@ -25,17 +25,28 @@ class SimpleScaleTransition (
     override fun getAnimator(container: ViewGroup, from: View?, to: View?, isPush: Boolean,
                              toAddedToContainer: Boolean): Animator {
         return AnimatorSet().apply {
-            playTogether(
-                    ObjectAnimator.ofFloat(from, View.SCALE_X, 1f, if(isPush) 1.35f else 0.5f),
-                    ObjectAnimator.ofFloat(from, View.SCALE_Y, 1f, if(isPush) 1.35f else 0.5f),
-                    ObjectAnimator.ofFloat(from, View.ALPHA, 1f, 0f),
-                    ObjectAnimator.ofFloat(to, View.SCALE_X, if(isPush) 0.5f else 1.35f, 1f),
-                    ObjectAnimator.ofFloat(to, View.SCALE_Y, if(isPush) 0.5f else 1.35f, 1f),
-                    ObjectAnimator.ofFloat(to, View.ALPHA, 0f, 1f)
-            )
+
+            if(from == null && to == null) return@apply
+
+            val builder =
+                    if (from != null) {
+                        play(ObjectAnimator.ofFloat(
+                            from, View.SCALE_X, 1f, if(isPush) 1.35f else 0.5f))
+                    } else play(ObjectAnimator.ofFloat(
+                            to, View.SCALE_X, if(isPush) 0.5f else 1.35f, 1f))
+
+            if(from != null) {
+                if(to != null) builder.with(ObjectAnimator.ofFloat(
+                        to, View.SCALE_X, if(isPush) 0.5f else 1.35f, 1f))
+                builder.with(ObjectAnimator.ofFloat(
+                        from, View.SCALE_Y, 1f, if(isPush) 1.35f else 0.5f))
+                builder.with(ObjectAnimator.ofFloat(from, View.ALPHA, 1f, 0f))
+            }
+            if(to != null) {
+                builder.with(ObjectAnimator.ofFloat(to, View.SCALE_Y, if(isPush) 0.5f else 1.35f, 1f))
+                ObjectAnimator.ofFloat(to, View.ALPHA, 0f, 1f)
+            }
             interpolator = FastOutSlowInInterpolator()
         }
-
-
     }
 }

@@ -16,14 +16,14 @@ import com.carbonplayer.model.network.utils.RealmListJsonAdapterFactory
 import com.carbonplayer.ui.main.TopChartsController
 import com.carbonplayer.utils.CrashReportingTree
 import com.carbonplayer.utils.Preferences
+import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.jobs.CacheEvictionJob
 import com.carbonplayer.utils.jobs.CarbonJobCreator
 import com.evernote.android.job.JobManager
 import com.facebook.stetho.Stetho
 import com.facebook.stetho.okhttp3.StethoInterceptor
-import com.google.android.exoplayer2.upstream.*
-import com.google.android.exoplayer2.util.Util
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.perf.FirebasePerformance
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.squareup.moshi.KotlinJsonAdapterFactory
 import com.squareup.moshi.Moshi
@@ -48,7 +48,6 @@ class CarbonPlayerApplication : Application() {
     //Instance variables
     var currentAlbum: Album? = null
 
-
     init {
         instance = this
     }
@@ -59,6 +58,10 @@ class CarbonPlayerApplication : Application() {
         if (ProcessPhoenix.isPhoenixProcess(this)) return
 
         analytics = FirebaseAnalytics.getInstance(this)
+
+        analytics.setAnalyticsCollectionEnabled(
+                !BuildConfig.DEBUG &&
+                !IdentityUtils.isAutomatedTestDevice(this))
 
         /*if (LeakCanary.isInAnalyzerProcess(this))
             return
@@ -75,6 +78,7 @@ class CarbonPlayerApplication : Application() {
         androidHttpClient = AndroidHttpClient.newInstance(googleUserAgent, applicationContext)
 
         if (BuildConfig.DEBUG) {
+            FirebasePerformance.getInstance().isPerformanceCollectionEnabled = false
             Timber.plant(Timber.DebugTree())
 
             Stetho.initialize(
@@ -92,7 +96,7 @@ class CarbonPlayerApplication : Application() {
         JobManager.create(this).addJobCreator(CarbonJobCreator())
         CacheEvictionJob.schedule()
 
-        RxJavaPlugins.setErrorHandler { e -> Timber.e(e, e.toString()) }
+        RxJavaPlugins.setErrorHandler { e -> Timber.e(e) }
 
         Realm.init(this)
         // Configure default configuration for Realm
@@ -110,16 +114,6 @@ class CarbonPlayerApplication : Application() {
             (applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
                     .createNotificationChannel(mChannel)
         }
-    }
-
-    fun buildDataSourceFactory(bandwidthMeter: DefaultBandwidthMeter?): DataSource.Factory {
-        return DefaultDataSourceFactory(this, bandwidthMeter,
-                buildHttpDataSourceFactory())
-
-    }
-
-    fun buildHttpDataSourceFactory(): HttpDataSource.Factory {
-        return DefaultHttpDataSourceFactory(Util.getUserAgent(this, googleUserAgent))
     }
 
     val googleBuildNumberLong = 68381L
@@ -164,7 +158,5 @@ class CarbonPlayerApplication : Application() {
                 .add(RealmListJsonAdapterFactory())
                 .add(KotlinJsonAdapterFactory())
                 .build()
-
-
     }
 }

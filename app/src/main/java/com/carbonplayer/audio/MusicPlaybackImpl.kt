@@ -2,7 +2,6 @@ package com.carbonplayer.audio
 
 import android.app.Service
 import android.net.Uri
-import android.os.Handler
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.exception.PlaybackException
@@ -34,8 +33,6 @@ class MusicPlaybackImpl(
         val onbuffer: (Float) -> Unit,
         val onerror: (PlaybackException) -> Unit
 ) : Player.EventListener {
-
-    private val mainHandler: Handler = Handler(service.mainLooper)
 
     private var subscription: Disposable? = null
 
@@ -202,9 +199,6 @@ class MusicPlaybackImpl(
             mirroredContentQueue.add(sourcePair.first)
             sourcePair.second
         })
-        subscription?.dispose()
-        subscription = mirroredContentQueue[trackNum].progressMonitor()
-                .subscribe({ b -> onbuffer(b) })
 
         dynamicSource.addMediaSources(sources)
 
@@ -362,7 +356,8 @@ class MusicPlaybackImpl(
     override fun onPositionDiscontinuity(@Player.DiscontinuityReason reason: Int) {
         Timber.d("Position Discontinuity: $reason")
 
-        if (exoPlayer.currentWindowIndex == lastKnownWindowIndex + 1 && !disallowNextAutoInc) {
+        if (exoPlayer.currentWindowIndex == lastKnownWindowIndex + 1 && !disallowNextAutoInc
+                && mirroredQueue.size > trackNum + 1) {
             trackNum++
             Timber.i("Discontinuity -> Next Track")
             ontrackchanged(trackNum, mirroredQueue[trackNum].apply { queuePosition = trackNum })

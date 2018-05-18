@@ -52,6 +52,7 @@ internal class NowPlayingQueueAdapter(
         }
     }
 
+
     override fun onCreateViewHolder(parent: ViewGroup,
                                     viewType: Int): ViewHolder {
         val v = LayoutInflater.from(ContextThemeWrapper(parent.context, R.style.DarkRippleTheme))

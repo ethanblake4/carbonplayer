@@ -36,6 +36,7 @@ import com.carbonplayer.utils.ui.AnimUtils
 import com.carbonplayer.utils.ui.ColorUtils
 import com.carbonplayer.utils.ui.PaletteUtil
 import com.github.florent37.glidepalette.GlidePalette
+import com.google.firebase.perf.metrics.AddTrace
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -571,6 +572,7 @@ class NowPlayingHelper(private val activity: Activity) {
      * Service is running. It is very unlikely that it will be removed.
      */
     @Suppress("DEPRECATION")
+    @AddTrace(name = "isServiceRunning", enabled = true)
     private fun isServiceRunning(): Boolean {
         val manager = activity.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         return manager.getRunningServices(Integer.MAX_VALUE).any {

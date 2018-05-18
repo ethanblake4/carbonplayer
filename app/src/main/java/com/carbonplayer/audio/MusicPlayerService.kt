@@ -430,8 +430,14 @@ class MusicPlayerService : Service(), MusicFocusable {
                     builder.build())
             initialized = true
         } else {
-            notificationMgr.notify(Constants.ID.MUSIC_PLAYER_SERVICE,
-                    builder.build())
+            if(!playback.isUnpaused()) {
+                stopForeground(false)
+                notificationMgr.notify(Constants.ID.MUSIC_PLAYER_SERVICE,
+                        builder.build())
+            } else {
+                startForeground(Constants.ID.MUSIC_PLAYER_SERVICE,
+                        builder.build())
+            }
         }
     }
 
