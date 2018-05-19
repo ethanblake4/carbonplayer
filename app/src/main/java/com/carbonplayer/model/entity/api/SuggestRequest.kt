@@ -1,4 +1,4 @@
-package com.carbonplayer.model.entity
+package com.carbonplayer.model.entity.api
 
 data class SuggestRequest (
         val capabilities: SuggestCapabilities,

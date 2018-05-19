@@ -1,6 +1,8 @@
-package com.carbonplayer.model.entity.skyjam
+package com.carbonplayer.model.entity.api
 
 import com.carbonplayer.model.entity.Image
+import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 
 data class TopChartsResponse (
         val header: TopChartsHeader,

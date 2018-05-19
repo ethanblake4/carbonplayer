@@ -1,4 +1,4 @@
-package com.carbonplayer.model.entity
+package com.carbonplayer.model.entity.api
 
 import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum

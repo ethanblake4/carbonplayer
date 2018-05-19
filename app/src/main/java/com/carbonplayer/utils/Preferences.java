@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
 import com.carbonplayer.CarbonPlayerApplication;
+import com.carbonplayer.model.entity.enums.CarbonThemeBase;
 import com.carbonplayer.model.entity.enums.PaletteMode;
 import com.carbonplayer.model.entity.enums.StreamQuality;
 import com.carbonplayer.utils.general.IdentityUtils;
@@ -41,6 +42,8 @@ public class Preferences {
     public int textAdditionalContrast = 8;
 
     public int maxAudioCacheSizeMB = 1024;
+
+    public CarbonThemeBase themeBase = CarbonThemeBase.MATERIAL_MIXED;
 
     public boolean filterExplicit = false;
 

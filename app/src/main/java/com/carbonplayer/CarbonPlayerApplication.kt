@@ -9,9 +9,11 @@ import android.graphics.Color
 import android.net.http.AndroidHttpClient
 import android.os.Build
 import com.carbonplayer.model.entity.Album
+import com.carbonplayer.model.entity.api.ExploreTab
+import com.carbonplayer.model.entity.api.StationCategory
+import com.carbonplayer.model.entity.api.TopChartsGenres
+import com.carbonplayer.model.entity.api.TopChartsResponse
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
-import com.carbonplayer.model.entity.skyjam.TopChartsGenres
-import com.carbonplayer.model.entity.skyjam.TopChartsResponse
 import com.carbonplayer.model.network.utils.RealmListJsonAdapterFactory
 import com.carbonplayer.ui.main.TopChartsController
 import com.carbonplayer.utils.CrashReportingTree
@@ -23,7 +25,6 @@ import com.evernote.android.job.JobManager
 import com.facebook.stetho.Stetho
 import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.perf.FirebasePerformance
 import com.jakewharton.processphoenix.ProcessPhoenix
 import com.squareup.moshi.KotlinJsonAdapterFactory
 import com.squareup.moshi.Moshi
@@ -78,7 +79,6 @@ class CarbonPlayerApplication : Application() {
         androidHttpClient = AndroidHttpClient.newInstance(googleUserAgent, applicationContext)
 
         if (BuildConfig.DEBUG) {
-            FirebasePerformance.getInstance().isPerformanceCollectionEnabled = false
             Timber.plant(Timber.DebugTree())
 
             Stetho.initialize(
@@ -128,6 +128,9 @@ class CarbonPlayerApplication : Application() {
 
     var homeLastResponse: InnerJamApiV1Proto.GetHomeResponse? = null
     var homePdContextToken: String? = null
+
+    var lastNewReleasesResponse: ExploreTab? = null
+    var lastStationCategoryRoot: StationCategory? = null
 
     var topchartsResponseMap: MutableMap<String, TopChartsResponse> = mutableMapOf()
     var lastTopChartsGenres: TopChartsGenres? = null

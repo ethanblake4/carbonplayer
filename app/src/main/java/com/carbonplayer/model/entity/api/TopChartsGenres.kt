@@ -1,4 +1,4 @@
-package com.carbonplayer.model.entity.skyjam
+package com.carbonplayer.model.entity.api
 
 data class TopChartsGenres (
         val genres: List<Genre>

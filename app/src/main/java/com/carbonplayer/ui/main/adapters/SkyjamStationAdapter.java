@@ -114,7 +114,6 @@ public class SkyjamStationAdapter extends RecyclerView.Adapter<SkyjamStationAdap
         holder.detailText.setTextColor(defaultTextColor);
 
         SkyjamStation s = mDataset.get(position);
-        Timber.d(s.toString());
         holder.titleText.setText(s.getName());
         holder.detailText.setText("");
         holder.station = s;

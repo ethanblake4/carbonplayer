@@ -28,7 +28,8 @@ import timber.log.Timber
 import android.app.Activity
 import android.support.v4.content.ContextCompat.startActivity
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-
+import android.view.LayoutInflater
+import android.view.View
 
 
 fun JSONObject.maybeGetInt (key: String?): Int? = maybeGet (key, { getInt(key) })
@@ -42,6 +43,7 @@ fun JSONObject.maybeGetArray (key: String?): JSONArray? = maybeGet (key, { getJS
 val Any.carbonAnalytics: FirebaseAnalytics
     get() = CarbonPlayerApplication.instance.analytics
 
+val View.layoutInflater get() = LayoutInflater.from(this.context)
 
 fun FirebaseAnalytics.logEntityEvent(event: String, artist: IArtist) =
         logEvent(event, bundleOf(

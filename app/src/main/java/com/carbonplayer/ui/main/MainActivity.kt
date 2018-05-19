@@ -24,6 +24,7 @@ import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.*
+import com.carbonplayer.model.entity.api.TopChartsGenres
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.IArtist
 import com.carbonplayer.model.entity.base.IPlaylist
@@ -35,7 +36,6 @@ import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
 import com.carbonplayer.model.entity.skyjam.SkyjamArtist
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
-import com.carbonplayer.model.entity.skyjam.TopChartsGenres
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import com.carbonplayer.ui.intro.IntroActivity
@@ -43,6 +43,7 @@ import com.carbonplayer.ui.main.adapters.SuggestionsAdapter
 import com.carbonplayer.ui.main.library.*
 import com.carbonplayer.ui.settings.Settings
 import com.carbonplayer.ui.transition.SimpleScaleTransition
+import com.carbonplayer.ui.widget.helpers.BottomNavigationHelper
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.carbonAnalytics
 import com.carbonplayer.utils.general.IdentityUtils
@@ -138,12 +139,15 @@ class MainActivity : AppCompatActivity() {
                 IdentityUtils.getNavbarHeight(resources))
         bottom_nav.selectedItemId = R.id.action_home
 
+        BottomNavigationHelper.disableShiftMode(bottom_nav)
+
         bottom_nav.setOnNavigationItemSelectedListener { item ->
 
             val initialFrag = when (item.itemId) {
                 R.id.action_topcharts -> TopChartsController()
                 R.id.action_home -> HomeController()
                 R.id.action_library -> LibraryController()
+                R.id.action_explore -> ExploreController()
                 else -> LibraryController()
             }
 
@@ -170,6 +174,11 @@ class MainActivity : AppCompatActivity() {
                     main_actionbar_text.visibility = View.VISIBLE
                     topChartsSpinner.visibility = View.GONE
                     main_actionbar_text.setText(R.string.my_library)
+                }
+                R.id.action_explore -> {
+                    main_actionbar_text.visibility = View.VISIBLE
+                    topChartsSpinner.visibility = View.GONE
+                    main_actionbar_text.setText(R.string.explore)
                 }
                 else -> {
                     main_actionbar_text.visibility = View.VISIBLE

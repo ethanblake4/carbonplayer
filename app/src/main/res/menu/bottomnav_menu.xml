@@ -13,6 +13,11 @@
         android:title="@string/home"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_explore"
+        android:icon="@drawable/ic_explore_white_24dp"
+        android:title="@string/explore"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_library"
         android:icon="@drawable/ic_library_music_white_24dp"
         android:title="@string/library"

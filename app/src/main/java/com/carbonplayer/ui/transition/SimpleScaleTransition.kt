@@ -44,7 +44,7 @@ class SimpleScaleTransition (
             }
             if(to != null) {
                 builder.with(ObjectAnimator.ofFloat(to, View.SCALE_Y, if(isPush) 0.5f else 1.35f, 1f))
-                ObjectAnimator.ofFloat(to, View.ALPHA, 0f, 1f)
+                builder.with(ObjectAnimator.ofFloat(to, View.ALPHA, 0f, 1f))
             }
             interpolator = FastOutSlowInInterpolator()
         }

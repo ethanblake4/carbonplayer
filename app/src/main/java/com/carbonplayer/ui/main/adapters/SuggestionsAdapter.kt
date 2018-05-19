@@ -11,7 +11,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.SuggestResponse
+import com.carbonplayer.model.entity.api.SuggestResponse
 import com.carbonplayer.model.entity.utils.MediaTypeUtil
 import kotlinx.android.synthetic.main.search_song_layout.view.*
 import kotlinx.android.synthetic.main.text_suggestion.view.*

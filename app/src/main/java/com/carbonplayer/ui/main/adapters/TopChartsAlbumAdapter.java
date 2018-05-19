@@ -42,6 +42,8 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
     private int screenWidthPx;
     private RequestManager requestManager;
 
+    public boolean isHorizontal = false;
+
     class ViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.gridLayoutRoot) View layoutRoot;
         @BindView(R.id.gridLayoutContentRoot) View contentRoot;
@@ -100,7 +102,8 @@ public class TopChartsAlbumAdapter extends RecyclerView.Adapter<TopChartsAlbumAd
                                                        int viewType) {
         // create a new view
         View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.grid_item_layout, parent, false);
+                .inflate(isHorizontal ? R.layout.grid_item_layout_horizontal :
+                        R.layout.grid_item_layout, parent, false);
         // set the view's size, margins, paddings and layout parameters
 
         ViewHolder vh = new ViewHolder(v);

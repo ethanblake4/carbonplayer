@@ -5,7 +5,9 @@ import android.content.Context
 import android.net.Uri
 import android.net.http.AndroidHttpClient
 import com.carbonplayer.CarbonPlayerApplication
-import com.carbonplayer.model.entity.*
+import com.carbonplayer.model.entity.ConfigEntry
+import com.carbonplayer.model.entity.api.*
+import com.carbonplayer.model.entity.enums.ExploreTabType
 import com.carbonplayer.model.entity.enums.NetworkType
 import com.carbonplayer.model.entity.enums.RadioFeedReason
 import com.carbonplayer.model.entity.enums.StreamQuality
@@ -14,6 +16,7 @@ import com.carbonplayer.model.entity.exception.ServerRejectionException
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto.GetHomeRequest
 import com.carbonplayer.model.entity.radio.RadioSeed
+import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.model.entity.radio.request.RadioFeedRequest
 import com.carbonplayer.model.entity.radio.response.RadioFeedResponse
 import com.carbonplayer.model.entity.skyjam.*
@@ -39,6 +42,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
+import java.io.InvalidObjectException
 import java.io.UnsupportedEncodingException
 import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
@@ -149,6 +153,152 @@ object Protocol {
 
             throw ResponseCodeException(response.body()!!.string())
         }
+    }
+
+    /*fun newReleases(context: Context): Single<NewReleasesResponse> = Single.fromCallable {
+
+        val client = CarbonPlayerApplication.instance.okHttpClient
+        val adapter = CarbonPlayerApplication.moshi.adapter(NewReleasesResponse::class.java)
+
+        val getParams = Uri.Builder()
+                .appendQueryParameter("alt", "json")
+                .appendDefaults()
+                .build()
+
+        val request = defaultBuilder(context)
+                .url(SJ_URL + "explore/newreleases?" + getParams)
+                .header("Content-Type", "application/json")
+                .build()
+
+        val response = client.newCall(request).execute()
+
+        if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+            response.body()?.string()?.let {
+                Timber.d(it)
+                return@fromCallable adapter.fromJson(it)
+            }
+        }
+
+        if (response.code() in 400..499) {
+            Timber.d(response.body()?.string())
+            GoogleLogin.retryGoogleAuthSync(context)
+            throw ServerRejectionException(
+                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
+            )
+        }
+
+        throw ResponseCodeException(response.body()!!.string())
+    }*/
+
+    fun exploreTab(context: Context, tabType: ExploreTabType, genre: String? = null,
+                   maxEntries: Int = 100) : Single<ExploreTab> = Single.fromCallable {
+        val client = CarbonPlayerApplication.instance.okHttpClient
+        val adapter = CarbonPlayerApplication.moshi.adapter(ExploreTabsResponse::class.java)
+
+        val getParams = Uri.Builder()
+                .appendQueryParameter("alt", "json")
+                .appendDefaults()
+                .appendQueryParameter("tabs", tabType.ordinal.toString())
+                .appendQueryParameter("num-items", maxEntries.toString())
+                .apply { if(genre != null) appendQueryParameter("genre", genre) }
+                .build()
+
+        val request = defaultBuilder(context)
+                .url(SJ_URL + "explore/tabs?" + getParams)
+                .header("Content-Type", "application/json")
+                .build()
+
+        val response = client.newCall(request).execute()
+
+        if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+            response.body()?.string()?.let {
+                Timber.d(it)
+                return@fromCallable adapter.fromJson(it)?.tabs?.getOrNull(0)
+                ?: throw InvalidObjectException("value is null")
+            }
+        }
+
+        if (response.code() in 400..499) {
+            Timber.d(response.body()?.string())
+            GoogleLogin.retryGoogleAuthSync(context)
+            throw ServerRejectionException(
+                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
+            )
+        }
+
+        throw ResponseCodeException(response.body()!!.string())
+    }
+
+    fun stationCategories(context: Context) : Single<StationCategory> = Single.fromCallable {
+        val client = CarbonPlayerApplication.instance.okHttpClient
+        val adapter = CarbonPlayerApplication.moshi.adapter(StationCategoryResponse::class.java)
+
+        val getParams = Uri.Builder()
+                .appendQueryParameter("alt", "json")
+                .appendDefaults()
+                .build()
+
+        val request = defaultBuilder(context)
+                .url(SJ_URL + "browse/stationcategories?" + getParams)
+                .header("Content-Type", "application/json")
+                .build()
+
+        val response = client.newCall(request).execute()
+
+        if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+            response.body()?.string()?.let {
+                Timber.d(it)
+                return@fromCallable adapter.fromJson(it)?.root
+                        ?: throw InvalidObjectException("value is null")
+            }
+        }
+
+        if (response.code() in 400..499) {
+            Timber.d(response.body()?.string())
+            GoogleLogin.retryGoogleAuthSync(context)
+            throw ServerRejectionException(
+                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
+            )
+        }
+
+        throw ResponseCodeException(response.body()!!.string())
+    }
+
+    fun stations(
+            context: Context, category: StationCategory
+    ) : Single<List<SkyjamStation>> = Single.fromCallable {
+        val client = CarbonPlayerApplication.instance.okHttpClient
+        val adapter = CarbonPlayerApplication.moshi.adapter(StationsResponse::class.java)
+
+        val getParams = Uri.Builder()
+                .appendQueryParameter("alt", "json")
+                .appendDefaults()
+                .build()
+
+        val request = defaultBuilder(context)
+                .url(SJ_URL + "browse/stations/${category.id}?" + getParams)
+                .header("Content-Type", "application/json")
+                .build()
+
+        val response = client.newCall(request).execute()
+
+        if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
+            response.body()?.string()?.let {
+                Timber.d(it)
+                return@fromCallable adapter.fromJson(it)?.stations
+                        ?: throw InvalidObjectException("value is null")
+            }
+        }
+
+        if (response.code() in 400..499) {
+            Timber.d(response.body()?.string())
+            GoogleLogin.retryGoogleAuthSync(context)
+            throw ServerRejectionException(
+                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
+            )
+        }
+
+        throw ResponseCodeException(response.body()!!.string())
     }
 
     @Suppress("DEPRECATION")

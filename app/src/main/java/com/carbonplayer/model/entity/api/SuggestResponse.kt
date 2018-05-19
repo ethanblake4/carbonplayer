@@ -1,4 +1,4 @@
-package com.carbonplayer.model.entity
+package com.carbonplayer.model.entity.api
 
 import timber.log.Timber
 import java.util.*

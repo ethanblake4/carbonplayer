@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import kotlinx.android.synthetic.main.topcharts_song_layout.view.*
@@ -46,6 +47,7 @@ internal class TopChartsSongAdapter(
         t.albumArtRef?.first()?.url?.let {
             Glide.with(holder.itemView)
                     .load(it)
+                    .transition(DrawableTransitionOptions.withCrossFade(200))
                     .into(holder.itemView.trackThumb)
         }
     }

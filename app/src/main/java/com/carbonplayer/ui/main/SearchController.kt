@@ -12,7 +12,7 @@ import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.carbonplayer.R
-import com.carbonplayer.model.entity.SearchResponse
+import com.carbonplayer.model.entity.api.SearchResponse
 import com.carbonplayer.model.entity.utils.MediaTypeUtil
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.helpers.MusicManager

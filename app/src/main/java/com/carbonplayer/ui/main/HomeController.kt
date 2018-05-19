@@ -26,6 +26,7 @@ import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1P
 import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adaptivehome.FullBleedListAdapter
+import com.carbonplayer.ui.main.adaptivehome.HomeCardController
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
 import io.reactivex.Completable
@@ -137,9 +138,9 @@ class HomeController : Controller() {
                             }
                         },
                         { mod: FullBleedModuleV1Proto.FullBleedModule ->
-                            Toast.makeText(activity, "This action is not supported yet",
-                                    Toast.LENGTH_LONG).show()
-                            Timber.d("Clicked module")
+                            (activity as MainActivity).goto(
+                                    HomeCardController(mod)
+                            )
                         }, { mod, cb ->
                             playSingleSection(mod.singleSection)
                                     .observeOn(AndroidSchedulers.mainThread())
