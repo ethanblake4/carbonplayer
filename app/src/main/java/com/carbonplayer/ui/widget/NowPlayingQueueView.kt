@@ -19,6 +19,7 @@ class NowPlayingQueueView: RecyclerView {
     private var activePointerId = MotionEvent.INVALID_POINTER_ID
     private var lastY = 0f
     private var last2Y = 0f
+    private var eventStartedOnDragHandle = false
     var initialY = -2f
     private val scroller = Scroller(context, FastOutSlowInInterpolator())
     private val dragHandleMaxX: Int
@@ -73,12 +74,14 @@ class NowPlayingQueueView: RecyclerView {
         when(event?.actionMasked) {
 
             MotionEvent.ACTION_DOWN -> {
+
                 /* On a touch, set the current active pointer and remove control from
                  * the scroller */
 
                 super.onTouchEvent(event)
                 scrollHasControl = false
                 val ac = event.actionIndex
+                eventStartedOnDragHandle = event.rawX < dragHandleMaxX
                 last2Y = lastY
                 lastY = event.rawY
                 eventInitialY = event.rawY
@@ -92,11 +95,10 @@ class NowPlayingQueueView: RecyclerView {
                  */
                 val dy = event.rawY - lastY
 
-
                 if(!eventHasMotion && (event.rawY > eventInitialY + 1
                         || event.rawY < eventInitialY - 1)) eventHasMotion = true
                 if(eventHasMotion) {
-                    if(event.rawX < dragHandleMaxX){
+                    if(eventStartedOnDragHandle){
                         super.onTouchEvent(event)
                     } else if(isUp && event.rawY < lastY) {
                         super.onTouchEvent(event)
@@ -130,7 +132,7 @@ class NowPlayingQueueView: RecyclerView {
 
                 getLocationInWindow(location)
 
-                if(event.rawX < dragHandleMaxX){
+                if(eventStartedOnDragHandle){
                     super.onTouchEvent(event)
                 } else if(isUp && event.rawY < lastY) {
                     super.onTouchEvent(event)
@@ -186,9 +188,11 @@ class NowPlayingQueueView: RecyclerView {
             MotionEvent.ACTION_CANCEL -> {
                 super.onTouchEvent(event)
                 activePointerId = MotionEvent.INVALID_POINTER_ID
+                eventStartedOnDragHandle = false
             }
 
             MotionEvent.ACTION_POINTER_UP -> {
+                eventStartedOnDragHandle = false
                 super.onTouchEvent(event)
                 if (event.getPointerId(event.actionIndex) == activePointerId) {
                     // This was our active pointer going up. Choose a new

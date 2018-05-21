@@ -98,9 +98,9 @@ class PlaylistController(
             savedState.getInt("secondaryTextColor")
     )
 
-    @Keep constructor(context:Context, drawable: Drawable?,
+    @Keep constructor(context: Context, drawable: Drawable?,
                       playlist: IPlaylist, swatchPair: PaletteUtil.SwatchPair) : this (
-            Observable.just(drawable),
+            drawable?.let { Observable.just(it) },
             playlist,
             null,
             MusicLibrary.loadPlentries(context, playlist),

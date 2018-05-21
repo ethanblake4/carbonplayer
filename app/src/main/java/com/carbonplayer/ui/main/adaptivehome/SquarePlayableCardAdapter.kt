@@ -21,7 +21,9 @@ import kotlinx.android.synthetic.main.grid_item_layout.view.*
 
 
 internal class SquarePlayableCardAdapter (
-        val context: MainActivity
+        val context: MainActivity,
+        val callback: (SquarePlayableCardV1Proto.SquarePlayableCardDescriptor) -> Unit,
+        val menuCallback: (View, SquarePlayableCardV1Proto.SquarePlayableCardDescriptor) -> Unit
 ) : HeaderRecyclerViewAdapter<
         RecyclerView.ViewHolder,
         Pair<AttributedTextV1Proto.AttributedText, ColorV1Proto.Color>,
@@ -66,10 +68,18 @@ internal class SquarePlayableCardAdapter (
         holder.itemView.primaryText.text = card.titleSection.title.text
         holder.itemView.detailText.text = card.titleSection.subtitle.text
 
+        holder.itemView.imageButton.setOnClickListener { v ->
+            menuCallback(v, getItem(position))
+        }
+
         glide.load(card.imageReference.url)
                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                 .transition(DrawableTransitionOptions.withCrossFade(200))
                 .into(holder.itemView.imgthumb)
+
+        holder.itemView.gridLayoutRoot.setOnClickListener {
+            callback(getItem(position))
+        }
 
     }
 

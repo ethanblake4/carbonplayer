@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Parcelable
 import com.carbonplayer.model.entity.Image
 import com.carbonplayer.model.entity.base.IPlaylist
+import com.carbonplayer.model.entity.proto.identifiers.PlayableItemIdV1Proto
 import kotlinx.android.parcel.Parcelize
 
 @SuppressLint("ParcelCreator")
@@ -29,4 +30,10 @@ data class SkyjamPlaylist (
         override var explicitType: String?,
         override var contentType: String?
 
-) : IPlaylist, Parcelable
+) : IPlaylist, Parcelable {
+    constructor(protoItem: PlayableItemIdV1Proto.PlayableItemId, name: String) : this (
+            "", "", "", name, null, null, null, null,
+            protoItem.audioList.sharedPlaylist.playlistToken,
+            null, null, false, null, null, null, null, null, null
+    )
+}

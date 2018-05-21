@@ -25,8 +25,6 @@ import android.widget.Toast
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.Artist
@@ -82,8 +80,8 @@ class ArtistController(
     private var fabOffset: Int = 0
     private var squareHeight: Int = 0
 
-    private lateinit var artistProxy: Artist
     private lateinit var realArtist: IArtist
+    private var retrievedFuture = false
     //private val aId = artist
 
     private var expanded = false
@@ -153,14 +151,17 @@ class ArtistController(
         root.main_backdrop.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.TWO_BY_ONE
         root.parallaxSquare.aspect = ImageReferenceV1Proto.ImageReference.AspectRatio.TWO_BY_ONE
 
-        futureArtist?.subscribe {
-            realArtist = it
-            setupView(root, true)
+        if(!retrievedFuture) {
+            futureArtist?.subscribe {
+                retrievedFuture = true
+                realArtist = it
+                setupView(root, true)
+            }
         }
 
         root.secondaryText.setText(R.string.media_type_artist)
 
-        realArtist = artist
+        realArtist = if(retrievedFuture) realArtist else artist
         setupView(root, false)
 
         root.songgroup_recycler.isNestedScrollingEnabled = false

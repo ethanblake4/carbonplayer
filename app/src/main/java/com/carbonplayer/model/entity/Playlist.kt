@@ -62,5 +62,6 @@ open class Playlist(
         const val LOCAL_ID = "localId"
         const val REMOTE_ID = "id"
         const val CLIENT_ID = "clientId"
+        const val SHARE_TOKEN = "shareToken"
     }
 }

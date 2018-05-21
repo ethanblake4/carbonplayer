@@ -31,6 +31,10 @@ import com.carbonplayer.model.entity.base.IPlaylist
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.enums.MediaType
 import com.carbonplayer.model.entity.enums.RadioFeedReason
+import com.carbonplayer.model.entity.proto.identifiers.ArtistIdV1Proto
+import com.carbonplayer.model.entity.proto.innerjam.elements.ActionListV1Proto
+import com.carbonplayer.model.entity.proto.innerjam.elements.ActionListV1Proto.ActionList.Action.TypeCase.*
+import com.carbonplayer.model.entity.proto.innerjam.renderers.ContextMenuV1Proto
 import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.model.entity.skyjam.SkyjamAlbum
@@ -407,6 +411,72 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun execProtoAction(action: ActionListV1Proto.ActionList.Action,
+                        itemTitle: String, itemSubtitle: String) {
+
+        val showErr = {
+            Toast.makeText(this, "Could not perform action", Toast.LENGTH_LONG).show()
+        }
+
+        when(action.typeCase) {
+            DISMISSALOPTION -> Timber.d("Dismiss")
+            ALBUMRELEASELINK -> {
+                Timber.d("Album release")
+            }
+            ARTISTLINK -> when(action.artistLink.typeCase) {
+                ArtistIdV1Proto.ArtistId.TypeCase.CATALOG ->
+                    gotoArtist(SkyjamArtist(action.artistLink.catalog.metajamCompactKey),
+                            PaletteUtil.DEFAULT_SWATCH_PAIR)
+                else -> showErr()
+            }
+            SHARECONTENTOPTION -> {
+                shareImpl(action.shareContentOption.shareLink, action.shareContentOption.shareTitle)
+            }
+            STARTRADIOSTATIONOPTION -> {
+                npHelper.startRadio(action.startRadioStationOption.radioSeedId)
+            }
+            PURCHASEOPTION -> showErr()
+            INTERNALURL -> showErr()
+            EXTERNALURL -> showErr()
+            PLAYCONTAINERNEXTOPTION -> showErr()
+            ADDCONTAINERTOQUEUEOPTION -> showErr()
+            ADDCONTAINERTOUSERLIBRARYOPTION -> showErr()
+            REMOVECONTAINERFROMUSERLIBRARYOPTION -> showErr()
+            DOWNLOADCONTAINEROPTION -> showErr()
+            REMOVEDOWNLOADEDCONTAINEROPTION -> showErr()
+            EDITPLAYLISTOPTION -> showErr()
+            DELETEPLAYLISTOPTION -> showErr()
+            SUBSCRIBETOPLAYLISTOPTION -> showErr()
+            UNSUBSCRIBEFROMPLAYLISTOPTION -> showErr()
+            PLAYLISTLINK -> showErr()
+            RADIOSTATIONLINK -> showErr()
+            REQUESTCAPABILITY -> showErr()
+            SHOWPAGEOPTION -> showErr()
+            STARTPLAYABLEITEM -> showErr()
+            NAVIGATIONACTION -> showErr()
+            TYPE_NOT_SET -> showErr()
+            null -> Timber.e("Null action list typeCase")
+        }
+    }
+
+    fun showContextMenuPopup(view: View, menuDesc: ContextMenuV1Proto.ContextMenuDescriptor,
+                             itemTitle: String, itemSubtitle: String) {
+        val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
+        val menu = pop.menu
+
+        menuDesc.itemsList.forEachIndexed { i, it ->
+            menu.add(0, it.clickAction.typeCase.number, i, it.displayText)
+        }
+
+        pop.setOnMenuItemClickListener { item ->
+            val menuItem = menuDesc.itemsList.first {
+                it.clickAction.typeCase.number == item.itemId
+            }
+            execProtoAction(menuItem.clickAction, itemTitle, itemSubtitle)
+            true
+        }
+    }
+
     /** When an album's menu button is selected **/
     fun showAlbumPopup(view: View, album: IAlbum) {
 
@@ -462,11 +532,15 @@ class MainActivity : AppCompatActivity() {
                 FirebaseAnalytics.Param.ITEM_NAME to name,
                 FirebaseAnalytics.Param.ITEM_CATEGORY to type
         ))
+        val shareBody = "https://play.google.com/music/m/${id}?signup_if_needed=1"
+        shareImpl(shareBody, "Share via")
+    }
+
+    private fun shareImpl(shareLink: String, shareTitle: String) {
         val sharingIntent = Intent(android.content.Intent.ACTION_SEND)
         sharingIntent.type = "text/plain"
-        val shareBody = "https://play.google.com/music/m/${id}?signup_if_needed=1"
-        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody)
-        startActivity(Intent.createChooser(sharingIntent, "Share via"))
+        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareLink)
+        startActivity(Intent.createChooser(sharingIntent, shareTitle))
     }
 
     fun goto(controller: Controller) {

@@ -21,7 +21,9 @@ import kotlinx.android.synthetic.main.grid_item_layout.view.*
 
 
 internal class TallPlayableCardAdapter (
-        val context: MainActivity
+        val context: MainActivity,
+        val callback: (TallPlayableCardV1Proto.TallPlayableCardDescriptor) -> Unit,
+        val menuCallback: (View, TallPlayableCardV1Proto.TallPlayableCardDescriptor) -> Unit
 ) : HeaderRecyclerViewAdapter<
         RecyclerView.ViewHolder,
         Pair<AttributedTextV1Proto.AttributedText, ColorV1Proto.Color>,
@@ -70,6 +72,14 @@ internal class TallPlayableCardAdapter (
                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                 .transition(DrawableTransitionOptions.withCrossFade(200))
                 .into(holder.itemView.imgthumb)
+
+        holder.itemView.gridLayoutRoot.setOnClickListener {
+            callback(getItem(position))
+        }
+
+        holder.itemView.imageButton.setOnClickListener {
+            menuCallback(it, getItem(position))
+        }
 
     }
 

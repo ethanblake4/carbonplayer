@@ -350,10 +350,13 @@ class AlbumController(
             Protocol.getNautilusAlbum(root.context, album.albumId)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.from(this.activity!!.mainLooper))
-                    .subscribe({ a -> a.tracks?.let {
+                    .subscribe({ a ->
+                        if((album as SkyjamAlbum).source == 2) album = a
+                        a.tracks?.let {
                             tracks = it
                             setupRecycler(root)
                         }})
+
         } else if(tracks.isNotEmpty()) setupRecycler(root)
 
         root.play_fab.setOnClickListener {

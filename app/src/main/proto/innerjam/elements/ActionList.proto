@@ -17,6 +17,8 @@ import "identifiers/PlayableItemId.proto";
 
 message ActionList {
 
+    repeated Action actions = 1;
+
     message Action {
         string displayText = 1;
         oneof type {

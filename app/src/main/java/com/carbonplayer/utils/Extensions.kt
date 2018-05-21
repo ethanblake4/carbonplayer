@@ -6,6 +6,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.Parcelable
+import android.view.LayoutInflater
+import android.view.View
 import androidx.core.os.bundleOf
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.SimpleTarget
@@ -25,11 +27,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.parceler.Parcels
 import timber.log.Timber
-import android.app.Activity
-import android.support.v4.content.ContextCompat.startActivity
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-import android.view.LayoutInflater
-import android.view.View
 
 
 fun JSONObject.maybeGetInt (key: String?): Int? = maybeGet (key, { getInt(key) })
@@ -51,6 +48,10 @@ fun FirebaseAnalytics.logEntityEvent(event: String, artist: IArtist) =
                 FirebaseAnalytics.Param.ITEM_NAME to artist.name,
                 FirebaseAnalytics.Param.ITEM_CATEGORY to MediaType.ARTIST
         ))
+
+fun FirebaseAnalytics.logUnsupportedEvent() = logEvent(
+        "unsupported", null
+)
 
 fun FirebaseAnalytics.logEntityEvent(event: String, album: IAlbum) =
         logEvent(event, bundleOf(

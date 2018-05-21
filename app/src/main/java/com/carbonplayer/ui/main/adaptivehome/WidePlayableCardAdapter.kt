@@ -19,7 +19,8 @@ import kotlinx.android.synthetic.main.full_bleed_header.view.*
 import kotlinx.android.synthetic.main.wide_playable_card.view.*
 
 internal class WidePlayableCardAdapter (
-        val context: MainActivity
+        val context: MainActivity,
+        val callback: (WidePlayableCardV1Proto.WidePlayableCardDescriptor) -> Unit
 ) : HeaderRecyclerViewAdapter<
         RecyclerView.ViewHolder,
         Pair<AttributedTextV1Proto.AttributedText, ColorV1Proto.Color>,

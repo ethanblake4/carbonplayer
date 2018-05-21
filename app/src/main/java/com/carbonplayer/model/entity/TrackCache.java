@@ -14,6 +14,7 @@ import com.carbonplayer.model.entity.primitive.Null;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 
 import io.reactivex.Observable;
 import io.realm.Realm;
@@ -73,6 +74,7 @@ public class TrackCache {
         File[] fileList = cacheDir.listFiles();
 
         LongSparseArray<LinkedList<File>> fileMap = new LongSparseArray<>();
+
         for (File f : fileList) {
             if(f.isDirectory()) continue;
             Long id = Long.parseLong(f.getName().split("--")[0]);
@@ -106,17 +108,27 @@ public class TrackCache {
                 long size = track.getLocalTrackSizeBytes();
                 long importance = track.getCacheImportance(PlaySource.SONGS);
 
+                List<File> tFiles = fileMap.get(track.getLocalId());
+
+                if(tFiles == null) {
+                    track.setHasCachedFile(false);
+                    continue;
+                }
+
                 if (size * importance < clearNumber) {
                     track.setHasCachedFile(false);
-                    for (File f2 : fileMap.get(track.getLocalId())) {
+                    for (File f2 : tFiles) {
                         Timber.d("Deleting cached track %s (quality %s), success: %b",
                                 track.toString(),
                                 String.valueOf(f2.getName().charAt(f2.getName().length() - 1)),
                                 f2.delete());
                     }
+                    if(!track.getInLibrary()) {
+                        track.deleteFromRealm();
+                    }
                 } else {
                     int highestQuality = 0;
-                    for (File f2 : fileMap.get(track.getLocalId())) {
+                    for (File f2 : tFiles) {
                         int qual = Integer.parseInt(String.valueOf(
                                 f2.getName().charAt(f2.getName().length() - 1)));
                         if (qual > highestQuality) {
@@ -124,7 +136,7 @@ public class TrackCache {
                         }
                     }
 
-                    for (File f2 : fileMap.get(track.getLocalId())) {
+                    for (File f2 : tFiles) {
                         int qual = Integer.parseInt(String.valueOf(
                                 f2.getName().charAt(f2.getName().length() - 1)));
                         if (qual < highestQuality) {

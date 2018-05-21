@@ -510,6 +510,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                     if (sendStateOnRegistered) {
                         sendStateOnRegistered = false
                         Timber.d("Sending service state")
+
                         emit(Constants.EVENT.SendQueue)
                         emit(Constants.EVENT.TrackPlaying, lastNotifiedTrack)
                         emit(if (playback.isUnpaused()) Constants.EVENT.Playing else

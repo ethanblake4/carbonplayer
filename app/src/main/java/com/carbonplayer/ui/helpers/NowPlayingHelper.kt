@@ -25,6 +25,8 @@ import com.carbonplayer.audio.TrackQueue
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.base.ITrack
 import com.carbonplayer.model.entity.enums.RadioFeedReason
+import com.carbonplayer.model.entity.proto.identifiers.RadioSeedIdV1Proto.RadioSeedId
+import com.carbonplayer.model.entity.radio.RadioSeed
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.ui.main.adapters.NowPlayingQueueAdapter
 import com.carbonplayer.ui.widget.helpers.QueueItemTouchCallback
@@ -88,6 +90,7 @@ class NowPlayingHelper(private val activity: Activity) {
                  * Register an [IncomingHandler] so we receive messages from the service
                  */
                 Timber.d("Registering bound client")
+                // TODO this creates a race condition apparently
                 val msg = Message.obtain(null, Constants.MESSAGE.REGISTER_CLIENT)
                 replyMessenger = Messenger(IncomingHandler())
                 msg.replyTo = replyMessenger
@@ -250,6 +253,30 @@ class NowPlayingHelper(private val activity: Activity) {
                 })
 
         return completer
+    }
+
+    fun startRadio(seedId: RadioSeedId) {
+        startRadio(when(seedId.typeCase) {
+            RadioSeedId.TypeCase.ALBUMRELEASE -> RadioSeed.TYPE_ALBUM
+            RadioSeedId.TypeCase.ARTIST -> RadioSeed.TYPE_ARTIST
+            RadioSeedId.TypeCase.CURATED -> RadioSeed.TYPE_CURATED_STATION
+            RadioSeedId.TypeCase.FEELINGLUCKY -> 0
+            RadioSeedId.TypeCase.GENRE -> RadioSeed.TYPE_GENRE
+            RadioSeedId.TypeCase.LOCKERPLAYLIST -> RadioSeed.TYPE_PLAYLIST
+            RadioSeedId.TypeCase.TRACK -> RadioSeed.TYPE_SJ_TRACK
+            RadioSeedId.TypeCase.TYPE_NOT_SET -> 0
+            else -> 0
+        }, when(seedId.typeCase) {
+            RadioSeedId.TypeCase.ALBUMRELEASE -> seedId.albumRelease.catalog.metajamCompactKey
+            RadioSeedId.TypeCase.ARTIST -> seedId.artist.catalog.metajamCompactKey
+            RadioSeedId.TypeCase.CURATED -> seedId.curated.metajamCompactKey
+            RadioSeedId.TypeCase.FEELINGLUCKY -> ""
+            RadioSeedId.TypeCase.GENRE -> seedId.genre.id
+            RadioSeedId.TypeCase.LOCKERPLAYLIST -> seedId.lockerPlaylist.playlistToken
+            RadioSeedId.TypeCase.TRACK -> seedId.track.catalog.metajamCompactKey
+            RadioSeedId.TypeCase.TYPE_NOT_SET -> ""
+            else -> ""
+        })
     }
 
     fun fromSharedPlaylist(shareToken: String): Completable {
