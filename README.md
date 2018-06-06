@@ -15,14 +15,10 @@ Carbon Player is intended to improve upon the original Google Play Music applica
 - Improved UX (no more accidentally deleting a track from a playlist!)
 
 ## Roadmap
-There are many things that remain to be added. In loose order of priority, here are the major ones:
+There are several things that remain to be added. In loose order of priority, here are the major ones:
 - Shuffle and Repeat modes
 - Download support and Downloaded Only mode
-- Support for viewing items on the homepage
 - Recents page
-- Top Charts genre filter 
-- New Releases page
-- Browse stations page
 - Chromecast support
 - Google Assistant integration
 - Podcasts
