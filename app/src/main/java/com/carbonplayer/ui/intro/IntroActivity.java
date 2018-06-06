@@ -1,6 +1,7 @@
 package com.carbonplayer.ui.intro;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Build;
@@ -21,6 +22,7 @@ import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
@@ -111,11 +113,15 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
 
         if (mPager.getCurrentItem() > 0) nextButton.setAlpha(0.0f);
         if (mPager.getCurrentItem() < 2) enableSwitching = false;
+
+        if(!CarbonPlayerApplication.instance.preferences.firstStart) {
+            finish();
+        }
     }
 
     @Override
     public void onBackPressed() {
-        //thwart plans
+        // thwart plans
     }
 
     @Override
@@ -175,6 +181,32 @@ public class IntroActivity extends FragmentActivity implements ViewPager.OnPageC
         authDialog.show();
         authDialog.setTitle(getString(R.string.intro_signin));
         authDialog.setCancelable(true);
+    }
+
+    public Dialog showTesterCodeDialog() {
+
+        AlertDialog.Builder authDialog = new AlertDialog.Builder(IntroActivity.this);
+
+        authDialog.setView(R.layout.tester_code_prompt);
+        authDialog.setTitle("Enter tester code");
+
+        authDialog.setPositiveButton("Ok", (dialog, which) -> {
+            if(((EditText)((AlertDialog)dialog).findViewById(R.id.testerCodeText)).getText()
+                    .toString().equals("460591")) {
+                CarbonPlayerApplication.instance.preferences.useTestToken = true;
+                CarbonPlayerApplication.instance.preferences.save();
+                presenter.continueAfterTesterCode();
+            } else {
+                Toast.makeText(this, "Incorrect code", Toast.LENGTH_SHORT).show();
+                presenter.promptTesterCode();
+            }
+        });
+
+        Dialog x = authDialog.create();
+
+        presenter.setAuthDialog(x);
+
+        return x;
     }
 
     public Dialog showWebDialog(String url, boolean forAuth) {

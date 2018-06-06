@@ -65,8 +65,8 @@ internal class SquarePlayableCardAdapter (
                 ProtoUtils.colorFrom(card.imageReference.representativeColor)
         )
 
-        holder.itemView.primaryText.text = card.titleSection.title.text
-        holder.itemView.detailText.text = card.titleSection.subtitle.text
+        holder.itemView.primaryText.text = card.numberedDescriptionSection.titleSection.title.text
+        holder.itemView.detailText.text = card.numberedDescriptionSection.titleSection.subtitle.text
 
         holder.itemView.imageButton.setOnClickListener { v ->
             menuCallback(v, getItem(position))

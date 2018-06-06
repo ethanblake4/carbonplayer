@@ -52,7 +52,7 @@ class ParcelableTrack (
         override var estimatedSize: Int = 0,
         override val trackAvailableForPurchase: Boolean?,
         override val trackAvailableForSubscription: Boolean?,
-        override val trackType: String?,
+        override val trackType: Int?,
         var queuePosition: Int = 0
 
 ) : ITrack, Parcelable {
@@ -96,5 +96,9 @@ class ParcelableTrack (
             source.totalDiscCount, source.totalTrackCount, source.estimatedSize ?: -1,
             source.trackAvailableForPurchase, source.trackAvailableForSubscription, source.trackType
     )
+
+    override fun syncable(): SkyjamTrack {
+        TODO("not implemented")
+    }
 
 }

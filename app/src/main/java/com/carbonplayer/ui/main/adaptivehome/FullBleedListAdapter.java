@@ -3,6 +3,7 @@ package com.carbonplayer.ui.main.adaptivehome;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
@@ -10,7 +11,9 @@ import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -22,6 +25,7 @@ import com.carbonplayer.R;
 import com.carbonplayer.model.entity.proto.innerjam.elements.TitleSectionV1Proto;
 import com.carbonplayer.model.entity.proto.innerjam.renderers.FullBleedModuleV1Proto.FullBleedModule;
 import com.carbonplayer.model.entity.proto.innerjam.visuals.AttributedTextV1Proto;
+import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto;
 import com.carbonplayer.ui.widget.ParallaxScrimageViewSz;
 import com.carbonplayer.utils.protocol.ProtoUtils;
 import com.carbonplayer.utils.ui.ColorUtils;
@@ -69,6 +73,7 @@ public final class FullBleedListAdapter
 
         @BindView(R.id.cardTitle) TextView cardTitle;
         @BindView(R.id.full_bleed_card_img) ParallaxScrimageViewSz image;
+        @BindView(R.id.full_bleed_card) FrameLayout card;
         @BindView(R.id.full_bleed_card_grad) View gradient;
         @BindView(R.id.itemText) TextView itemText;
         @BindView(R.id.playButtonSpinner) ProgressBar playButtonSpinner;
@@ -140,17 +145,30 @@ public final class FullBleedListAdapter
 
             itemText.setTextColor(ProtoUtils.colorFrom(module.getModuleTitle().getColor()));
 
-            gradient.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+            GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                     new int[]{
                             ColorUtils.modifyAlpha(ProtoUtils.colorFrom(
                                     module.getBackgroundColor()), 0.1f),
                             ColorUtils.modifyAlpha(ProtoUtils.colorFrom(
                                     module.getBackgroundImageReference().getRepresentativeColor()), 1.0f)
-                    }));
+                    });
 
-            image.setBackgroundColor(ProtoUtils.colorFrom(
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                image.setForeground(g);
+                if(module.getBackgroundImageReference().getAspectRatio() ==
+                        ImageReferenceV1Proto.ImageReference.AspectRatio.ONE_BY_ONE) {
+                    image.setAdjustViewBounds(false);
+                    image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                }
+            } else {
+                image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                gradient.setBackground(g);
+            }
+
+
+
+            card.setBackgroundColor(ProtoUtils.colorFrom(
                     module.getBackgroundImageReference().getRepresentativeColor()));
-
 
             requestManager.load(module.getBackgroundImageReference().getUrl())
                     .transition(DrawableTransitionOptions.with((dataSource, isFirstResource) -> {
@@ -161,7 +179,6 @@ public final class FullBleedListAdapter
                                 .build(dataSource, isFirstResource);
                     }))
                     .into(image);
-
         }
     }
 

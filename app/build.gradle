@@ -29,8 +29,8 @@ if(new File("carbonplayer.properties").exists()) {
             applicationId "com.carbonplayer"
             minSdkVersion 21
             targetSdkVersion 27
-            versionCode 5
-            versionName "0.2.0"
+            versionCode 6
+            versionName "0.2.1"
             buildConfigField "boolean", "RELEASE", "false"
             signingConfig signingConfigs.config
             multiDexEnabled true

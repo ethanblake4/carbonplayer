@@ -5,11 +5,11 @@ import android.app.Activity
 import android.content.Context
 import android.support.annotation.UiThread
 import android.util.Pair
-import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.model.entity.*
 import com.carbonplayer.model.entity.base.IAlbum
 import com.carbonplayer.model.entity.base.IPlaylist
 import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.enums.MutateOperation
 import com.carbonplayer.model.entity.exception.NoNautilusException
 import com.carbonplayer.model.entity.primitive.FinalBool
 import com.carbonplayer.model.entity.primitive.RealmInteger
@@ -19,6 +19,7 @@ import com.carbonplayer.model.entity.skyjam.SkyjamPlaylist
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import com.carbonplayer.model.network.Protocol
 import com.carbonplayer.utils.addToAutoDispose
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -49,8 +50,7 @@ object MusicLibrary {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(Consumer { entries ->
                     for (e in entries) {
-                        if (e.name == "isNautilusUser"
-                                && !CarbonPlayerApplication.instance.preferences.isCarbonTester)
+                        if (e.name == "isNautilusUser")
                             if (e.value == "false") {
                                 failed.set(true)
                                 onError.accept(NoNautilusException())
@@ -477,7 +477,7 @@ object MusicLibrary {
                 lis.get().forEach { sjPlentry ->
 
                     val track = sjPlentry.track?.let {
-                        insertOrUpdateTrack(realm, it)
+                        addOneToDatabase(realm, it, true, it.inLibrary)
                     }
 
                     val plentry = PlaylistEntry(sjPlentry, track)
@@ -569,11 +569,11 @@ object MusicLibrary {
         return listOf(
                 SkyjamTrack.sample("Intro", 1, artist, album),
                 SkyjamTrack.sample("Fire Eyes", 2, artist, album),
-                SkyjamTrack.sample("Remedial", 1, artist, album),
-                SkyjamTrack.sample("Tapestry", 1, artist, album),
-                SkyjamTrack.sample("Saltwater (Interlude)", 1, artist, album),
-                SkyjamTrack.sample("Virus", 1, artist, album),
-                SkyjamTrack.sample("Devil", 1, artist, album)
+                SkyjamTrack.sample("Remedial", 3, artist, album),
+                SkyjamTrack.sample("Tapestry", 4, artist, album),
+                SkyjamTrack.sample("Saltwater (Interlude)", 5, artist, album),
+                SkyjamTrack.sample("Virus", 6, artist, album),
+                SkyjamTrack.sample("Devil", 7, artist, album)
         )
     }
 
@@ -631,6 +631,65 @@ object MusicLibrary {
         }
     }
 
+    fun addToLibrary(context: Context, track: SkyjamTrack): Completable {
+        track.inLibrary = true
+        return Protocol.mutateEntity(context, track, MutateOperation.CREATE)
+                .andThen(Completable.fromCallable {
+                    Realm.getDefaultInstance().executeTransaction { realm ->
+                        addOneToDatabase(realm, track, true, true)
+                    }
+                })
+                .doOnError { track.inLibrary = false }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+    }
+
+    fun addToLibrary(context: Context, album: SkyjamAlbum): Completable {
+        album.inLibrary = true
+        return Protocol.mutateEntity(context, album, MutateOperation.CREATE)
+                .flatMapCompletable { entity -> Completable.fromCallable {
+                    Realm.getDefaultInstance().executeTransaction { realm ->
+                        (entity as SkyjamAlbum).tracks?.forEach {
+                            addOneToDatabase(realm, it, true, true)
+                        }
+                    }
+                } }
+                .doOnError { album.inLibrary = false }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+    }
+
+    fun removeFromLibrary(context: Context, album: IAlbum): Completable {
+
+        val albumId = album.albumId
+
+        return Protocol.mutateEntity(context, album, MutateOperation.DELETE)
+                .flatMapCompletable { entity -> Completable.fromCallable {
+                    Realm.getDefaultInstance().executeTransaction { realm ->
+                        getDbAlbumTracks(albumId, realm).forEach {
+                            it.inLibrary = false
+                        }
+                        getAlbum(albumId, realm)?.inLibrary = false
+                    }
+                } }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+    }
+
+    fun removeFromLibrary(context: Context, track: ITrack): Completable {
+
+        track.inLibrary = false
+        return Protocol.mutateEntity(context, track, MutateOperation.DELETE)
+                .andThen(Completable.fromCallable {
+                    Realm.getDefaultInstance().executeTransaction { realm ->
+                        get(track, realm)?.inLibrary = false
+                    }
+                })
+                .doOnError { track.inLibrary = true }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+    }
+
     @UiThread
     fun loadArtists(): Flowable<RealmResults<Artist>> {
         return Realm.getDefaultInstance().where(Artist::class.java)
@@ -638,6 +697,30 @@ object MusicLibrary {
                 .sort(Artist.NAME, Sort.ASCENDING)
                 .findAllAsync()
                 .asFlowable()
+    }
+
+    operator fun get(track: ITrack, realm: Realm? = null): Track? {
+        if(track is Track) return track
+        var trackQ = (realm ?: Realm.getDefaultInstance()).where(Track::class.java)
+        var nmo = false
+        track.id?.let { trackQ = trackQ.equalTo(Track.TRACK_ID, it); nmo = true }
+        track.clientId?.let {
+            trackQ = if (nmo) trackQ.or().equalTo(Track.CLIENT_ID, it)
+            else {
+                nmo = true
+                trackQ.equalTo(Track.CLIENT_ID, it)
+            }
+        }
+        track.storeId?.let {
+            trackQ = if (nmo) trackQ.or().equalTo(Track.STORE_ID, it)
+            else trackQ.equalTo(Track.STORE_ID, it)
+        }
+
+        return trackQ.findFirst()
+    }
+
+    fun has(track: ITrack): Boolean {
+        return get(track)?.let { if(!it.inLibrary) null else it } != null
     }
 
     fun getAllAlbumTracks(album: IAlbum): List<ITrack> {
@@ -649,7 +732,28 @@ object MusicLibrary {
         else (album as SkyjamAlbum).tracks?.sortedBy {
             it.trackNumber
         } ?: listOf()
+    }
 
+    fun get(album: IAlbum, realm: Realm? = null): Album? {
+        return getAlbum(album.albumId, realm)
+
+    }
+
+    fun getAlbum(albumId: String, realm: Realm? = null): Album? {
+        return (realm ?: Realm.getDefaultInstance())
+                .where(Album::class.java)
+                .equalTo(Album.ID, albumId)
+                .findFirst()
+    }
+
+    infix fun has(album: IAlbum) = get(album)?.let { if(!it.inLibrary) null else it } != null
+
+    private fun getDbAlbumTracks(album: IAlbum, realm: Realm = Realm.getDefaultInstance()): List<Track> {
+        return get(album, realm)?.tracks?.mapNotNull { get(it, realm) } ?: listOf()
+    }
+
+    private fun getDbAlbumTracks(albumId: String, realm: Realm = Realm.getDefaultInstance()): List<Track> {
+        return getAlbum(albumId, realm)?.tracks?.mapNotNull { get(it, realm) } ?: listOf()
     }
 
     fun getTrack(id: String): Track? {

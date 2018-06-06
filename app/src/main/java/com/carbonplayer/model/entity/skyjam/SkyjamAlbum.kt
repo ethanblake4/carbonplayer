@@ -11,7 +11,7 @@ import com.carbonplayer.model.entity.proto.identifiers.PlayableItemIdV1Proto
 data class SkyjamAlbum (
 
         override val kind: String /* should be "sj#album" */,
-        override val inLibrary: Boolean?,
+        override var inLibrary: Boolean?,
         override val albumId: String = MusicLibrary.UNKNOWN_ALBUM_ID,
         override val recentTimestamp: Long?,
         override val name: String = "",

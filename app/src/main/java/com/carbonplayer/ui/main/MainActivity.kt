@@ -58,6 +58,7 @@ import com.carbonplayer.utils.ui.PaletteUtil
 import com.carbonplayer.utils.ui.VolumeObserver
 import com.crashlytics.android.Crashlytics
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.jakewharton.processphoenix.ProcessPhoenix
 import icepick.Icepick
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -96,7 +97,8 @@ class MainActivity : AppCompatActivity() {
 
         // If this is the first-time start of the app,
         // launch the IntroActivity
-        if (CarbonPlayerApplication.instance.preferences.firstStart) {
+        if (CarbonPlayerApplication.instance.preferences.firstStart
+                && !ProcessPhoenix.isPhoenixProcess(this)) {
             val i = Intent(this@MainActivity, IntroActivity::class.java)
             startActivity(i)
             Timber.d("Started IntroActivity")
@@ -314,9 +316,7 @@ class MainActivity : AppCompatActivity() {
     private fun sub() {
         suggestSubject.debounce(300, TimeUnit.MILLISECONDS)
                 .distinctUntilChanged()
-                .flatMap({ query ->
-                    Protocol.suggest(this, query)
-                })
+                .flatMapSingle ({ query -> Protocol.suggest(this, query) })
                 .map({ response -> response.suggested_queries })
                 .retry(2)
                 .subscribeOn(Schedulers.io())
@@ -403,6 +403,7 @@ class MainActivity : AppCompatActivity() {
         goto(frag)
     }
 
+
     fun scrollCb(dy: Int) {
         curAppbarOffset = dy
         functionalAppbar.postOnAnimation {
@@ -449,7 +450,9 @@ class MainActivity : AppCompatActivity() {
             SUBSCRIBETOPLAYLISTOPTION -> showErr()
             UNSUBSCRIBEFROMPLAYLISTOPTION -> showErr()
             PLAYLISTLINK -> showErr()
-            RADIOSTATIONLINK -> showErr()
+            RADIOSTATIONLINK -> {
+                //gotoStation()
+            }
             REQUESTCAPABILITY -> showErr()
             SHOWPAGEOPTION -> showErr()
             STARTPLAYABLEITEM -> showErr()
@@ -470,7 +473,7 @@ class MainActivity : AppCompatActivity() {
 
         pop.setOnMenuItemClickListener { item ->
             val menuItem = menuDesc.itemsList.first {
-                it.clickAction.typeCase.number == item.itemId
+                    it.clickAction.typeCase.number == item.itemId
             }
             execProtoAction(menuItem.clickAction, itemTitle, itemSubtitle)
             true
@@ -480,8 +483,9 @@ class MainActivity : AppCompatActivity() {
     /** When an album's menu button is selected **/
     fun showAlbumPopup(view: View, album: IAlbum) {
 
-        val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
-        pop.inflate(R.menu.album_popup)
+        val pop = PopupMenu(
+                ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
+        pop.inflate(if(MusicLibrary has album) R.menu.album_popup else R.menu.album_popup_remote)
 
         carbonAnalytics.logEntityEvent("album_popup", album)
 
@@ -514,7 +518,36 @@ class MainActivity : AppCompatActivity() {
                 R.id.menu_start_radio -> {
                     npHelper.startRadio(RadioSeed.TYPE_ALBUM, album.albumId)
                 }
-
+                R.id.menu_add_to_library -> {
+                    (album as? SkyjamAlbum)?.let {
+                        MusicLibrary.addToLibrary(this, album)
+                                .subscribe ({
+                                    Toast.makeText(this,
+                                            "Added album to library",
+                                            Toast.LENGTH_SHORT).show()
+                                }) { e ->
+                                    Timber.e(e)
+                                    Toast.makeText(this,
+                                            "Error adding album to library",
+                                            Toast.LENGTH_LONG).show()
+                                }
+                    } ?: Toast.makeText(this,
+                            "This album cannot be added to the library",
+                            Toast.LENGTH_LONG).show()
+                }
+                R.id.menu_remove_from_library -> {
+                    MusicLibrary.removeFromLibrary(this, album)
+                            .subscribe ({
+                                Toast.makeText(this,
+                                        "Removed album from library",
+                                        Toast.LENGTH_SHORT).show()
+                            }) { e ->
+                                Timber.e(e)
+                                Toast.makeText(this,
+                                        "Error removing album from library",
+                                        Toast.LENGTH_LONG).show()
+                            }
+                }
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",
                             Toast.LENGTH_SHORT).show()
@@ -617,8 +650,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showTrackPopup(view: View, track: ITrack) {
+
         val pop = PopupMenu(ContextThemeWrapper(this, R.style.AppTheme_PopupOverlay), view)
-        pop.inflate(R.menu.remote_song_popup)
+        pop.inflate(if(track.inLibrary ||
+                MusicLibrary.has(track)) R.menu.library_song_popup else R.menu.remote_song_popup)
 
         carbonAnalytics.logEntityEvent("popup", track)
 
@@ -650,6 +685,32 @@ class MainActivity : AppCompatActivity() {
                         gotoArtist(Artist(it, track.albumArtist, false),
                                 PaletteUtil.DEFAULT_SWATCH_PAIR)
                     }
+                }
+                R.id.menu_add_to_library -> {
+                    (track as? SkyjamTrack)?.let {
+                        MusicLibrary.addToLibrary(this, it)
+                                .subscribe ({
+                                    Toast.makeText(this, R.string.track_added_to_library,
+                                            Toast.LENGTH_SHORT).show()
+                                }) { err ->
+                                    Timber.e(err)
+                                    Toast.makeText(this, R.string.error_adding_to_library,
+                                            Toast.LENGTH_SHORT).show()
+                                }
+                    } ?: Toast.makeText(this, R.string.cant_add_track_to_library,
+                            Toast.LENGTH_SHORT).show()
+                }
+                R.id.menu_remove_from_library -> {
+                    MusicLibrary.removeFromLibrary(this, track)
+                            .subscribe({
+                                Toast.makeText(this, R.string.track_added_to_library,
+                                        Toast.LENGTH_SHORT).show()
+                            }) { err ->
+                                Timber.e(err)
+                                Toast.makeText(this, R.string.error_adding_to_library,
+                                        Toast.LENGTH_SHORT).show()
+                            }
+
                 }
                 else -> {
                     Toast.makeText(this, "This action is not supported yet",

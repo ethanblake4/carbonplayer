@@ -1,11 +1,12 @@
 package com.carbonplayer.model.entity.base
 
 import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.skyjam.SkyjamTrack
 import io.realm.Realm
 
 interface ITrack {
 
-    val inLibrary: Boolean
+    var inLibrary: Boolean
 
     val audioAd: Boolean?
     val id: String?
@@ -28,7 +29,7 @@ interface ITrack {
     val discNumber: Int
     val totalDiscCount: Int?
     val estimatedSize: Int?
-    val trackType: String?
+    val trackType: Int?
     val durationMillis: Int
 
     val trackAvailableForPurchase: Boolean?
@@ -55,4 +56,5 @@ interface ITrack {
     val playCount: Int?
 
     fun parcelable(realm: Realm? = null) : ParcelableTrack
+    fun syncable() : SkyjamTrack
 }

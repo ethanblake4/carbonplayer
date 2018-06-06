@@ -3,6 +3,7 @@ package com.carbonplayer.model.entity.skyjam
 import com.carbonplayer.model.MusicLibrary
 import com.carbonplayer.model.entity.Image
 import com.carbonplayer.model.entity.ParcelableTrack
+import com.carbonplayer.model.entity.Track
 import com.carbonplayer.model.entity.base.ITrack
 import io.realm.Realm
 
@@ -41,7 +42,7 @@ data class SkyjamTrack(
         override val discNumber: Int,
         override val totalDiscCount: Int?,
         override val estimatedSize: Int?,
-        override val trackType: String?,
+        override val trackType: Int?,
         override val durationMillis: Int,
 
         override val trackAvailableForPurchase: Boolean?,
@@ -74,6 +75,25 @@ data class SkyjamTrack(
 
     fun remoteParcelable() = ParcelableTrack(this)
 
+    override fun syncable() = this
+
+    fun forAdd() = SkyjamAddTrack(this)
+
+    constructor(local: Track, trackType: String?) : this (
+            "sj#track", local.audioAd, local.inLibrary, local.id,
+            local.clientId, local.nid, local.storeId, local.title, local.artist,
+            local.artists?.map { it.artistId }, local.album, local.albumId,
+            local.albumArtist, null, null, local.trackNumber, local.totalTrackCount,
+            local.discNumber, local.totalDiscCount, local.estimatedSize, local.trackType,
+            local.durationMillis, local.trackAvailableForPurchase,
+            null, local.trackAvailableForSubscription, local.rating,
+            local.lastRatingChangeTimestamp, local.explicitType,
+            local.creationTimestamp, local.recentTimestamp, local.isDeleted,
+            local.comment, local.composer, local.genre, local.year, local.beatsPerMinute,
+            local.playCount
+    )
+
+
     override fun parcelable(realm: Realm?) : ParcelableTrack {
 
         var t: ParcelableTrack? = null
@@ -93,7 +113,7 @@ data class SkyjamTrack(
                 "888-888-888", "000-000-000", "000-000-000", name,
                 artist, listOf("000-000-000"), album, MusicLibrary.UNKNOWN_ALBUM_ID,
                 artist, listOf(), listOf(), pos, 10, 1, 1,
-                420120, "", 0, null,
+                420120, -1, 0, null,
                 false, false, null,
                 null, null, null, null,
                 false, null, null, null, 2000,

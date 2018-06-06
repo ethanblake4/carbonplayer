@@ -15,6 +15,7 @@ import android.util.Log;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.model.entity.exception.NeedsBrowserException;
+import com.carbonplayer.model.entity.exception.SjNotSupportedException;
 import com.carbonplayer.utils.CrashReportingTree;
 import com.carbonplayer.utils.Preferences;
 import com.carbonplayer.utils.general.BundleBuilder;
@@ -81,6 +82,7 @@ public final class GoogleLogin {
     private static final String LOGIN_SDK_VERSION = String.valueOf(Build.VERSION.SDK_INT);
 
     private static String browserRecoverUrl;
+    private static boolean sjNotSupported = false;
 
     /**
      * @param login    - your mail, should looks like myemail@gmail.com
@@ -347,6 +349,13 @@ public final class GoogleLogin {
 
             return null;
         }
+
+        if(response.containsKey("services")) {
+            if(!response.get("services").contains("sj")) {
+                sjNotSupported = true;
+                return null;
+            }
+        }
         return response.get("Token");
     }
 
@@ -510,7 +519,10 @@ public final class GoogleLogin {
 
                 if(browserRecoverUrl != null) {
                     subscriber.onError(new NeedsBrowserException(browserRecoverUrl));
+                } else if (sjNotSupported) {
+                    subscriber.onError(new SjNotSupportedException());
                 } else subscriber.onError(Exceptions.propagate(new Exception()));
+
 
                 subscriber.onComplete();
                 return;
@@ -600,6 +612,32 @@ public final class GoogleLogin {
     }
 
     /**
+     * Simple Observable wrapper of login code
+     *
+     * @param context  activity context
+     * @return Observable which will produce err
+     */
+    public static Completable testLogin(@NonNull Activity context) {
+        //TODO Rx-ify
+        return Completable.create(subscriber -> {
+            @SuppressLint("HardwareIds")
+            String androidId = Settings.Secure.getString(context.getContentResolver(),
+                    Settings.Secure.ANDROID_ID);
+
+            // Step 4: Get a Google Play Music oAuth master token
+            String playOAuth = getMusicOAuth(context,
+                    CarbonPlayerApplication.Companion.getDefaultMtoken());
+
+            Timber.d("testPlayOAuth: %s", playOAuth == null ? "null" : playOAuth);
+
+            if (playOAuth != null) CarbonPlayerApplication.Companion.getInstance()
+                    .preferences.testPlayOAuth = playOAuth;
+
+            subscriber.onComplete();
+        });
+    }
+
+    /**
      * Step 4: Get a Google Play Music oAuth token for the "skyjam" scope (not "sj")
      * This is not a master token, it can be directly used and expires (every hour?)
      * It is required for newer Play Music endpoints like AdaptiveHome
@@ -649,6 +687,12 @@ public final class GoogleLogin {
     public static void retryPlayOAuthSync(@NonNull Context context) {
         if(prefs().masterToken == null) return;
         prefs().PlayMusicOAuth = getMusicOAuth(context, prefs().masterToken);
+        prefs().save();
+    }
+
+    public static void retryTestOAuthSync(@NonNull Context context) {
+        prefs().testPlayOAuth = getMusicOAuth(context,
+                CarbonPlayerApplication.Companion.getDefaultMtoken());
         prefs().save();
     }
 

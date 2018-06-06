@@ -39,7 +39,7 @@ class TopChartsController : Controller() {
             Protocol.getTopChartsGenres(context)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe {
+                    .subscribe { it ->
                         CarbonPlayerApplication.instance.lastTopChartsGenres = it
                         (activity as MainActivity).callbackWithTopChartsGenres(it.genres)
                         (activity as MainActivity).registerSpinnerCallback(it.genres, {

@@ -46,40 +46,76 @@
             android:background="@color/colorAccent" />
 
         <LinearLayout
-            android:id="@+id/settings_general_mobile_quality"
-            android:layout_width="match_parent"
+        android:id="@+id/settings_general_mobile_quality"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical">
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="@string/settings_general_opt_quality_mobile"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="16dp"
+            android:textStyle="bold"
+            android:layout_marginBottom="2dp"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/settings_general_opt_quality_mobile"
-                android:layout_marginStart="@dimen/activity_horizontal_margin"
-                android:layout_marginTop="16dp"
-                android:textStyle="bold"
-                android:layout_marginBottom="2dp"/>
-
-            <TextView
-                android:id="@+id/settings_general_mobile_quality_desc"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/activity_horizontal_margin"
-                android:fontFamily="sans-serif"
-                android:textSize="12sp"
-                android:layout_marginBottom="16dp"
-                android:text="@string/opt_quality_medium"
-                />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/settings_general_mobile_quality_desc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:fontFamily="sans-serif"
+            android:textSize="12sp"
+            android:layout_marginBottom="16dp"
+            android:text="@string/opt_quality_medium"
+            />
+    </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1px"
             android:background="@color/colorAccent" />
+
+        <FrameLayout
+            android:id="@+id/settings_general_allow_explicit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="16dp"
+            android:paddingTop="16dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Allow explicit tracks in radios"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_marginTop="4dp"
+                android:textStyle="bold" />
+
+            <android.support.v7.widget.AppCompatCheckBox
+                android:id="@+id/settings_general_allow_explicit_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="right|end"
+                android:layout_marginEnd="@dimen/activity_horizontal_margin"
+                android:checked="true"/>
+
+        </FrameLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="@color/colorAccent" />
+
+
 
         <LinearLayout
             android:id="@+id/settings_general_cache_size"
@@ -115,6 +151,8 @@
             android:layout_width="match_parent"
             android:layout_height="1px"
             android:background="@color/colorAccent" />
+
+
 
         <LinearLayout
             android:id="@+id/settings_general_evict_cache"

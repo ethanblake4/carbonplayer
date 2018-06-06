@@ -5,8 +5,8 @@
         android:id="@+id/menu_start_radio"
         android:title="@string/action_start_radio" />
     <item
-        android:id="@+id/menu_add_to_library"
-        android:title="@string/add_to_library" />
+        android:id="@+id/menu_remove_from_library"
+        android:title="@string/remove_from_library" />
     <item
         android:id="@+id/menu_play_next"
         android:title="@string/action_play_next" />

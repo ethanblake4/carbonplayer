@@ -53,8 +53,8 @@ class HomeCardController (
                          activity as MainActivity,
                          { card ->
                              gotoItem(card.itemId,
-                                 card.titleSection.title.text,
-                                 card.titleSection.subtitle.text,
+                                 card.numberedDescriptionSection.titleSection.title.text,
+                                 card.numberedDescriptionSection.titleSection.subtitle.text,
                                  listOf(card.imageReference.url),
                                  card.playbackMetadata)
                          },
@@ -62,8 +62,8 @@ class HomeCardController (
                              (activity as MainActivity).showContextMenuPopup(
                                      view,
                                      card.contextMenu,
-                                     card.titleSection.title.text,
-                                     card.titleSection.subtitle.text
+                                     card.numberedDescriptionSection.titleSection.title.text,
+                                     card.numberedDescriptionSection.titleSection.subtitle.text
                              )
                          }
                  ).apply {

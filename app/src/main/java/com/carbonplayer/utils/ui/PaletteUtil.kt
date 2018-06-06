@@ -200,7 +200,4 @@ object PaletteUtil {
 
     }
 
-
-
-
 }

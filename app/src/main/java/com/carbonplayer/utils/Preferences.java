@@ -38,6 +38,7 @@ public class Preferences {
     public String BearerAuth;
     public String OAuthToken;
     public String PlayMusicOAuth;
+    public String testPlayOAuth;
 
     public int textAdditionalContrast = 8;
 
@@ -48,6 +49,7 @@ public class Preferences {
     public boolean filterExplicit = false;
 
     public boolean isCarbonTester = true;
+    public boolean useTestToken = false;
 
     public int getContentFilterAsInt() {
         if(filterExplicit) return 2;

@@ -47,7 +47,7 @@ open class Track(
         override var trackAvailableForSubscription: Boolean? = null,
         override var totalDiscCount: Int? = null,
         override var totalTrackCount: Int? = null,
-        override var trackType: String? = null,
+        override var trackType: Int? = null,
         override var lastRatingChangeTimestamp: Long? = null,
         override var playCount: Int = 0,
         override var rating: String? = null,
@@ -224,6 +224,10 @@ open class Track(
 
     override fun parcelable(realm: Realm?): ParcelableTrack {
         return ParcelableTrack(this)
+    }
+
+    override fun syncable(): SkyjamTrack {
+        return SkyjamTrack(this, "8")
     }
 
     override fun toString() = "Track { id: $id, name: $title, album: $album, trackNumber: $trackNumber, " +

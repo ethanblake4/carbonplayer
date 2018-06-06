@@ -4,13 +4,15 @@ import android.app.Activity
 import android.content.Context
 import android.net.Uri
 import android.net.http.AndroidHttpClient
+import android.widget.Toast
 import com.carbonplayer.CarbonPlayerApplication
+import com.carbonplayer.model.MusicLibrary
+import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.ConfigEntry
 import com.carbonplayer.model.entity.api.*
-import com.carbonplayer.model.entity.enums.ExploreTabType
-import com.carbonplayer.model.entity.enums.NetworkType
-import com.carbonplayer.model.entity.enums.RadioFeedReason
-import com.carbonplayer.model.entity.enums.StreamQuality
+import com.carbonplayer.model.entity.base.IAlbum
+import com.carbonplayer.model.entity.base.ITrack
+import com.carbonplayer.model.entity.enums.*
 import com.carbonplayer.model.entity.exception.ResponseCodeException
 import com.carbonplayer.model.entity.exception.ServerRejectionException
 import com.carbonplayer.model.entity.proto.innerjam.InnerJamApiV1Proto
@@ -20,16 +22,21 @@ import com.carbonplayer.model.entity.radio.SkyjamStation
 import com.carbonplayer.model.entity.radio.request.RadioFeedRequest
 import com.carbonplayer.model.entity.radio.response.RadioFeedResponse
 import com.carbonplayer.model.entity.skyjam.*
-import com.carbonplayer.model.network.entity.*
+import com.carbonplayer.model.network.HttpProtocol.RequestCapabilities
+import com.carbonplayer.model.network.entity.PagedPlaylistResponse
+import com.carbonplayer.model.network.entity.PagedPlentryResponse
+import com.carbonplayer.model.network.entity.PagedTrackResponse
+import com.carbonplayer.model.network.entity.PagedTrackResponseData
 import com.carbonplayer.model.network.utils.ClientContextFactory
 import com.carbonplayer.model.network.utils.IOUtils
 import com.carbonplayer.utils.general.Either
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.protocol.URLSigning
-import com.squareup.moshi.JsonAdapter
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.exceptions.Exceptions
+import io.realm.Realm
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -42,7 +49,6 @@ import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
 import java.io.IOException
-import java.io.InvalidObjectException
 import java.io.UnsupportedEncodingException
 import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
@@ -58,7 +64,7 @@ object Protocol {
     private const val PA_URL = "https://music-pa.googleapis.com/v1/ij/" // Protobuf URL
     private const val STREAM_URL = "https://android.clients.google.com/music/mplay"
     private val TYPE_JSON = MediaType.parse("application/json; charset=utf-8")!!
-    private const val MAX_RESULTS = 250
+
 
     private fun Uri.Builder.appendDefaults() =
             this.apply {
@@ -73,7 +79,7 @@ object Protocol {
         val getParams = Uri.Builder().appendDefaults()
 
         return Single.create<LinkedList<ConfigEntry>> { subscriber ->
-            val request = defaultBuilder(context.baseContext)
+            val request = playBuilder(context.baseContext, true)
                     .url(SJ_URL + "config?" + getParams.build().encodedQuery)
                     .build()
             try {
@@ -93,214 +99,114 @@ object Protocol {
                 subscriber.onError(e)
             } catch (e: JSONException) {
                 subscriber.onError(e)
+            } catch (e: Throwable) {
+                subscriber.onError(e)
             }
         }
     }
 
+    /**
+     * Gets a radio station feed based on a [RadioSeed]
+     *
+     * @param maxEntries Usually 25
+     * @param reason should usually be [RadioFeedReason.INSTANT_MIX] except in case of
+     * [RadioFeedReason.ARTIST_SHUFFLE]
+     * @param sessionToken Only for free radios (unsupported in Carbon currently)
+     *
+     * TODO this should support [RadioFeedRequest.RadioStationRequest.recentlyPlayed]
+     */
     fun radioFeed(context: Context, remoteSeedId: String, maxEntries: Int, reason: RadioFeedReason,
                   seedType: Int, sessionToken: String?): Single<RadioFeedResponse> {
-        val adapter = CarbonPlayerApplication.moshi.adapter(RadioFeedResponse::class.java)
-        return Single.fromCallable {
 
-            val client = CarbonPlayerApplication.instance.okHttpClient
+        val radioRQ = RadioFeedRequest(
+                CarbonPlayerApplication.instance.preferences.contentFilterAsInt,
+                null,
+                listOf(RadioFeedRequest.RadioStationRequest(
+                        false,
+                        maxEntries,
+                        remoteSeedId,
+                        null,
+                        null,
+                        RadioSeed.create(remoteSeedId, seedType),
+                        sessionToken
+                ))
+        )
 
-            val radioRQ = RadioFeedRequest(
-                    CarbonPlayerApplication.instance.preferences.contentFilterAsInt,
-                    null,
-                    listOf(RadioFeedRequest.RadioStationRequest(
-                            false,
-                            maxEntries,
-                            remoteSeedId,
-                            null,
-                            null,
-                            RadioSeed.create(remoteSeedId, seedType),
-                            sessionToken
-                    ))
-            )
-
-            val getParams = Uri.Builder()
-                    .appendQueryParameter("alt", "json")
-                    .appendDefaults()
-                    .appendQueryParameter("rz", reason.toApiValue())
-                    .build()
-
-            Timber.d("RadioRequest: seedType=$seedType, rz=${reason.toApiValue()}")
-
-            val rqAdapter = CarbonPlayerApplication.moshi.adapter(RadioFeedRequest::class.java)
-
-            val request = playBuilder(context)
-                    .url(SJ_URL + "radio/stationfeed?" + getParams)
-                    .header("Content-Type", "application/json")
-                    .post(RequestBody.create(TYPE_JSON, rqAdapter.toJson(radioRQ).toByteArray()))
-                    .build()
-
-            val response = client.newCall(request).execute()
-
-            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-                response.body()?.string()?.let {
-                    Timber.d(it)
-                    return@fromCallable adapter.fromJson(it)
-                }
-            }
-
-            if (response.code() in 400..499) {
-                Timber.d(response.body()?.string())
-                GoogleLogin.retryPlayOAuthSync(context)
-                throw ServerRejectionException(
-                        ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
-                )
-            }
-
-            throw ResponseCodeException(response.body()!!.string())
-        }
+        return HttpProtocol.post(
+                context,
+                UrlType.SKYJAM.with("radio/stationfeed")
+                        .appendQueryParameter("rz", reason.toApiValue()),
+                RequestCapabilities.new(false),
+                radioRQ)
     }
 
-    /*fun newReleases(context: Context): Single<NewReleasesResponse> = Single.fromCallable {
-
-        val client = CarbonPlayerApplication.instance.okHttpClient
-        val adapter = CarbonPlayerApplication.moshi.adapter(NewReleasesResponse::class.java)
-
-        val getParams = Uri.Builder()
-                .appendQueryParameter("alt", "json")
-                .appendDefaults()
-                .build()
-
-        val request = defaultBuilder(context)
-                .url(SJ_URL + "explore/newreleases?" + getParams)
-                .header("Content-Type", "application/json")
-                .build()
-
-        val response = client.newCall(request).execute()
-
-        if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-            response.body()?.string()?.let {
-                Timber.d(it)
-                return@fromCallable adapter.fromJson(it)
-            }
-        }
-
-        if (response.code() in 400..499) {
-            Timber.d(response.body()?.string())
-            GoogleLogin.retryGoogleAuthSync(context)
-            throw ServerRejectionException(
-                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
-            )
-        }
-
-        throw ResponseCodeException(response.body()!!.string())
-    }*/
-
+    /**
+     * Gets an explore "tab" (these are not displayed as tabs in the Play Music app,
+     * and are not necessarily related to Carbon's "Explore" tab)
+     * @see ExploreTabType for the different possible types
+     *
+     * @param context Context instance
+     * @param tabType The [ExploreTabType] of tab to get
+     * @param genre Only for [ExploreTabType.TOP_CHARTS] - the genre to use. This parameter
+     * is never used in Carbon because we use [getTopCharts] instead which uses a different
+     * endpoint (confused yet?)
+     * @param maxEntries Maximum entries, usually 100
+     */
     fun exploreTab(context: Context, tabType: ExploreTabType, genre: String? = null,
-                   maxEntries: Int = 100) : Single<ExploreTab> = Single.fromCallable {
-        val client = CarbonPlayerApplication.instance.okHttpClient
-        val adapter = CarbonPlayerApplication.moshi.adapter(ExploreTabsResponse::class.java)
-
-        val getParams = Uri.Builder()
-                .appendQueryParameter("alt", "json")
-                .appendDefaults()
+                   maxEntries: Int = 100): Single<ExploreTab> {
+        val path = UrlType.SKYJAM.with("explore/tabs")
                 .appendQueryParameter("tabs", tabType.ordinal.toString())
                 .appendQueryParameter("num-items", maxEntries.toString())
-                .apply { if(genre != null) appendQueryParameter("genre", genre) }
-                .build()
+                .apply { if (genre != null) appendQueryParameter("genre", genre) }
 
-        val request = defaultBuilder(context)
-                .url(SJ_URL + "explore/tabs?" + getParams)
-                .header("Content-Type", "application/json")
-                .build()
+        return HttpProtocol.get<ExploreTabsResponse>(context, path,
+                RequestCapabilities(true, false, true))
+                .map { it.tabs.getOrNull(0) }
 
-        val response = client.newCall(request).execute()
-
-        if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-            response.body()?.string()?.let {
-                Timber.d(it)
-                return@fromCallable adapter.fromJson(it)?.tabs?.getOrNull(0)
-                ?: throw InvalidObjectException("value is null")
-            }
-        }
-
-        if (response.code() in 400..499) {
-            Timber.d(response.body()?.string())
-            GoogleLogin.retryGoogleAuthSync(context)
-            throw ServerRejectionException(
-                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
-            )
-        }
-
-        throw ResponseCodeException(response.body()!!.string())
     }
 
-    fun stationCategories(context: Context) : Single<StationCategory> = Single.fromCallable {
-        val client = CarbonPlayerApplication.instance.okHttpClient
-        val adapter = CarbonPlayerApplication.moshi.adapter(StationCategoryResponse::class.java)
-
-        val getParams = Uri.Builder()
-                .appendQueryParameter("alt", "json")
-                .appendDefaults()
-                .build()
-
-        val request = defaultBuilder(context)
-                .url(SJ_URL + "browse/stationcategories?" + getParams)
-                .header("Content-Type", "application/json")
-                .build()
-
-        val response = client.newCall(request).execute()
-
-        if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-            response.body()?.string()?.let {
-                Timber.d(it)
-                return@fromCallable adapter.fromJson(it)?.root
-                        ?: throw InvalidObjectException("value is null")
-            }
-        }
-
-        if (response.code() in 400..499) {
-            Timber.d(response.body()?.string())
-            GoogleLogin.retryGoogleAuthSync(context)
-            throw ServerRejectionException(
-                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
-            )
-        }
-
-        throw ResponseCodeException(response.body()!!.string())
+    /**
+     * Gets categories for radio stations for Explore tab
+     *
+     * @param context Context instance
+     */
+    fun stationCategories(context: Context): Single<StationCategory> {
+        return HttpProtocol.get<StationCategoryResponse>(
+                context, UrlType.SKYJAM.with("browse/stationcategories"),
+                RequestCapabilities.cl())
+                .map { it.root }
     }
 
+    /**
+     * Gets list of stations from a category returned by [stationCategories]
+     *
+     * @param context Context instance
+     */
     fun stations(
             context: Context, category: StationCategory
-    ) : Single<List<SkyjamStation>> = Single.fromCallable {
-        val client = CarbonPlayerApplication.instance.okHttpClient
-        val adapter = CarbonPlayerApplication.moshi.adapter(StationsResponse::class.java)
-
-        val getParams = Uri.Builder()
-                .appendQueryParameter("alt", "json")
-                .appendDefaults()
-                .build()
-
-        val request = defaultBuilder(context)
-                .url(SJ_URL + "browse/stations/${category.id}?" + getParams)
-                .header("Content-Type", "application/json")
-                .build()
-
-        val response = client.newCall(request).execute()
-
-        if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-            response.body()?.string()?.let {
-                Timber.d(it)
-                return@fromCallable adapter.fromJson(it)?.stations
-                        ?: throw InvalidObjectException("value is null")
-            }
-        }
-
-        if (response.code() in 400..499) {
-            Timber.d(response.body()?.string())
-            GoogleLogin.retryGoogleAuthSync(context)
-            throw ServerRejectionException(
-                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
-            )
-        }
-
-        throw ResponseCodeException(response.body()!!.string())
+    ): Single<List<SkyjamStation>> {
+        return HttpProtocol.get<StationsResponse>(
+                context, UrlType.SKYJAM.with("browse/stations/${category.id}"),
+                RequestCapabilities.cl())
+                .map { it.stations }
     }
 
+    /**
+     * Gets "listen now" (actually the Home page, or "AdaptiveHome" in Google-speak)
+     *
+     * This endpoint uses Protocol Buffers instead of JSON because f*ck you why not
+     *
+     * That means we have to use [AndroidHttpClient] instead of OkHttp (we probably
+     * don't actually but it's too hard to fix properly)
+     *
+     * Calls to this function *will* fail every other time, for some reason
+     *
+     * @param context Context instance
+     * @param previousDistilledContextToken The
+     * [InnerJamApiV1Proto.GetHomeResponse.distilledContextToken_] that was returned
+     * with the last request to this function, or null. This enables the endpoint to
+     * send an empty response if nothing has changed.
+     */
     @Suppress("DEPRECATION")
     fun listenNow(context: Activity, previousDistilledContextToken: String?):
             Single<InnerJamApiV1Proto.GetHomeResponse> {
@@ -320,10 +226,10 @@ object Protocol {
                 val entity = AndroidHttpClient.getCompressedEntity(
                         homeRequest.toByteArray(), context.contentResolver)
                 entity.setContentType("application/x-protobuf")
-                val cookieStore =  BasicCookieStore()
+                val cookieStore = BasicCookieStore()
 
                 // Create local HTTP context
-                val localContext =  BasicHttpContext()
+                val localContext = BasicHttpContext()
                 // Bind custom cookie store to the local context
                 localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore)
 
@@ -355,101 +261,63 @@ object Protocol {
         }
     }
 
-    fun getTopCharts(context: Context, offset: Int, pageSize: Int): Observable<TopChartsResponse> {
+    /**
+     * Gets the default Top Charts page
+     * - Should we use [exploreTab] for this instead? What is the difference?
+     *
+     * @param context Context instance
+     * @param offset Offset for paging (unused)
+     * @param pageSize Number of entries to retrieve
+     */
+    fun getTopCharts(context: Context, offset: Int, pageSize: Int): Single<TopChartsResponse> {
 
-        val adapter = CarbonPlayerApplication.moshi.adapter(TopChartsResponse::class.java)
+        return HttpProtocol.get(
+                context,
+                UrlType.SKYJAM.with("browse/topchart")
+                        .appendQueryParameter("tracksOffset", offset.toString())
+                        .appendQueryParameter("albumsOffset", offset.toString())
+                        .appendQueryParameter("maxTracks", pageSize.toString())
+                        .appendQueryParameter("maxAlbums", pageSize.toString()),
+                RequestCapabilities.cl())
 
-        return Observable.fromCallable {
-            val client = CarbonPlayerApplication.instance.okHttpClient
-
-            val getParams = Uri.Builder()
-                    .appendQueryParameter("alt", "json")
-                    .appendDefaults()
-                    .appendQueryParameter("tracksOffset", offset.toString())
-                    .appendQueryParameter("albumsOffset", offset.toString())
-                    .appendQueryParameter("maxTracks", pageSize.toString())
-                    .appendQueryParameter("maxAlbums", pageSize.toString())
-
-            val request = defaultBuilder(context)
-                    .url(SJ_URL + "browse/topchart?" + getParams)
-                    .header("Content-Type", "application/json")
-                    .build()
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-                response.body()?.source()?.let {
-                    return@fromCallable adapter.fromJson(it)
-                }
-            }
-            if (response.code() in 400..499) {
-                throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
-            }
-            throw ResponseCodeException(response.body()!!.string())
-        }
     }
 
-    fun getTopChartsGenres(context: Context): Observable<TopChartsGenres> {
-
-        val adapter = CarbonPlayerApplication.moshi.adapter(TopChartsGenres::class.java)
-
-        return Observable.fromCallable {
-            val client = CarbonPlayerApplication.instance.okHttpClient
-
-            val getParams = Uri.Builder()
-                    .appendQueryParameter("alt", "json")
-                    .appendDefaults()
-
-            val request = defaultBuilder(context)
-                    .url(SJ_URL + "browse/topchartgenres?" + getParams)
-                    .header("Content-Type", "application/json")
-                    .build()
-
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-                response.body()?.source()?.let {
-                    return@fromCallable adapter.fromJson(it)
-                }
-            }
-            if (response.code() in 400..499) {
-                throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
-            }
-            throw ResponseCodeException(response.body()!!.string())
-        }
+    /**
+     * Gets a list of Top Charts genres
+     * Should only be called very occasionally, as these almost never change
+     *
+     * @param context Context instance
+     */
+    fun getTopChartsGenres(context: Context): Single<TopChartsGenres> {
+        return HttpProtocol.get(
+                context, UrlType.SKYJAM.with("browse/topchartgenres"),
+                RequestCapabilities(true, false, true))
     }
 
+    /**
+     * Gets a Top Charts page for a specified [genre]
+     * - Should we use [exploreTab] for this instead? What is the difference?
+     *
+     * @param context Context instance
+     * @param genre Selected [TopChartsGenres.Genre.id]
+     * @param offset Offset for paging (unused)
+     * @param pageSize Number of entries to retrieve
+     */
     fun getTopChartsFor(context: Context, genre: String, offset: Int, pageSize: Int)
-            : Observable<TopChartsResponse> {
+            : Single<TopChartsResponse> {
 
-        val adapter = CarbonPlayerApplication.moshi.adapter(TopChartsResponse::class.java)
-
-        return Observable.fromCallable {
-            val client = CarbonPlayerApplication.instance.okHttpClient
-
-            val getParams = Uri.Builder()
-                    .appendQueryParameter("alt", "json")
-                    .appendDefaults()
-                    .appendQueryParameter("tracksOffset", offset.toString())
-                    .appendQueryParameter("albumsOffset", offset.toString())
-                    .appendQueryParameter("maxTracks", pageSize.toString())
-                    .appendQueryParameter("maxAlbums", pageSize.toString())
-
-            val request = defaultBuilder(context)
-                    .url(SJ_URL + "browse/topchartforgenre/$genre?" + getParams)
-                    .header("Content-Type", "application/json")
-                    .build()
-            val response = client.newCall(request).execute()
-            if (response.isSuccessful && response.code() >= 200 && response.code() < 300) {
-                response.body()?.source()?.let {
-                    return@fromCallable adapter.fromJson(it)
-                }
-            }
-            if (response.code() in 400..499) {
-                throw handle400(context, response.code(), response.header("X-Rejection-Reason"))
-            }
-            throw ResponseCodeException(response.body()!!.string())
-        }
+        return HttpProtocol.get(
+                context,
+                UrlType.SKYJAM.with("browse/topchartforgenre/$genre")
+                        .appendQueryParameter("tracksOffset", offset.toString())
+                        .appendQueryParameter("albumsOffset", offset.toString())
+                        .appendQueryParameter("maxTracks", pageSize.toString())
+                        .appendQueryParameter("maxAlbums", pageSize.toString()),
+                RequestCapabilities.cl())
     }
 
-    fun getSharedPlentries(context: Context, sharedToken: String) : Observable<List<SkyjamPlentry>> {
+
+    fun getSharedPlentries(context: Context, sharedToken: String): Observable<List<SkyjamPlentry>> {
         val client = CarbonPlayerApplication.instance.okHttpClient
 
         return Observable.create { subscriber ->
@@ -457,16 +325,17 @@ object Protocol {
                     .appendQueryParameter("alt", "json")
                     .appendDefaults()
 
+
             val adapter = CarbonPlayerApplication.moshi.adapter(SharedPlentryResponse::class.java)
             val rqAdapter = CarbonPlayerApplication.moshi.adapter(SharedPlentryRequest::class.java)
 
             var continuationToken: String? = null
 
             do {
-                val rqJson = SharedPlentryRequest.Entry (
+                val rqJson = SharedPlentryRequest.Entry(
                         250, sharedToken, continuationToken, 0L)
                         .asRequest()
-                val request = defaultBuilder(context)
+                val request = bestBuilder(context, true, false, true)
                         .url(SJ_URL + "plentries/shared?" + getParams)
                         .header("Content-Type", "application/json")
                         .post(RequestBody.create(TYPE_JSON, rqAdapter.toJson(rqJson).toByteArray()))
@@ -484,15 +353,14 @@ object Protocol {
                         }
                     }
                 }
-            } while(continuationToken != null)
+            } while (continuationToken != null)
 
             subscriber.onComplete()
-
         }
     }
 
-    fun getNautilusAlbum(context: Context, nid: String): Observable<SkyjamAlbum> {
-        return Observable.fromCallable {
+    fun getNautilusAlbum(context: Context, nid: String): Single<SkyjamAlbum> {
+        return Single.fromCallable {
             val client = CarbonPlayerApplication.instance.okHttpClient
             val adapter = CarbonPlayerApplication.moshi.adapter(SkyjamAlbum::class.java)
 
@@ -503,7 +371,7 @@ object Protocol {
                     .appendQueryParameter("include-tracks", "true")
                     .appendQueryParameter("include-description", "true")
 
-            val request = defaultBuilder(context)
+            val request = bestBuilder(context, true, false, true)
                     .url(SJ_URL + "fetchalbum?" + getParams)
                     .header("Content-Type", "application/json")
                     .build()
@@ -520,7 +388,7 @@ object Protocol {
             }
             if (response.code() in 400..499) {
                 throw handle400(context, response.code(),
-                        response.header("X-Rejection-Reason"))
+                        response.header("X-Rejection-Reason"), true, false, true)
             }
             response.body()?.string()?.let {
                 throw ResponseCodeException(it)
@@ -528,7 +396,7 @@ object Protocol {
         }
     }
 
-    fun getNautilusArtist(context: Context,  nid: String): Observable<SkyjamArtist> {
+    fun getNautilusArtist(context: Context, nid: String): Observable<SkyjamArtist> {
 
         return Observable.fromCallable {
             val client = CarbonPlayerApplication.instance.okHttpClient
@@ -542,7 +410,7 @@ object Protocol {
                     .appendQueryParameter("num-top-tracks", "50")
                     .appendQueryParameter("num-related-artists", "20")
 
-            val request = defaultBuilder(context)
+            val request = bestBuilder(context, true, false, true)
                     .url(SJ_URL + "fetchartist?" + getParams)
                     .header("Content-Type", "application/json")
                     .build()
@@ -559,7 +427,7 @@ object Protocol {
             }
             if (response.code() in 400..499) {
                 throw handle400(context, response.code(),
-                        response.header("X-Rejection-Reason"))
+                        response.header("X-Rejection-Reason"), true, false, true)
             }
             throw ResponseCodeException(response.body()!!.string())
         }
@@ -575,7 +443,7 @@ object Protocol {
                     .appendQueryParameter("alt", "json")
                     .appendDefaults()
 
-            val request = defaultBuilder(context)
+            val request = bestBuilder(context, true, false, true)
                     .url(SJ_URL + "playlists/$shareToken" + getParams)
                     .header("Content-Type", "application/json")
                     .build()
@@ -592,19 +460,22 @@ object Protocol {
             }
             if (response.code() in 400..499) {
                 throw handle400(context, response.code(),
-                        response.header("X-Rejection-Reason"))
+                        response.header("X-Rejection-Reason"), true, false, true)
             }
             throw ResponseCodeException(response.body()!!.string())
         }
     }
 
-    fun search(context: Context, query: String, startToken: String = "") = Observable.fromCallable {
-        val client = CarbonPlayerApplication.instance.okHttpClient
-        val adapter = CarbonPlayerApplication.moshi.adapter(SearchResponse::class.java)
+    /**
+     * Searches Google Play Music for [query]
+     *
+     * @param context [Context] instance
+     * @param query the thing to search for
+     * @param startToken unused
+     */
+    fun search(context: Context, query: String, startToken: String = ""): Single<SearchResponse> {
 
-        val getParams = Uri.Builder()
-                .appendQueryParameter("alt", "json")
-                .appendDefaults()
+        val path = UrlType.SKYJAM.with("query")
                 .appendQueryParameter("q", query)
                 .appendQueryParameter("query-type", "1")
                 .apply {
@@ -614,158 +485,46 @@ object Protocol {
                         appendQueryParameter("start-token", startToken)
                 }
                 .appendQueryParameter("max-results", "100")
-
                 /* 1: Song, 2: Artist, 3: Album, 4: Playlist, 5: Genre
-                6: Station, 7: Situation,
-                 * TODO 8: Video, 9: Podcast */
+                 * 6: Station, 7: Situation, TODO 8: Video, 9: Podcast */
                 .appendQueryParameter("ct", "1,2,3,4,6,7")
 
-                .build()
+        return HttpProtocol.get(
+                context,
+                path,
+                RequestCapabilities.new(false))
 
-        val request = playBuilder(context)
-                .url(SJ_URL + "query?" + getParams)
-                .header("Content-Type", "application/json")
-                .build()
-
-        val response = client.newCall(request).execute()
-        if (response.isSuccessful && response.code() in 200..299) {
-            response.body()?.source()?.let {
-                return@fromCallable adapter.fromJson(it)
-            }
-        }
-        if (response.code() in 400..499) {
-            Timber.e(response.body()?.string() ?: "No body")
-            GoogleLogin.retryPlayOAuthSync(context)
-            throw ServerRejectionException(
-                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
-            )
-        }
-        throw ResponseCodeException(response.body()!!.string())
     }
 
-    fun suggest(context: Context, query: String): Observable<SuggestResponse> = Observable.fromCallable {
-
-        val client = CarbonPlayerApplication.instance.okHttpClient
-        val requestAdapter = CarbonPlayerApplication.moshi.adapter(SuggestRequest::class.java)
-        val adapter = CarbonPlayerApplication.moshi.adapter(SuggestResponse::class.java)
-
-        val getParams = Uri.Builder()
-                .appendQueryParameter("alt", "json")
-                .appendDefaults().build()
+    /**
+     * Gets a list of search suggestions. Essentially a lighter version of [search].
+     *
+     * @param context [Context] instance
+     * @param query the thing to search for
+     */
+    fun suggest(context: Context, query: String): Single<SuggestResponse> {
 
         val suggestRequest = SuggestRequest(
                 SuggestRequest.SuggestCapabilities(listOf(
                         1, 2, 3, 4
                 ), true), query)
 
-        val qs = SJ_URL + "querysuggestion?" + getParams
-        Timber.d(qs)
+        return HttpProtocol.post(
+                context,
+                UrlType.SKYJAM.with("querysuggestion"),
+                RequestCapabilities.new(query.isEmpty()),
+                suggestRequest)
 
-        val request = playBuilder(context)
-                .url(qs)
-                .header("Content-Type", "application/json")
-                .post(RequestBody.create(TYPE_JSON, requestAdapter.toJson(suggestRequest)))
-                .build()
-
-        val response = client.newCall(request).execute()
-        if (response.isSuccessful && response.code() in 200..299) {
-            response.body()?.source()?.let {
-                return@fromCallable adapter.fromJson(it)
-            }
-        }
-        if (response.code() in 400..499) {
-            Timber.d(response.body()?.string() ?: "No body")
-            GoogleLogin.retryPlayOAuthSync(context)
-            throw ServerRejectionException(
-                    ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
-            )
-        }
-        throw ResponseCodeException(response.body()!!.string())
-    }
-
-    private fun <R, T : PagedJsonResponse<R>> rawPagedFeed(context: Context, urlPart: String,
-                                                     adapter: JsonAdapter<T>): Observable<Either<R, Unit>> {
-
-        val client = CarbonPlayerApplication
-                .instance.okHttpClient
-        val getParams = Uri.Builder()
-                .appendQueryParameter("alt", "json")
-                .appendDefaults()
-
-        return Observable.create<Either<R, Unit>> { subscriber ->
-
-            var startToken: String? = ""
-
-            while (startToken != null) {
-                Timber.d("startToken: $startToken")
-                val requestJson = JSONObject()
-                try {
-                    requestJson.put("max-results", MAX_RESULTS)
-                    if ("" != startToken) requestJson.put("start-token", startToken)
-                } catch (e: JSONException) {
-                    subscriber.onError(e)
-                }
-
-                startToken = null
-
-                val request = defaultBuilder(context)
-                        .url(SJ_URL + urlPart + "?" + getParams.build().encodedQuery)
-                        .header("Content-Type", "application/json")
-                        .post(RequestBody.create(TYPE_JSON, requestJson.toString()))
-                        .build()
-                try {
-
-                    Timber.d("starting exec")
-
-                    val r = client.newCall(request).execute()
-                    if (!r.isSuccessful) {
-                        Timber.d("ending responsecode")
-                        subscriber.onError(ResponseCodeException())
-                    }
-
-                    r.body()?.source()?.let {
-                        Timber.d("recieve source")
-                        adapter.fromJson(it)?.let { response ->
-                        startToken = response.nextPageToken
-                        Timber.d("recieve startToken as $startToken")
-                        response.data?.let { subscriber.onNext(Either.Left(it))
-                            Timber.d("recieve data")}
-                        if(startToken == "" || startToken == null) {
-                            Timber.d("ending 1")
-                            subscriber.onNext(Either.Right(Unit))
-                            subscriber.onComplete()
-                        }
-                            it
-                    } ?: {
-                            Timber.d("ending 2")
-                            subscriber.onNext(Either.Right(Unit))
-                            subscriber.onComplete()
-                            it
-                        }.invoke() } ?: {
-                        Timber.d("ending 3")
-                        subscriber.onNext(Either.Right(Unit))
-                        subscriber.onComplete()
-                    }.invoke()
-
-                } catch (e: IOException) {
-                    Timber.d("ending ioexception")
-                    subscriber.onError(e)
-                } catch (e: JSONException) {
-                    Timber.d("ending jsonexception")
-                    subscriber.onError(e)
-                }
-            }
-            Timber.d("ending at end")
-            subscriber.onComplete()
-        }
     }
 
     @JvmStatic
     fun listTracks(context: Context): Observable<com.google.common.base.Optional<List<SkyjamTrack>>> {
         val adapter = CarbonPlayerApplication.moshi.adapter(PagedTrackResponse::class.java)
-        return rawPagedFeed<PagedTrackResponseData?, PagedTrackResponse>(context, "trackfeed", adapter)
+        return HttpProtocol.rawPagedFeed<PagedTrackResponseData?, PagedTrackResponse>(
+                context, "trackfeed", adapter
+        )
                 .map { response ->
-                    if(response is Either.Left){
+                    if (response is Either.Left) {
                         Timber.d("mapped existent optional")
                         com.google.common.base.Optional.fromNullable(response.value?.items)
                     } else {
@@ -778,9 +537,11 @@ object Protocol {
     @JvmStatic
     fun listPlaylists(context: Activity): Observable<com.google.common.base.Optional<List<SkyjamPlaylist>>> {
         val adapter = CarbonPlayerApplication.moshi.adapter(PagedPlaylistResponse::class.java)
-        return rawPagedFeed(context, "playlistfeed", adapter)
-                .map{ response ->
-                    if(response is Either.Left)
+        return HttpProtocol.rawPagedFeed(
+                context, "playlistfeed", adapter
+        )
+                .map { response ->
+                    if (response is Either.Left)
                         com.google.common.base.Optional.fromNullable(response.value?.items)
                     else com.google.common.base.Optional.absent()
                 }
@@ -789,21 +550,32 @@ object Protocol {
     @JvmStatic
     fun listPlaylistEntries(context: Activity): Observable<com.google.common.base.Optional<List<SkyjamPlentry>>> {
         val adapter = CarbonPlayerApplication.moshi.adapter(PagedPlentryResponse::class.java)
-        return rawPagedFeed(context, "plentryfeed", adapter)
-                .map { response -> if(response is Either.Left)
-                    com.google.common.base.Optional.fromNullable(response.value?.items)
-                else com.google.common.base.Optional.absent() }
+        return HttpProtocol.rawPagedFeed(
+                context, "plentryfeed", adapter
+        )
+                .map { response ->
+                    if (response is Either.Left)
+                        com.google.common.base.Optional.fromNullable(response.value?.items)
+                    else com.google.common.base.Optional.absent()
+                }
     }
 
     fun getStreamURL(context: Context, song_id: String): Single<String> {
+        // Stream URL endpoint only supports HTTP 1.1
         val protocols = ArrayList<okhttp3.Protocol>()
         protocols.add(okhttp3.Protocol.HTTP_1_1)
+
+        // Give us the redirects!
         val client = CarbonPlayerApplication.instance.getOkHttpClient(
                 OkHttpClient().newBuilder()
                         .followRedirects(false)
                         .followSslRedirects(false)
                         .protocols(protocols))
+
         return Single.create<String> { subscriber ->
+
+            // Stream URLs need to be signed to prove that we're actually Google
+            // We're not... but we're doing it anyway, psych!
             val salt = Date().time.toString()
             var digest = ""
             try {
@@ -818,20 +590,22 @@ object Protocol {
 
             val getParams = Uri.Builder()
 
+            // Remote track
             if (song_id.startsWith("T") || song_id.startsWith("D"))
                 getParams.appendQueryParameter("mjck", song_id)
-            else
+            else // Library track
                 getParams.appendQueryParameter("songid", song_id)
 
             getParams
                     .appendDefaults()
-                    .appendQueryParameter("targetkbps", "180")
-                    .appendQueryParameter("audio_formats", "mp3")
-                    .appendQueryParameter("p", if (IdentityUtils.getDeviceIsSmartphone(context)) "1" else "0")
-                    .appendQueryParameter("opt", getStreamQualityHeader(context))
-                    .appendQueryParameter("net", getNetHeader(context))
-                    .appendQueryParameter("pt", "e")
-                    .appendQueryParameter("adaptive", "true")
+                    .appendQueryParameter("targetkbps", "180") // :: Does this do anything?
+                    .appendQueryParameter("audio_formats", "mp3") // :: Are there other options?
+                    .appendQueryParameter("p", // This means "is it a phone?"
+                            if (IdentityUtils.getDeviceIsSmartphone(context)) "1" else "0")
+                    .appendQueryParameter("opt", getStreamQualityHeader(context)) // quality
+                    .appendQueryParameter("net", getNetHeader(context)) // network type
+                    .appendQueryParameter("pt", "e") // :: what the fuck
+                    .appendQueryParameter("adaptive", "true") // :: ???
                     //.appendQueryParameter("dt", "pc")
                     .appendQueryParameter("slt", salt)
                     .appendQueryParameter("sig", digest)
@@ -839,10 +613,12 @@ object Protocol {
             val encQuery = getParams.build().encodedQuery
             Timber.d(encQuery)
 
-            val request = bearerBuilder(context)
+            val request = bestBuilder(context, false, true, false)
                     .url(STREAM_URL + "?" + encQuery)
                     .build()
             try {
+                // Capture the redirect, which will be the stream URL
+                // (what a weird method)
                 val r = client.newCall(request).execute()
                 val locHeader = r.headers().get("Location")
                 Timber.d("Location is $locHeader")
@@ -851,7 +627,8 @@ object Protocol {
                 } else {
                     if (r.code() == 401 || r.code() == 402 || r.code() == 403) {
                         val rejectionReason = r.header("X-Rejected-Reason")
-                        subscriber.onError(handle400(context, r.code(), rejectionReason))
+                        subscriber.onError(handle400(context, r.code(), rejectionReason,
+                                false, true, false))
                     } else if (r.code() in 200..299) {
                         subscriber.onError(ResponseCodeException(String.format(Locale.getDefault(),
                                 "Unexpected response code %d", r.code())))
@@ -865,7 +642,88 @@ object Protocol {
         }
     }
 
-    private fun handle400(context: Context, code: Int, rejectionReason: String?): Exception {
+    /**
+     * Creates, deletes, or updates an [ITrack] in the Library
+     *
+     * Technically, we should batch these calls using a SyncAdapter.
+     * But who's got time for that?
+     *
+     * There is another endpoint specifically for non-batch updates but it doesn't work :|
+     */
+    fun mutateEntity(context: Context, entity: ITrack, operation: MutateOperation): Completable {
+        val mutateRequest = MutateTrackRequest(
+                if (operation == MutateOperation.CREATE) entity.syncable().forAdd() else null,
+                if (operation == MutateOperation.DELETE) entity.storeId else null,
+                if (operation == MutateOperation.UPDATE) entity.syncable() else null
+        )
+        return HttpProtocol.post<MutateTrackRequest.Batch, MutateTrackResponse>(
+                context,
+                UrlType.SKYJAM.with("trackbatch"),
+                RequestCapabilities(true, false, true),
+                MutateTrackRequest.Batch(listOf(mutateRequest)))
+                .map {
+                    if (it.wasSuccessful) it
+                    else throw ResponseCodeException(it.response_code ?: "Unknown")
+                }.toCompletable()
+    }
+
+    /**
+     * Creates, deletes, or updates an [IAlbum] in the Library
+     *
+     * Technically, we should batch these calls using a SyncAdapter.
+     * But who's got time for that?
+     */
+    fun mutateEntity(
+            context: Context, entity: IAlbum, operation: MutateOperation
+    ) : Single<IAlbum> {
+
+        if(operation == MutateOperation.CREATE &&
+                entity is SkyjamAlbum && entity.tracks?.isEmpty() != false) {
+            // We need tracks to do a Create
+            return getNautilusAlbum(context, entity.albumId)
+                    .flatMap {
+                        mutateEntity(context, it, operation).map { it }
+                    }
+        } else if (operation == MutateOperation.DELETE && entity !is Album) {
+            return mutateEntity(context, Realm.getDefaultInstance().where(Album::class.java)
+                    .equalTo(Album.ID, entity.albumId)
+                    .findFirst()!!, operation)
+        }
+
+        val mutations = MusicLibrary.getAllAlbumTracks(entity)
+                .map {
+                    MutateTrackRequest(
+                            if (operation == MutateOperation.CREATE) it.syncable().forAdd() else null,
+                            if (operation == MutateOperation.DELETE) it.id ?: it.storeId else null,
+                            if (operation == MutateOperation.UPDATE) it.syncable() else null
+                    )
+                }
+
+        return HttpProtocol.post<MutateTrackRequest.Batch, MutateTrackResponse>(
+                context,
+                UrlType.SKYJAM.with("trackbatch"),
+                RequestCapabilities(true, false, true),
+                MutateTrackRequest.Batch(mutations))
+                .map {
+                    if (it.wasSuccessful) entity
+                    else throw ResponseCodeException(it.response_code ?: "Unknown")
+                }
+    }
+
+    /** Handles a 400 error
+     * Sometimes, these errors return a X-Rejection-Reason header which this method
+     * can interpret into [ServerRejectionException]s
+     *
+     * Also, in many cases this method will try to re-auth the correct token.
+     * If using [Observable.retry] this can seamlessly resolve auth expiry without
+     * interrupting the user flow.
+     */
+    fun handle400(context: Context,
+                          code: Int,
+                          rejectionReason: String?,
+                          acceptCL: Boolean,
+                          acceptBearer: Boolean,
+                          sameWithFree: Boolean = true): Exception {
         if (rejectionReason != null) {
             try {
                 val rejectionReasonEnum = ServerRejectionException.RejectionReason
@@ -874,7 +732,7 @@ object Protocol {
                         "getStreamURL: serverRejected")
                 when (rejectionReasonEnum) {
                     ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED -> {
-                        GoogleLogin.retryGoogleAuth(context)
+                        reAuthSync(context, acceptCL, acceptBearer, sameWithFree)
                         return ServerRejectionException(rejectionReasonEnum)
                     }
                     ServerRejectionException.RejectionReason.ANOTHER_STREAM_BEING_PLAYED,
@@ -890,17 +748,16 @@ object Protocol {
                 }
             } catch (e: IllegalArgumentException) {
                 try {
-                    GoogleLogin.retryGoogleAuthSync(context)
+                    reAuthSync(context, acceptCL, acceptBearer, sameWithFree)
                 } catch (s: Exception) {
                     Timber.e(e, "Exception retrying Google Auth")
                 }
 
                 return ServerRejectionException(ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED)
             }
-
         } else {
             try {
-                GoogleLogin.retryGoogleAuthSync(context)
+                reAuthSync(context, acceptCL, acceptBearer, sameWithFree)
             } catch (e: Exception) {
                 Timber.e(e, "Exception retrying Google Auth")
             }
@@ -908,6 +765,24 @@ object Protocol {
             return ServerRejectionException(
                     ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED)
         }
+    }
+
+    private fun reAuthSync(
+            context: Context,
+            acceptCL: Boolean,
+            acceptBearer: Boolean,
+            sameWithFree: Boolean
+    ) {
+        if(acceptCL && !CarbonPlayerApplication.instance.preferences.useTestToken) {
+            Toast.makeText(
+                    context,
+                    "Your Google account is no longer valid. Go to Settings > Account, sign out, and log back in.",
+                    Toast.LENGTH_LONG).show()
+        } else if(acceptBearer)
+            GoogleLogin.retryGoogleAuthSync(context)
+        else if( sameWithFree || !CarbonPlayerApplication.instance.preferences.useTestToken)
+            GoogleLogin.retryPlayOAuthSync(context)
+        else GoogleLogin.retryTestOAuthSync(context)
     }
 
     private fun getNetHeader(context: Context): String {
@@ -948,6 +823,20 @@ object Protocol {
                 .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context))
     }
 
+    private fun bestBuilder(
+            context: Context,
+            acceptCL: Boolean,
+            acceptBearer: Boolean,
+            sameWithFree: Boolean = true
+    ) : Request.Builder {
+        if(acceptCL && !CarbonPlayerApplication.instance.preferences.useTestToken)
+            return defaultBuilder(context)
+        if(acceptBearer && (sameWithFree ||
+                !CarbonPlayerApplication.instance.preferences.useTestToken))
+            return bearerBuilder(context)
+        return playBuilder(context, sameWithFree)
+    }
+
     private fun bearerBuilder(context: Context): Request.Builder {
         if(IdentityUtils.isAutomatedTestDevice(context)) return playBuilder(context)
         Timber.d("Bearer token: %s", CarbonPlayerApplication.instance.preferences.BearerAuth)
@@ -962,15 +851,20 @@ object Protocol {
                 .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context))
     }
 
-    private fun playBuilder(context: Context): Request.Builder {
-        Timber.d("Bearer token: %s", CarbonPlayerApplication.instance.preferences.BearerAuth)
+    private fun playBuilder(context: Context, sameWithFree: Boolean = true): Request.Builder {
+
         Timber.d("DeviceID: ${IdentityUtils.getGservicesId(context, true)}")
         Timber.d("UserAgent: ${CarbonPlayerApplication.instance.googleUserAgent}")
+
+        val token = if (sameWithFree || !CarbonPlayerApplication.instance.preferences.useTestToken)
+            CarbonPlayerApplication.instance.preferences.PlayMusicOAuth
+        else CarbonPlayerApplication.instance.preferences.testPlayOAuth
+
+        Timber.d("sameWithFree: $sameWithFree Play token: $token")
+
         return Request.Builder()
                 .header("User-Agent", CarbonPlayerApplication.instance.googleUserAgent)
-                .header("Authorization", "Bearer " +
-                        CarbonPlayerApplication.instance.preferences.PlayMusicOAuth)
-
+                .header("Authorization", "Bearer $token")
                 .header("X-Device-ID", IdentityUtils.getGservicesId(context, true))
                 .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context))
     }

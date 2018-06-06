@@ -30,8 +30,6 @@ import timber.log.Timber
 
 class ExploreController @Keep constructor() : Controller() {
 
-    private val childRouter: Router by lazy { getChildRouter(view!!.browseStationsContainer) }
-
     override fun onContextAvailable(context: Context) {
         super.onContextAvailable(context)
 
@@ -94,6 +92,12 @@ class ExploreController @Keep constructor() : Controller() {
             applyNewReleases(root, it)
         }
 
+        CarbonPlayerApplication.instance.lastStationCategoryRoot?.let {
+            applyBrowseStations(root, it)
+        } ?: getChildRouter(root.browseStationsContainer).pushController(
+                RouterTransaction.with(LoadingController())
+        )
+
         root.app_bar.addOnOffsetChangedListener({ _, i ->
             (activity as MainActivity).scrollCb(i)
         })
@@ -103,9 +107,11 @@ class ExploreController @Keep constructor() : Controller() {
 
     override fun onAttach(view: View) {
 
+        super.onAttach(view)
+
         CarbonPlayerApplication.instance.lastStationCategoryRoot?.let {
             applyBrowseStations(view, it)
-        } ?: childRouter.pushController(
+        } ?: getChildRouter(view.browseStationsContainer).pushController(
                 RouterTransaction.with(LoadingController())
         )
     }
@@ -125,7 +131,7 @@ class ExploreController @Keep constructor() : Controller() {
 
         Timber.d(categoryRoot.toString())
 
-        childRouter.apply {
+        getChildRouter(view.browseStationsContainer).apply {
             setRoot(
                     RouterTransaction.with(BrowseStationsController(categoryRoot, { station ->
                         selectStation(this, station)

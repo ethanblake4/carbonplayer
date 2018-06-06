@@ -48,6 +48,7 @@ class SettingsAccount: AppCompatActivity() {
                             prefs.OAuthToken = null
                             prefs.PlayMusicOAuth = null
                             prefs.userEmail = null
+                            prefs.useTestToken = false
 
                             prefs.saveSync()
 

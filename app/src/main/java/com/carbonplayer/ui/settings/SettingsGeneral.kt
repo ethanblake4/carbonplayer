@@ -54,6 +54,23 @@ class SettingsGeneral: AppCompatActivity() {
                     .show()
         }
 
+        settings_general_allow_explicit.setOnClickListener {
+            app.preferences.filterExplicit = !app.preferences.filterExplicit
+            app.preferences.save()
+            updateTexts()
+        }
+
+        settings_general_allow_explicit_checkbox.setOnCheckedChangeListener { _, isChecked ->
+            app.preferences.filterExplicit = !isChecked
+            app.preferences.save()
+        }
+
+        settings_general_cache_size.setOnClickListener {
+            Toast.makeText(this, "You can't change this option yet!",
+                    Toast.LENGTH_SHORT)
+                    .show()
+        }
+
         settings_general_evict_cache.setOnClickListener {
 
             Toast.makeText(this, "Trimming cache", Toast.LENGTH_LONG).show()
@@ -68,6 +85,8 @@ class SettingsGeneral: AppCompatActivity() {
     private fun updateTexts() {
 
         val app = application as CarbonPlayerApplication
+
+        settings_general_allow_explicit_checkbox.isChecked = !app.preferences.filterExplicit
 
         settings_general_wifi_quality_desc.text =
                 resources.getStringArray(R.array.stream_qualities)[

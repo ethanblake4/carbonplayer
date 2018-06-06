@@ -98,9 +98,24 @@ class CarbonPlayerApplication : Application() {
 
         RxJavaPlugins.setErrorHandler { e -> Timber.e(e) }
 
+
         Realm.init(this)
         // Configure default configuration for Realm
-        val realmConfig = RealmConfiguration.Builder().build()
+        val realmConfig = RealmConfiguration.Builder()
+                .schemaVersion(2)
+                .migration { realm, oldVersion, newVersion ->
+                    if(newVersion <= oldVersion) return@migration
+                    if(newVersion == 2L) realm.schema.get("Track")
+                            ?.addField("newTrackType", Integer::class.java)
+                            ?.transform { obj ->
+                                obj.getString("trackType")?.toIntOrNull()?.let {
+                                    obj.setInt("newTrackType", it)
+                                }
+                            }
+                            ?.removeField("trackType")
+                            ?.renameField("newTrackType", "trackType")
+                }.build()
+
         Realm.setDefaultConfiguration(realmConfig)
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -150,7 +165,11 @@ class CarbonPlayerApplication : Application() {
         lateinit var instance: CarbonPlayerApplication
         private var _compositeDisposable: CompositeDisposable? = null
 
+        val defaultMtoken = "aas_et/AKppINZpEZk3nrMVIMuXZvCkgO_OlueAqJn-serXl6dxdz0fw6L7AQ5F_MC" +
+                "mW-XJmNgv_HnGWOo4wNcpdaNZO9AXqhBegmiduflFvMHcXVZ8ZHiHKEuQYPE9ZIU2TZ4qMg=="
+
         val compositeDisposable: CompositeDisposable
+
         get() {
             if (_compositeDisposable == null) _compositeDisposable = CompositeDisposable()
             _compositeDisposable?.isDisposed?.let { if (it) _compositeDisposable = CompositeDisposable() }

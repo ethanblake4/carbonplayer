@@ -1,5 +1,6 @@
 package com.carbonplayer.ui.main
 
+import android.app.Activity
 import android.support.design.widget.AppBarLayout
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
@@ -236,6 +237,14 @@ class HomeController : Controller() {
             PlayableItemIdV1Proto.PlayableItemId.TypeCase.ARTIST -> return errorPlaying()
             PlayableItemIdV1Proto.PlayableItemId.TypeCase.TYPE_NOT_SET -> return errorPlaying()
             else -> return errorPlaying()
+        }
+    }
+
+    override fun onActivityResumed(activity: Activity) {
+        super.onActivityResumed(activity)
+
+        view?.let {
+            if (CarbonPlayerApplication.instance.homeLastResponse == null) refresh(it)
         }
     }
 

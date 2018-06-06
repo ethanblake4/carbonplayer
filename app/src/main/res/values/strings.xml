@@ -130,6 +130,13 @@
     <string name="yes">Yes</string>
     <string name="cancel">Cancel</string>
     <string name="explore">Explore</string>
+    <string name="add_to_library">Add to library</string>
+    <string name="remove_from_library">Remove from library</string>
+    <string name="cant_add_track_to_library">This track can\'t be added to the library</string>
+    <string name="track_added_to_library">Track added to library</string>
+    <string name="error_adding_to_library">Error adding to library</string>
+    <string name="cant_remove_track_from_library">This track can\'t be removed from the library</string>
+    <string name="err_sj_not_supported">This Google account does not support music.</string>
 
 
 </resources>
