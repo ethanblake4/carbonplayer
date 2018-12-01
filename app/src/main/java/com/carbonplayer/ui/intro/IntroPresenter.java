@@ -2,7 +2,6 @@ package com.carbonplayer.ui.intro;
 
 import android.app.Dialog;
 import android.content.Intent;
-import android.support.annotation.NonNull;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.R;
@@ -16,6 +15,7 @@ import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
+import androidx.annotation.NonNull;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import timber.log.Timber;

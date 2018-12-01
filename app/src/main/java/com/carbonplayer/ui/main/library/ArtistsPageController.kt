@@ -3,11 +3,11 @@ package com.carbonplayer.ui.main.library
 import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
@@ -48,7 +48,7 @@ class ArtistsPageController : Controller() {
 
         view.main_recycler.layoutManager = layoutManager
 
-        requestManager = Glide.with(activity)
+        requestManager = Glide.with(activity!!)
 
         if(activity != null && !subscribed) resubscribe(view)
 
@@ -57,7 +57,7 @@ class ArtistsPageController : Controller() {
 
     override fun onSaveViewState(view: View, outState: Bundle) {
         Timber.d("Artists - onSaveViewState = saving self state")
-        outState.putParcelable("recycler", view.main_recycler.layoutManager.onSaveInstanceState())
+        outState.putParcelable("recycler", view.main_recycler.layoutManager?.onSaveInstanceState())
 
         super.onSaveViewState(view, outState)
     }
@@ -91,7 +91,7 @@ class ArtistsPageController : Controller() {
                     view.main_recycler.adapter = adapter
                     view.fastscroll.setRecyclerView(view.main_recycler)
                     recyclerState?.let {
-                        view.main_recycler.layoutManager.onRestoreInstanceState(it)
+                        view.main_recycler.layoutManager?.onRestoreInstanceState(it)
                     }
                 }
     }

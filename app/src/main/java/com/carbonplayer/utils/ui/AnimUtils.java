@@ -18,7 +18,6 @@ package com.carbonplayer.utils.ui;
 import android.animation.Animator;
 import android.animation.TimeInterpolator;
 import android.content.Context;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.transition.Transition;
 import android.util.ArrayMap;
 import android.util.Property;
@@ -30,6 +29,8 @@ import android.view.animation.Interpolator;
 import android.view.animation.Transformation;
 
 import java.util.ArrayList;
+
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
 /**
  * Utility methods for working with animations.

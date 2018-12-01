@@ -128,6 +128,12 @@
 -keep class org.apache.http.** { *; }
 -dontwarn org.apache.http.**
 -dontwarn android.net.**
+-keep class org.apache.commons.codec.** { *; }
+-keep class org.apache.commons.logging.** { *; }
+-keep class android.net.compatibility.** { *; }
+-keep class android.net.http.** { *; }
+-dontwarn org.apache.http.**
+-dontwarn android.webkit.**
 
 -keepattributes Signature
 -keepattributes *Annotation*

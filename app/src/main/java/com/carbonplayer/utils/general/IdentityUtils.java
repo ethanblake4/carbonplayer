@@ -11,8 +11,6 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Px;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -27,6 +25,9 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Px;
+
 /**
  * Utilities for identifying device and device details
  */
@@ -39,7 +40,8 @@ public final class IdentityUtils {
         return size.x;
     }
 
-    public static @Px int displayWidth2(@NonNull Context context){
+    public static @Px
+    int displayWidth2(@NonNull Context context){
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         return displayMetrics.widthPixels;
     }

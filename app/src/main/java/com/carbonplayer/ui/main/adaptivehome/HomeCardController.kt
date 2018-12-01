@@ -3,14 +3,14 @@ package com.carbonplayer.ui.main.adaptivehome
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
-import android.support.annotation.Keep
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.annotation.Keep
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.carbonplayer.R
@@ -113,14 +113,14 @@ class HomeCardController (
                 Timber.d("wideplayable")
 
                 val vAdapter = WidePlayableCardAdapter(
-                        activity as MainActivity,
+                        activity as MainActivity)
                         { card -> gotoItem(card.itemId,
                                 card.title.text,
                                 card.description.text,
                                 listOf(card.imageReference.url),
                                 card.playbackMetadata)
                         }
-                ).apply {
+                .apply {
                     setItems(module.singleSection.widePlayableCardList.cardsList)
                     header = Pair(module.moduleTitle, module.moduleTitleUnderlineColor)
                 }
@@ -138,7 +138,7 @@ class HomeCardController (
         root.homeCardRecycler.clipToPadding = false
 
         root.homeCardRecycler.addOnScrollListener(object: RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 root.homeCardBackdrop.translationY -= dy * 0.16f
 
                 super.onScrolled(recyclerView, dx, dy)

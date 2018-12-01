@@ -4,10 +4,10 @@ import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Context
-import android.support.annotation.Keep
-import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.Keep
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.bluelinelabs.conductor.changehandler.AnimatorChangeHandler
 import com.carbonplayer.CarbonPlayerApplication
 

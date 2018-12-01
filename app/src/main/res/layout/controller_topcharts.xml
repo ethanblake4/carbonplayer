@@ -12,13 +12,13 @@
     android:fitsSystemWindows="false"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <android.support.design.widget.AppBarLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_insetEdge="top"
         android:theme="@style/AppTheme.AppBarOverlay">
 
-        <android.support.design.widget.CollapsingToolbarLayout
+        <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fitsSystemWindows="true"
@@ -34,7 +34,7 @@
                 app:scrimAlpha="0.3"
                 app:layout_collapseParallaxMultiplier="0.5" />
 
-            <android.support.v7.widget.Toolbar
+            <androidx.appcompat.widget.Toolbar
 
                 android:id="@+id/toolbar2"
                 android:layout_width="match_parent"
@@ -43,7 +43,7 @@
                 android:layout_marginTop="?android:actionBarSize"
                 app:layout_collapseMode="pin" />
 
-            <android.support.design.widget.TabLayout
+            <com.google.android.material.tabs.TabLayout
                 android:id="@+id/topcharts_tabs"
                 android:layout_width="match_parent"
                 android:layout_height="?android:actionBarSize"
@@ -51,21 +51,21 @@
                 android:layout_marginTop="?android:actionBarSize"
                 app:layout_collapseMode="pin">
 
-                <android.support.design.widget.TabItem
+                <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/topcharts_tab_songs" />
 
-                <android.support.design.widget.TabItem
+                <com.google.android.material.tabs.TabItem
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/topcharts_tab_albums" />
 
-            </android.support.design.widget.TabLayout>
+            </com.google.android.material.tabs.TabLayout>
 
-        </android.support.design.widget.CollapsingToolbarLayout>
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
 
-    </android.support.design.widget.AppBarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <com.carbonplayer.ui.widget.CustomSwipeToRefresh
         android:id="@+id/topChartsSwipeRefresh"
@@ -73,7 +73,7 @@
         android:layout_height="wrap_content"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <android.support.v4.view.ViewPager
+        <androidx.viewpager.widget.ViewPager
             android:id="@+id/topChartsPager"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />

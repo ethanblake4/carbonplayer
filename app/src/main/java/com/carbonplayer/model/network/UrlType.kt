@@ -2,7 +2,6 @@ package com.carbonplayer.model.network
 
 import android.net.Uri
 
-
 enum class UrlType {
     SKYJAM,
     INNERJAM,

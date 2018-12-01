@@ -2,8 +2,8 @@ package com.carbonplayer.ui.settings
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.TrackCache
@@ -24,16 +24,15 @@ class SettingsGeneral: AppCompatActivity() {
                     .setTitle(R.string.settings_general_opt_quality_wifi)
                     .setSingleChoiceItems(
                             R.array.stream_qualities,
-                            app.preferences.preferredStreamQualityWifi.ordinal - 1,
-                            { d, i ->
-                                app.preferences.preferredStreamQualityWifi =
-                                        StreamQuality.values()[i + 1]
-                                app.preferences.save()
+                            app.preferences.preferredStreamQualityWifi.ordinal - 1
+                    ) { d, i ->
+                        app.preferences.preferredStreamQualityWifi =
+                                StreamQuality.values()[i + 1]
+                        app.preferences.save()
 
-                                updateTexts()
-                                d.dismiss()
-                            }
-                    ).show()
+                        updateTexts()
+                        d.dismiss()
+                    }.show()
         }
 
         settings_general_mobile_quality.setOnClickListener {
@@ -41,16 +40,15 @@ class SettingsGeneral: AppCompatActivity() {
                     .setTitle(R.string.settings_general_opt_quality_mobile)
                     .setSingleChoiceItems(
                             R.array.stream_qualities,
-                            app.preferences.preferredStreamQualityMobile.ordinal - 1,
-                            { d, i ->
-                                app.preferences.preferredStreamQualityMobile =
-                                        StreamQuality.values()[i + 1]
-                                app.preferences.save()
+                            app.preferences.preferredStreamQualityMobile.ordinal - 1
+                    ) { d, i ->
+                        app.preferences.preferredStreamQualityMobile =
+                                StreamQuality.values()[i + 1]
+                        app.preferences.save()
 
-                                updateTexts()
-                                d.dismiss()
-                            }
-                    )
+                        updateTexts()
+                        d.dismiss()
+                    }
                     .show()
         }
 

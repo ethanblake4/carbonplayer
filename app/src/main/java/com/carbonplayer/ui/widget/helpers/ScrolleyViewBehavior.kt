@@ -1,12 +1,12 @@
 package com.carbonplayer.ui.widget.helpers
 
 import android.content.Context
-import android.support.annotation.Keep
-import android.support.design.widget.CoordinatorLayout
-import android.support.v4.view.ViewCompat
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import androidx.annotation.Keep
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.ViewCompat
 
 @Keep
 class ScrolleyViewBehavior : CoordinatorLayout.Behavior<View> {

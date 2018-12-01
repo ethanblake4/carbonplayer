@@ -4,14 +4,15 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
-import android.support.annotation.AnimatorRes;
 import android.view.View;
 
 import com.carbonplayer.R;
 
+import androidx.annotation.AnimatorRes;
+
 /**
  * Created by Michal on 05/08/16.
- * Animates showing and hiding elements of the {@link com.futuremind.recyclerviewfastscroll.FastScroller} (handle and bubble).
+ * Animates showing and hiding elements of the {@link com.carbonplayer.ui.widget.fastscroll.FastScroller} (handle and bubble).
  * The decision when to show/hide the element should be implemented via {@link ViewBehavior}.
  */
 public class VisibilityAnimationManager {

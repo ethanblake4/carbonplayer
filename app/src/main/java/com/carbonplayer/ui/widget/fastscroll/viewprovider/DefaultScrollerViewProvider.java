@@ -2,7 +2,6 @@ package com.carbonplayer.ui.widget.fastscroll.viewprovider;
 
 
 import android.graphics.drawable.InsetDrawable;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +9,8 @@ import android.widget.TextView;
 
 import com.carbonplayer.R;
 import com.carbonplayer.ui.widget.fastscroll.Utils;
+
+import androidx.core.content.ContextCompat;
 
 /**
  * Created by Michal on 05/08/16.

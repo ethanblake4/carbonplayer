@@ -5,9 +5,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v4.widget.TextViewCompat;
-import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -17,6 +14,10 @@ import android.widget.TextView;
 import com.carbonplayer.R;
 import com.carbonplayer.ui.widget.fastscroll.viewprovider.DefaultScrollerViewProvider;
 import com.carbonplayer.ui.widget.fastscroll.viewprovider.ScrollerViewProvider;
+
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.core.widget.TextViewCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by mklimczak on 28/07/15.

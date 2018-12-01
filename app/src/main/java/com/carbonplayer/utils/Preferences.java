@@ -3,7 +3,6 @@ package com.carbonplayer.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 
 import com.carbonplayer.CarbonPlayerApplication;
 import com.carbonplayer.model.entity.enums.CarbonThemeBase;
@@ -13,6 +12,7 @@ import com.carbonplayer.utils.general.IdentityUtils;
 
 import java.lang.reflect.Field;
 
+import androidx.annotation.NonNull;
 import timber.log.Timber;
 
 /**

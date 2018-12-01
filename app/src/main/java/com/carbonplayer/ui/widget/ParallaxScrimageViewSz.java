@@ -20,16 +20,17 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.support.annotation.ColorInt;
-import android.support.annotation.FloatRange;
-import android.support.v4.view.ViewCompat;
-import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.util.Property;
 
 import com.carbonplayer.R;
 import com.carbonplayer.utils.ui.AnimUtils;
 import com.carbonplayer.utils.ui.ColorUtils;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
+import androidx.appcompat.widget.AppCompatImageView;
+import androidx.core.view.ViewCompat;
 
 
 /**

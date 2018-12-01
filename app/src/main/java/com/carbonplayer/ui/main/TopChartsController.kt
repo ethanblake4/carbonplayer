@@ -1,7 +1,6 @@
 package com.carbonplayer.ui.main
 
 import android.content.Context
-import android.support.design.widget.CollapsingToolbarLayout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +17,8 @@ import com.carbonplayer.ui.main.topcharts.TopChartsAlbumPage
 import com.carbonplayer.ui.main.topcharts.TopChartsSongPage
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
+import com.google.android.material.appbar.CollapsingToolbarLayout
+import com.google.android.material.tabs.TabLayout
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.controller_main.*
@@ -42,13 +43,13 @@ class TopChartsController : Controller() {
                     .subscribe { it ->
                         CarbonPlayerApplication.instance.lastTopChartsGenres = it
                         (activity as MainActivity).callbackWithTopChartsGenres(it.genres)
-                        (activity as MainActivity).registerSpinnerCallback(it.genres, {
+                        (activity as MainActivity).registerSpinnerCallback(it.genres) {
                             Timber.d("selected $it")
                             view?.topChartsSwipeRefresh?.isRefreshing = true
 
                             if (it == DEFAULT_CHART) getCharts(context)
                             else applyCachedChart(context, it)
-                        })
+                        }
                     }.addToAutoDispose()
         }
     }
@@ -73,7 +74,7 @@ class TopChartsController : Controller() {
                     currentSongPage?.let { it.songList = response.chart.tracks }
                     currentAlbumPage?.let { it.albumList = response.chart.albums }
                     view?.let {
-                        Glide.with(activity).load(response.header.header_image.url)
+                        Glide.with(activity!!).load(response.header.header_image.url)
                                 .transition(DrawableTransitionOptions.withCrossFade(200))
                                 .into(it.topcharts_header_image)
                     }
@@ -94,7 +95,7 @@ class TopChartsController : Controller() {
             CarbonPlayerApplication.instance.topchartsResponseMap[id] = response
 
             view?.let {
-                Glide.with(activity).load(response.header.header_image.url)
+                Glide.with(activity!!).load(response.header.header_image.url)
                         .transition(DrawableTransitionOptions.withCrossFade(200))
                         .into(it.topcharts_header_image)
             }
@@ -113,7 +114,7 @@ class TopChartsController : Controller() {
                     CarbonPlayerApplication.instance.topchartsResponseMap[id] = response
 
                     view?.let {
-                        Glide.with(activity).load(response.header.header_image.url)
+                        Glide.with(activity!!).load(response.header.header_image.url)
                                 .transition(DrawableTransitionOptions.withCrossFade(200))
                                 .into(it.topcharts_header_image)
                         it.topChartsSwipeRefresh.isRefreshing = false
@@ -128,13 +129,13 @@ class TopChartsController : Controller() {
         val v = inflater.inflate(R.layout.controller_topcharts, container, false)
 
         CarbonPlayerApplication.instance.lastTopChartsGenres?.let {
-            (activity as MainActivity).registerSpinnerCallback(it.genres, {
+            (activity as MainActivity).registerSpinnerCallback(it.genres) {
                 Timber.d("selected $it")
                 view?.topChartsSwipeRefresh?.isRefreshing = true
 
                 if (it == DEFAULT_CHART) getCharts(v.context)
                 else applyCachedChart(v.context, it)
-            })
+            }
         }
 
         if(CarbonPlayerApplication.instance.lastTopChartsGenres == null)
@@ -192,7 +193,7 @@ class TopChartsController : Controller() {
 
         }
 
-        v.topcharts_tabs.setupWithViewPager(v.topChartsPager)
+        (v.topcharts_tabs as TabLayout).setupWithViewPager(v.topChartsPager)
 
 
         v.topChartsSwipeRefresh.setOnRefreshListener {
@@ -206,7 +207,7 @@ class TopChartsController : Controller() {
         CarbonPlayerApplication.instance.topchartsResponseMap[
                 CarbonPlayerApplication.instance.topChartsCurrentChart
                 ]?.let {
-            Glide.with(activity).load(it.header.header_image.url)
+            Glide.with(activity!!).load(it.header.header_image.url)
                     .into(v.topcharts_header_image)
         }
 

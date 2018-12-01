@@ -9,11 +9,11 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.res.ColorStateList
 import android.os.*
-import android.support.v4.content.ContextCompat
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.helper.ItemTouchHelper
 import android.text.TextUtils
 import android.view.View
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -37,6 +37,7 @@ import com.carbonplayer.utils.general.MathUtils
 import com.carbonplayer.utils.ui.AnimUtils
 import com.carbonplayer.utils.ui.ColorUtils
 import com.carbonplayer.utils.ui.PaletteUtil
+import com.github.florent37.glidepalette.BitmapPalette
 import com.github.florent37.glidepalette.GlidePalette
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -436,7 +437,7 @@ class NowPlayingHelper(private val activity: Activity) {
                             String.format("%02d:%02d", minute, second)
                     requestMgr.load(curTracK!!.albumArtURL)
                             .listener(GlidePalette.with(curTracK!!.albumArtURL)
-                            .use(0)
+                            .use(BitmapPalette.Profile.VIBRANT)
                             .setPaletteBuilderInterceptor { it.clearFilters() }
                             .intoCallBack{ palette -> if (palette != null) {
                                 activity.nowplaying_frame.post {
@@ -448,8 +449,8 @@ class NowPlayingHelper(private val activity: Activity) {
                                     PaletteUtil.crossfadeSubtitle(activity.npui_artist, pair.primary)
                                     PaletteUtil.crossfadeSubtitle(activity.npui_mixDescriptor, pair.primary)
                                     val tintList = ColorStateList(
-                                            arrayOf(IntArray(1, { -android.R.attr.state_checked }),
-                                                    IntArray(1, {android.R.attr.state_checked})),
+                                            arrayOf(IntArray(1) { -android.R.attr.state_checked },
+                                                    IntArray(1) {android.R.attr.state_checked}),
                                             arrayOf(ColorUtils.scrimify(pair.primary.bodyTextColor,
                                                     CarbonPlayerApplication.instance.preferences.scrimifyAmount),
                                                     ColorUtils.scrimify(pair.primary.bodyTextColor,
@@ -589,7 +590,7 @@ class NowPlayingHelper(private val activity: Activity) {
         messenger?.send(Message.obtain(null, Constants.MESSAGE.UNREGISTER_CLIENT).apply {
             replyTo = replyMessenger
         })
-        if(isServiceRunning()) activity.unbindService(connection)
+        if(isServiceRunning()) connection?.let { activity.unbindService(it) }
     }
 
 

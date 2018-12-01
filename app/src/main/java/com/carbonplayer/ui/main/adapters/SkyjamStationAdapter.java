@@ -2,8 +2,6 @@ package com.carbonplayer.ui.main.adapters;
 
 import android.graphics.Color;
 import android.graphics.Point;
-import android.support.annotation.ColorInt;
-import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +25,8 @@ import com.github.florent37.glidepalette.GlidePalette;
 
 import java.util.List;
 
+import androidx.annotation.ColorInt;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;

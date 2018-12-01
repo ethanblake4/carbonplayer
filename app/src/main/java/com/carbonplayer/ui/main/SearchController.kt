@@ -1,13 +1,13 @@
 package com.carbonplayer.ui.main
 
-import android.support.annotation.Keep
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.annotation.Keep
 import androidx.core.os.bundleOf
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
@@ -140,7 +140,7 @@ class SearchController(
             cDetail.entries?.let { entries ->
                 v.clusterEntries.adapter = when (cDetail.cluster?.type) {
                     MediaTypeUtil.TYPE_SONG -> SearchSongAdapter(
-                            entries.mapNotNull { it.track }.take(5),
+                            entries.asSequence().mapNotNull { it.track }.take(5).toList(),
                             { _, pos ->
                                 musicManager.fromTracks(entries.mapNotNull { it.track },
                                         pos)
@@ -150,13 +150,13 @@ class SearchController(
                             }
                     )
                     MediaTypeUtil.TYPE_ALBUM -> TopChartsAlbumAdapter(
-                            entries.mapNotNull { it.album }.take(4),
+                            entries.asSequence().mapNotNull { it.album }.take(4).toList(),
                             activity as MainActivity,
                             requestManager
                     )
                     MediaTypeUtil.TYPE_ARTIST -> LinearArtistAdapter(
                             activity!!,
-                            entries.mapNotNull { it.artist }.take(5),
+                            entries.asSequence().mapNotNull { it.artist }.take(5).toList(),
                             { (artist, swPair) ->
                                 (activity as MainActivity).gotoArtist(artist,
                                         swPair ?: PaletteUtil.DEFAULT_SWATCH_PAIR)

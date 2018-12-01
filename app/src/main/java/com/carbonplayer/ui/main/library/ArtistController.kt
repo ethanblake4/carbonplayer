@@ -8,12 +8,6 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
-import android.support.annotation.Keep
-import android.support.constraint.ConstraintSet
-import android.support.v4.view.animation.FastOutSlowInInterpolator
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.view.LayoutInflater
@@ -22,6 +16,12 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.ScaleAnimation
 import android.widget.Toast
+import androidx.annotation.Keep
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
@@ -59,6 +59,7 @@ import io.realm.Realm
 import kotlinx.android.synthetic.main.activity_songgroup.view.*
 import kotlinx.android.synthetic.main.nowplaying.*
 import kotlinx.android.synthetic.main.songgroup_details.view.*
+import org.apache.http.client.utils.CloneUtils.clone
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -173,12 +174,12 @@ class ArtistController(
                     if(!expanded) root.constraintLayout6.measuredHeight + root.descriptionText.height
                     else ogHeight
             )
-            anim.addUpdateListener({
+            anim.addUpdateListener {
                 val int = it.animatedValue as Int
                 val layoutParams = root.constraintLayout6.layoutParams
                 layoutParams.height = int
                 root.constraintLayout6.layoutParams = layoutParams
-            })
+            }
             anim.duration = 300
             anim.interpolator = FastOutSlowInInterpolator()
             anim.start()

@@ -1,0 +1,65 @@
+apply plugin: 'com.android.library'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+apply plugin: 'org.jetbrains.dokka-android'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "0.0.1"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+}
+
+ext {
+    bintrayRepo = 'exponent-core'
+    bintrayName = 'exponent-core'
+
+    publishedGroupId = 'io.ethanblake4'
+    libraryName = 'ExponentCore'
+    artifact = 'exponent-core'
+
+    libraryDescription = 'The core library of Exponent, a set of Android utilities for accessing ' +
+            'Google APIs without Play Services, including private APIs. It provides comprehensive ' +
+            'support for authentication and account management.'
+
+    siteUrl = 'https://github.com/ethanblake4/ExponentCore'
+    gitUrl = 'https://github.com/ethanblake4/ExponentCore.git'
+
+    libraryVersion = '0.0.1'
+
+    developerId = 'ethanblake4'
+    developerName = 'Ethan Elshyeb'
+    developerEmail = 'ethanblake@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'bintrayv1.gradle'

@@ -1,11 +1,11 @@
 package com.carbonplayer.ui.main.adapters
 
 import android.annotation.SuppressLint
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -57,9 +57,10 @@ internal class SuggestionsAdapter(
 
         if(holder.itemViewType == 1) {
             holder.itemView.trackName.text = t.entity?.title ?: t.suggestion_string ?: "Unknown"
-            t.entity?.let { when (it.type) {
+            t.entity?.let { searchEntity ->
+                when (searchEntity.type) {
                 MediaTypeUtil.TYPE_SONG -> {
-                    it.track?.albumArtRef?.firstOrNull()?.let {
+                    searchEntity.track?.albumArtRef?.firstOrNull()?.let {
                         requestManager.load(it.url)
                                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                                 .transition(DrawableTransitionOptions.withCrossFade(200))
@@ -67,7 +68,7 @@ internal class SuggestionsAdapter(
                     }
                 }
                 MediaTypeUtil.TYPE_ARTIST -> {
-                    (it.artist?.artistArtRef ?: it.artist?.artistArtRefs?.firstOrNull()?.url)?.let {
+                    (searchEntity.artist?.artistArtRef ?: searchEntity.artist?.artistArtRefs?.firstOrNull()?.url)?.let {
                         requestManager.load(it)
                                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                                 .transition(DrawableTransitionOptions.withCrossFade(200))
@@ -75,7 +76,7 @@ internal class SuggestionsAdapter(
                     }
                 }
                 MediaTypeUtil.TYPE_ALBUM -> {
-                    it.album?.albumArtRef?.let {
+                    searchEntity.album?.albumArtRef?.let {
                         requestManager.load(it)
                                 .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.ALL))
                                 .transition(DrawableTransitionOptions.withCrossFade(200))
@@ -91,7 +92,6 @@ internal class SuggestionsAdapter(
             holder.itemView.findViewById<TextView>(R.id.suggestionText)
                     .text = t.suggestion_string
         }
-
     }
 
     override fun getItemCount(): Int = dataset.size

@@ -1,10 +1,12 @@
 package com.carbonplayer.ui.widget;
 
 import android.content.Context;
-import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
+import android.view.View;
 
 import com.carbonplayer.model.entity.proto.innerjam.visuals.ImageReferenceV1Proto;
+
+import androidx.appcompat.widget.AppCompatImageView;
 
 import static com.carbonplayer.utils.general.MathUtils.aspectHeightMultiple;
 
@@ -19,9 +21,9 @@ public class AspectImageView extends AppCompatImageView {
     @Override
     protected void onMeasure(int widthSpec, int heightSpec) {
 
-        int aspectHeight = MeasureSpec.makeMeasureSpec(
-                Math.round((float) MeasureSpec.getSize(widthSpec)
-                        * aspectHeightMultiple(aspect)), MeasureSpec.EXACTLY);
+        int aspectHeight = View.MeasureSpec.makeMeasureSpec(
+                Math.round((float) View.MeasureSpec.getSize(widthSpec)
+                        * aspectHeightMultiple(aspect)), View.MeasureSpec.EXACTLY);
 
         super.onMeasure(widthSpec, aspectHeight);
     }

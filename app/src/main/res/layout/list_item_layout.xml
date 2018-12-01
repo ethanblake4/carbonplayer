@@ -8,7 +8,7 @@
     android:id="@+id/listItemFrame"
     android:background="#d71">
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:id="@+id/listItemContraintLayout"
@@ -45,6 +45,6 @@
             app:layout_constraintLeft_toLeftOf="@+id/primaryText"
             app:layout_constraintBottom_toBottomOf="@+id/imgthumb"
             android:layout_marginBottom="4dp" />
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

@@ -8,7 +8,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.util.ArrayMap;
 import android.util.Base64;
 import android.util.Log;
@@ -48,6 +47,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.HttpsURLConnection;
 
+import androidx.annotation.NonNull;
 import io.reactivex.Completable;
 import io.reactivex.exceptions.Exceptions;
 import okhttp3.FormBody;

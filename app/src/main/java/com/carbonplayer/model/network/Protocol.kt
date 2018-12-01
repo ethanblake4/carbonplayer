@@ -41,18 +41,16 @@ import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.protocol.ClientContext
-import org.apache.http.impl.client.BasicCookieStore
-import org.apache.http.protocol.BasicHttpContext
 import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.security.InvalidKeyException
 import java.security.NoSuchAlgorithmException
 import java.util.*
+import java.util.zip.GZIPOutputStream
 
 
 /**
@@ -223,36 +221,35 @@ object Protocol {
             val deviceId = IdentityUtils.getGservicesId(context, true)
 
             try {
-                val entity = AndroidHttpClient.getCompressedEntity(
-                        homeRequest.toByteArray(), context.contentResolver)
-                entity.setContentType("application/x-protobuf")
-                val cookieStore = BasicCookieStore()
 
-                // Create local HTTP context
-                val localContext = BasicHttpContext()
-                // Bind custom cookie store to the local context
-                localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore)
+                val arr = ByteArrayOutputStream()
+                val zipper =  GZIPOutputStream(arr)
+                zipper.write(homeRequest.toByteArray())
+                zipper.close()
 
-                val httpRequest = HttpPost(PA_URL + "gethome?alt=proto")
-                httpRequest.entity = entity
-                httpRequest.setHeader("X-Device-ID", deviceId)
-                httpRequest.setHeader("X-Device-Logging-ID", IdentityUtils.getLoggingID(context))
-                httpRequest.setHeader("Authorization", "Bearer " +
-                        CarbonPlayerApplication.instance.preferences.PlayMusicOAuth)
-                val response = CarbonPlayerApplication.instance.androidHttpClient
-                        .execute(httpRequest, localContext)
-                if (response.statusLine.statusCode == 401) {
+                val body = RequestBody.create(MediaType.parse("application/x-protobuf"), arr.toByteArray())
+
+                val response = CarbonPlayerApplication.instance.okHttpClient.newCall(Request.Builder()
+                        .header("Content-Encoding", "gzip")
+                        .header("User-Agent", CarbonPlayerApplication.instance.googleUserAgent)
+                        .header("X-Device-ID", deviceId)
+                        .header("X-Device-Logging-ID", IdentityUtils.getLoggingID(context))
+                        .header("Authorization", "Bearer ${CarbonPlayerApplication.instance.preferences.PlayMusicOAuth}")
+                        .url(PA_URL + "gethome?alt=proto")
+                        .post(body)
+                        .build()).execute()
+
+
+                if (response.code() == 401) {
                     GoogleLogin.retryPlayOAuthSync(context)
                     subscriber.onError(ServerRejectionException(
                             ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED
                     ))
                 }
-                val ent = response.entity
+                val ent = response.body()!!.byteStream()
                 val homeResponse = InnerJamApiV1Proto.GetHomeResponse
-                        .parseFrom(IOUtils.readSmallStream(ent.content, 5242880))
+                        .parseFrom(IOUtils.readSmallStream(ent, 5242880))
 
-                ent.consumeContent()
-                httpRequest.abort()
                 subscriber.onSuccess(homeResponse)
             } catch (e: IOException) {
                 Timber.e(e, "IOException in listenNow")
@@ -402,16 +399,17 @@ object Protocol {
             val client = CarbonPlayerApplication.instance.okHttpClient
             val adapter = CarbonPlayerApplication.moshi.adapter(SkyjamArtist::class.java)
 
-            val getParams = Uri.Builder()
+            val path = UrlType.SKYJAM.with("fetchartist")
                     .appendQueryParameter("alt", "json")
                     .appendDefaults()
                     .appendQueryParameter("nid", nid)
                     .appendQueryParameter("include-albums", "true")
                     .appendQueryParameter("num-top-tracks", "50")
                     .appendQueryParameter("num-related-artists", "20")
+                    .build()
 
             val request = bestBuilder(context, true, false, true)
-                    .url(SJ_URL + "fetchartist?" + getParams)
+                    .url(path)
                     .header("Content-Type", "application/json")
                     .build()
 

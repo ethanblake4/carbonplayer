@@ -1,7 +1,7 @@
 package com.carbonplayer.ui.settings
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.carbonplayer.R
 import com.carbonplayer.utils.newIntent
 import kotlinx.android.synthetic.main.activity_settings.*

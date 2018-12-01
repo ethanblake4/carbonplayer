@@ -274,7 +274,7 @@ fun Context.loadImageBitmap(
                     completed(null)
                 }
 
-                override fun onResourceReady(resource: Bitmap, t: Transition<in Bitmap>) {
+                override fun onResourceReady(resource: Bitmap, t: Transition<in Bitmap>?) {
                     Timber.i("image load complete")
                     completed(resource)
                 }

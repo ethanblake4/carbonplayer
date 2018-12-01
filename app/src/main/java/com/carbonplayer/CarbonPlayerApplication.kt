@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.net.http.AndroidHttpClient
 import android.os.Build
 import com.carbonplayer.model.entity.Album
 import com.carbonplayer.model.entity.api.ExploreTab
@@ -76,7 +75,7 @@ class CarbonPlayerApplication : Application() {
 
         okHttpClient = OkHttpClient.Builder()
                 .addNetworkInterceptor(StethoInterceptor()).build()
-        androidHttpClient = AndroidHttpClient.newInstance(googleUserAgent, applicationContext)
+        //androidHttpClient = AndroidHttpClient.newInstance(googleUserAgent, applicationContext)
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
@@ -152,7 +151,7 @@ class CarbonPlayerApplication : Application() {
     var topChartsCurrentChart = TopChartsController.DEFAULT_CHART
 
     lateinit var okHttpClient: OkHttpClient
-    lateinit var androidHttpClient: AndroidHttpClient
+    //lateinit var androidHttpClient: AndroidHttpClient
 
     fun getOkHttpClient(builder: OkHttpClient.Builder): OkHttpClient {
         return builder

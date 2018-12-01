@@ -1,9 +1,9 @@
 package com.carbonplayer.ui.main
 
-import android.support.annotation.Keep
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.Keep
 import com.bluelinelabs.conductor.Controller
 import com.carbonplayer.R
 

@@ -1,11 +1,11 @@
 package com.carbonplayer.ui.widget
 
 import android.content.Context
-import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import android.widget.Scroller
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.carbonplayer.utils.carbonAnalytics
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils

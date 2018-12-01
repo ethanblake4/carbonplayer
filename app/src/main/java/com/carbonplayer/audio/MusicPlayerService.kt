@@ -1,21 +1,19 @@
 package com.carbonplayer.audio
 
 import android.annotation.SuppressLint
-import android.app.Notification
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.media.AudioManager
-import android.media.MediaMetadata
 import android.net.wifi.WifiManager
 import android.os.*
-import android.support.v4.app.NotificationCompat
-import android.support.v4.app.NotificationManagerCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.ParcelableTrack
 import com.carbonplayer.model.entity.Track
@@ -28,8 +26,6 @@ import io.realm.Realm
 import org.parceler.Parcels
 import timber.log.Timber
 import java.util.*
-
-
 
 /**
  * Music player foreground service
@@ -77,12 +73,12 @@ class MusicPlayerService : Service(), MusicFocusable {
 
     private val noisyIntentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
 
-    private val noisyAudioStreamReceiver = BecomingNoisyReceiver({
+    private val noisyAudioStreamReceiver = BecomingNoisyReceiver {
         playback.pause()
         audioFocusHelper.abandonFocus()
         if(wifiLock.isHeld) wifiLock.release()
         if(wakeLock.isHeld) wakeLock.release()
-    })
+    }
 
 
     /** This is called any time we receive a command from the app **/
@@ -90,7 +86,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         when (intent.action) {
             Constants.ACTION.START_SERVICE -> initService(intent)
             Constants.ACTION.NEW_QUEUE -> {
-                val bundle = intent.extras
+                val bundle = intent.extras!!
                 val tracks = Parcels.unwrap<List<ParcelableTrack>>(
                         bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
 
@@ -130,25 +126,25 @@ class MusicPlayerService : Service(), MusicFocusable {
             }
             Constants.ACTION.SEEK -> {
                 Timber.i("Seek")
-                val position = intent.extras.getLong(Constants.KEY.POSITION)
+                val position = intent.extras!!.getLong(Constants.KEY.POSITION)
                 playback.seekTo(position)
             }
             Constants.ACTION.INSERT_NEXT -> {
                 Timber.i("Insert next")
-                val bundle = intent.extras
+                val bundle = intent.extras!!
                 val tracks = Parcels.unwrap<List<ParcelableTrack>>(
                         bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
                 playback.addNext(tracks)
             }
             Constants.ACTION.INSERT_AT_END -> {
                 Timber.i("Insert at end")
-                val bundle = intent.extras
+                val bundle = intent.extras!!
                 val tracks = Parcels.unwrap<List<ParcelableTrack>>(
                         bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
                 playback.addTracks(tracks)
             }
             Constants.ACTION.REORDER -> {
-                val bundle = intent.extras
+                val bundle = intent.extras!!
 
                 val from = bundle.getInt(Constants.KEY.REORDER_FROM)
                 val to = bundle.getInt(Constants.KEY.REORDER_TO)
@@ -167,7 +163,7 @@ class MusicPlayerService : Service(), MusicFocusable {
                 playback.remove(pos)
             }
             Constants.ACTION.SKIP_TO_TRACK -> {
-                val bundle = intent.extras
+                val bundle = intent.extras!!
 
                 val pos = bundle.getInt(Constants.KEY.POSITION)
 
@@ -202,7 +198,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         wifiLock.setReferenceCounted(false)
 
         wakeLock = (applicationContext.getSystemService(Context.POWER_SERVICE) as PowerManager)
-                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG)
+                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "$TAG:music_lock")
         wakeLock.setReferenceCounted(false)
 
         notificationMgr = NotificationManagerCompat.from(this)
@@ -215,7 +211,7 @@ class MusicPlayerService : Service(), MusicFocusable {
         playPauseIntent = newIntent<MusicPlayerService>(Constants.ACTION.PLAYPAUSE)
         nextIntent = newIntent<MusicPlayerService>(Constants.ACTION.NEXT)
 
-        val bundle = intent.extras
+        val bundle = intent.extras!!
         val tracks = Parcels.unwrap<List<ParcelableTrack>>(
                 bundle.getParcelable<Parcelable>(Constants.KEY.TRACKS))
 
@@ -349,9 +345,9 @@ class MusicPlayerService : Service(), MusicFocusable {
         mediaSession = MediaSessionCompat(this, TAG)
         mediaSession.setCallback(mediaSessionCallback)
 
-        Timber.d("Will call fromNewQueue with position ${intent.extras.getInt(Constants.KEY.POSITION)}")
+        Timber.d("Will call fromNewQueue with position ${intent.extras!!.getInt(Constants.KEY.POSITION)}")
 
-        fromNewQueue(tracks, intent.extras.getInt(Constants.KEY.POSITION))
+        fromNewQueue(tracks, intent.extras!!.getInt(Constants.KEY.POSITION))
     }
 
     private fun fromNewQueue(tracks: List<ParcelableTrack>, pos: Int) {
@@ -376,8 +372,8 @@ class MusicPlayerService : Service(), MusicFocusable {
             } else {
                 updateNotification(track, bitmap = img)
                 if(metadata !=  null) mediaSession.setMetadata(MediaMetadataCompat.Builder(metadata)
-                        .putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, img)
-                        .putBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON, img)
+                        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, img)
+                        .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, img)
                         .build())
             }
         }
@@ -409,14 +405,14 @@ class MusicPlayerService : Service(), MusicFocusable {
         mediaSession.setSessionActivity(contentIntent)
 
         builder.setStyle(
-                android.support.v4.media.app.NotificationCompat.MediaStyle()
+                androidx.media.app.NotificationCompat.MediaStyle()
                         .setShowCancelButton(true)
                         .setShowActionsInCompactView(0, 1, 2)
                         .setMediaSession(mediaSession.sessionToken))
                 .setChannelId("default")
                 .setContentIntent(contentIntent)
                 .setSmallIcon(R.drawable.ic_play)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentTitle(track.title)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setOngoing(playback.isUnpaused())

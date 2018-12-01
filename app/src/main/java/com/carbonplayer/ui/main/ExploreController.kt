@@ -1,12 +1,11 @@
 package com.carbonplayer.ui.main
 
 import android.content.Context
-import android.support.annotation.Keep
-import android.support.design.widget.AppBarLayout
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.Keep
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bluelinelabs.conductor.Controller
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
@@ -21,8 +20,10 @@ import com.carbonplayer.ui.main.adapters.TopChartsAlbumAdapter
 import com.carbonplayer.ui.main.explore.BrowseStationsController
 import com.carbonplayer.ui.main.explore.BrowseStationsPage
 import com.carbonplayer.ui.main.explore.BrowseStationsTab
+import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
 import com.carbonplayer.utils.general.MathUtils
+import com.google.android.material.appbar.AppBarLayout
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.controller_explore.view.*
@@ -44,7 +45,7 @@ class ExploreController @Keep constructor() : Controller() {
 
                     }) { err ->
                         Timber.e(err)
-                    }
+                    }.addToAutoDispose()
         }
 
         if (CarbonPlayerApplication.instance.lastStationCategoryRoot == null) {
@@ -57,7 +58,7 @@ class ExploreController @Keep constructor() : Controller() {
 
                     }) { err ->
                         Timber.e(err)
-                    }
+                    }.addToAutoDispose()
         }
 
 
@@ -98,7 +99,7 @@ class ExploreController @Keep constructor() : Controller() {
                 RouterTransaction.with(LoadingController())
         )
 
-        root.app_bar.addOnOffsetChangedListener({ _, i ->
+        root.app_bar.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { _, i ->
             (activity as MainActivity).scrollCb(i)
         })
 
@@ -142,9 +143,9 @@ class ExploreController @Keep constructor() : Controller() {
 
     private fun selectStation(router: Router, station: StationCategory) {
         if(station.subcategories != null) {
-            router.pushController(RouterTransaction.with(BrowseStationsTab(station, {
+            router.pushController(RouterTransaction.with(BrowseStationsTab(station) {
                 selectStation(router, it)
-            })))
+            }))
         } else {
             router.pushController(RouterTransaction.with(LoadingController()))
             Protocol.stations(activity!!, station)
@@ -154,7 +155,7 @@ class ExploreController @Keep constructor() : Controller() {
                         router.replaceTopController(RouterTransaction.with(
                                 BrowseStationsPage(response.take(60))
                         ))
-                    }
+                    }.addToAutoDispose()
         }
         view!!.browseStationsHeader.text = station.display_name
         view!!.browseStationsHeader.visibility = View.VISIBLE

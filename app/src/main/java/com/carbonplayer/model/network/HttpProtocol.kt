@@ -90,7 +90,6 @@ object HttpProtocol {
                    capabilities.acceptCL, capabilities.acceptBearer, capabilities.acceptFree)
         }
         throw ResponseCodeException(response.body()?.string() ?: response.code().toString())
-
     }
 
     inline fun <reified R> get (

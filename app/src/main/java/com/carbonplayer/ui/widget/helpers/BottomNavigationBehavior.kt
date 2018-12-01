@@ -1,13 +1,13 @@
 package com.carbonplayer.ui.widget.helpers
 
 import android.content.Context
-import android.support.annotation.Keep
-import android.support.design.widget.CoordinatorLayout
-import android.support.v4.view.ViewCompat
-import android.support.v4.view.animation.FastOutSlowInInterpolator
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import androidx.annotation.Keep
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.ViewCompat
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.carbonplayer.ui.helpers.NowPlayingHelper
 import kotlinx.android.synthetic.main.controller_main.view.*
 import kotlinx.android.synthetic.main.nowplaying.view.*

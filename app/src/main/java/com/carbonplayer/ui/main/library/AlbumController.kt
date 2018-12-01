@@ -7,11 +7,6 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
-import android.support.annotation.Keep
-import android.support.constraint.ConstraintSet
-import android.support.v4.view.animation.FastOutSlowInInterpolator
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.view.LayoutInflater
@@ -20,6 +15,11 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.ScaleAnimation
 import android.widget.Toast
+import androidx.annotation.Keep
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
@@ -265,7 +265,7 @@ class AlbumController(
                 .apply { if(swatchPair == PaletteUtil.DEFAULT_SWATCH_PAIR) {
                     listener(GlidePalette.with(album.albumArtRef)
                             .use(0)
-                            .intoCallBack({ palette -> if (palette != null) {
+                            .intoCallBack { palette -> if (palette != null) {
                                 val pair = PaletteUtil.getSwatches(activity!!, palette)
 
                                 PaletteUtil.crossfadeBackground(
@@ -293,15 +293,15 @@ class AlbumController(
 
                                 root.songgroup_grad.background =
                                         GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
-                                        intArrayOf(mainColor,
-                                                ColorUtils.modifyAlpha(mainColor, 200),
-                                                ColorUtils.modifyAlpha(mainColor, 0)))
+                                                intArrayOf(mainColor,
+                                                        ColorUtils.modifyAlpha(mainColor, 200),
+                                                        ColorUtils.modifyAlpha(mainColor, 0)))
 
                                 root.play_fab.backgroundTintList =
                                         ColorStateList.valueOf(pair.secondary.rgb)
                                 root.play_fab.imageTintList =
                                         ColorStateList.valueOf(pair.secondary.bodyTextColor)
-                            } })
+                            } }
                     )
                 } }.into(root.main_backdrop)
 
@@ -355,7 +355,7 @@ class AlbumController(
                         a.tracks?.let {
                             tracks = it
                             setupRecycler(root)
-                        }})
+                        }}).addToAutoDispose()
 
         } else if(tracks.isNotEmpty()) setupRecycler(root)
 

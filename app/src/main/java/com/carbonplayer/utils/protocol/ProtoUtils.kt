@@ -1,14 +1,15 @@
 package com.carbonplayer.utils.protocol
 
 import android.graphics.Color
-import android.support.annotation.ColorInt
-import android.support.annotation.FloatRange
+import androidx.annotation.ColorInt
+import androidx.annotation.FloatRange
 import com.carbonplayer.model.entity.proto.innerjam.visuals.ColorV1Proto
 
 
 object ProtoUtils {
 
-    @JvmStatic @JvmOverloads @ColorInt fun colorFrom(color: ColorV1Proto.Color, alpha: Boolean = false) : Int {
+    @JvmStatic @JvmOverloads @ColorInt
+    fun colorFrom(color: ColorV1Proto.Color, alpha: Boolean = false) : Int {
         color.rgbaSpace?.let {
             return if (alpha) Color.argb(it.alpha, it.red, it.green, it.blue)
             else Color.rgb(it.red, it.green, it.blue)

@@ -15,26 +15,26 @@ class LinkActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (intent.action == Intent.ACTION_VIEW) {
-            val url = "https://songlink.io/" + intent.data.scheme + "://" + intent.data.host + intent.data.path + "?" + intent.data.encodedQuery;
-            songlinkGoogleID(url, { id ->
+        if (intent.action == Intent.ACTION_VIEW) { intent.data?.let { uri ->
+            val url = "https://songlink.io/" + uri.scheme + "://" + uri.host + uri.path + "?" + uri.encodedQuery
+            songlinkGoogleID(url) { id ->
                 val i = Intent()
                 i.setClass(this@LinkActivity, AlbumActivity::class.java)
                 i.putExtra("id", id)
                 startActivity(i)
-            })
+            }
             val i = Intent(Intent.ACTION_VIEW)
-            i.data = Uri.parse("https://songlink.io/" + intent.data.scheme + "://" + intent.data.host + intent.data.path + "?" + intent.data.encodedQuery)
+            i.data = Uri.parse("https://songlink.io/" + uri.scheme + "://" + uri.host + uri.path + "?" + uri.encodedQuery)
             startActivity(i)
             finish()
-        }
+        } }
 
     }
 
     @Throws(IOException::class, URISyntaxException::class)
     fun songlinkGoogleID(url: String, completion: (String) -> Unit) {
         Thread(Runnable {
-            val conn = URL("https://songlink.io/" + url).openConnection()
+            val conn = URL("https://songlink.io/$url").openConnection()
             conn.connect()
             val inputS = conn.getInputStream()
             val page = inputS.convertToString()

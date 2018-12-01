@@ -100,7 +100,7 @@
                 android:layout_marginTop="4dp"
                 android:textStyle="bold" />
 
-            <android.support.v7.widget.AppCompatCheckBox
+            <androidx.appcompat.widget.AppCompatCheckBox
                 android:id="@+id/settings_general_allow_explicit_checkbox"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"

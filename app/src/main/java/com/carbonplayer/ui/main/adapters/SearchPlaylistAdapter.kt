@@ -3,10 +3,10 @@ package com.carbonplayer.ui.main.adapters
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.Point
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.base.IPlaylist
 import com.carbonplayer.utils.general.MathUtils

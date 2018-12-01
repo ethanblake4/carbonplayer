@@ -9,15 +9,15 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
-import android.support.annotation.Keep
-import android.support.v4.view.animation.FastOutSlowInInterpolator
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.ScaleAnimation
 import android.widget.Toast
+import androidx.annotation.Keep
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
@@ -151,7 +151,7 @@ class PlaylistController(
         futurePlaylist?.subscribe {
             realPlaylist = it
             setupView(root, true)
-        }
+        }?.addToAutoDispose()
 
         entries.subscribe {
 
@@ -168,10 +168,11 @@ class PlaylistController(
             root.songgroup_recycler.layoutParams.height =
                     (it.size * MathUtils.dpToPx2(resources, LightListSongAdapter.SONG_HEIGHT_DP)) +
                     IdentityUtils.getNavbarHeight(resources) + (activity as MainActivity).bottomInset
-        }
+        }.addToAutoDispose()
 
         drawable?.observeOn(AndroidSchedulers.mainThread())
                 ?.subscribe { root.main_backdrop.setImageDrawable(it) }
+                ?.addToAutoDispose()
 
         realPlaylist = playlist
         setupView(root, false)

@@ -3,10 +3,10 @@ package com.carbonplayer.ui.main.adapters
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Typeface
-import android.support.v4.content.res.ResourcesCompat
-import android.support.v7.widget.RecyclerView
 import android.view.*
 import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions

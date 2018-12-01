@@ -1,8 +1,8 @@
 package com.carbonplayer.ui.settings
 
 import android.os.Bundle
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.enums.PaletteMode
@@ -21,13 +21,13 @@ class SettingsAppearance: AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.settings_appearance_opt_primary_color_mode)
                     .setSingleChoiceItems(R.array.colorModes,
-                            app.preferences.primaryPaletteMode.ordinal - 1,
-                            { d, i ->
-                                app.preferences.primaryPaletteMode = PaletteMode.values()[i + 1]
-                                app.preferences.save()
-                                updateTexts()
-                                d.dismiss()
-                            })
+                            app.preferences.primaryPaletteMode.ordinal - 1
+                    ) { d, i ->
+                        app.preferences.primaryPaletteMode = PaletteMode.values()[i + 1]
+                        app.preferences.save()
+                        updateTexts()
+                        d.dismiss()
+                    }
                     .show()
         }
 
@@ -35,13 +35,13 @@ class SettingsAppearance: AppCompatActivity() {
             AlertDialog.Builder(this)
                     .setTitle(R.string.settings_opt_appearance_accent_color_mode)
                     .setSingleChoiceItems(R.array.colorModes,
-                            app.preferences.secondaryPaletteMode.ordinal - 1,
-                            { d, i ->
-                                app.preferences.secondaryPaletteMode = PaletteMode.values()[i + 1]
-                                app.preferences.save()
-                                updateTexts()
-                                d.dismiss()
-                            })
+                            app.preferences.secondaryPaletteMode.ordinal - 1
+                    ) { d, i ->
+                        app.preferences.secondaryPaletteMode = PaletteMode.values()[i + 1]
+                        app.preferences.save()
+                        updateTexts()
+                        d.dismiss()
+                    }
                     .show()
         }
 

@@ -1,14 +1,12 @@
 package com.carbonplayer.ui.main
 
 import android.app.Activity
-import android.support.design.widget.AppBarLayout
-import android.support.design.widget.Snackbar
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bluelinelabs.conductor.Controller
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
@@ -30,6 +28,8 @@ import com.carbonplayer.ui.main.adaptivehome.FullBleedListAdapter
 import com.carbonplayer.ui.main.adaptivehome.HomeCardController
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.general.IdentityUtils
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.snackbar.Snackbar
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Action
@@ -60,7 +60,7 @@ class HomeController : Controller() {
         (view.toolbar.layoutParams as AppBarLayout.LayoutParams).bottomMargin +=
                 IdentityUtils.getStatusBarHeight(resources) / 2
 
-        view.app_bar.addOnOffsetChangedListener({ _, i ->
+        view.app_bar.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener{ _, i ->
             (activity as MainActivity).scrollCb(i)
             currentScrollCallback?.run()
         })
@@ -96,13 +96,13 @@ class HomeController : Controller() {
         v.swipeRefreshLayout.isRefreshing = true
 
         Protocol.listenNow(activity!!, CarbonPlayerApplication.instance.homePdContextToken)
-                .retry({ tries, err ->
+                .retry { tries, err ->
                     if (err !is ServerRejectionException) return@retry tries < 2
                     if (err.rejectionReason !=
                             ServerRejectionException.RejectionReason.DEVICE_NOT_AUTHORIZED)
                         return@retry false
                     else tries < 3
-                })
+                }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ home ->

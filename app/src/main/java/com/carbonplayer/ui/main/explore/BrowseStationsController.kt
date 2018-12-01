@@ -1,12 +1,12 @@
 package com.carbonplayer.ui.main.explore
 
-import android.support.annotation.Keep
-import android.support.v4.view.ViewPager
 import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.Keep
 import androidx.core.util.contains
+import androidx.viewpager.widget.ViewPager
 import com.bluelinelabs.conductor.Controller
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction

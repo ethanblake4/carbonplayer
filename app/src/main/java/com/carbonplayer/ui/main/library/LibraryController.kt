@@ -1,9 +1,9 @@
 package com.carbonplayer.ui.main.library
 
-import android.support.design.widget.AppBarLayout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.viewpager.widget.ViewPager
 import com.bluelinelabs.conductor.Controller
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
@@ -11,6 +11,7 @@ import com.bluelinelabs.conductor.support.RouterPagerAdapter
 import com.carbonplayer.R
 import com.carbonplayer.ui.main.MainActivity
 import com.carbonplayer.utils.general.IdentityUtils
+import com.google.android.material.appbar.AppBarLayout
 import kotlinx.android.synthetic.main.activity_main.view.*
 import timber.log.Timber
 
@@ -28,7 +29,7 @@ class LibraryController : Controller() {
         (view.tab_layout.layoutParams as AppBarLayout.LayoutParams).topMargin +=
                 IdentityUtils.getStatusBarHeight(resources) / 2
 
-        view.app_bar.addOnOffsetChangedListener({ a, i ->
+        view.app_bar.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { a, i ->
             (activity as MainActivity).scrollCb(i)
 
         })
@@ -83,17 +84,18 @@ class LibraryController : Controller() {
 
         Timber.d("curpager=%d", curPage)
 
-        view.libraryPager.adapter = adapter
-        view.tab_layout.setupWithViewPager(view.libraryPager)
+        (view.libraryPager as ViewPager).adapter = adapter
+        view.tab_layout.setupWithViewPager((view.libraryPager as ViewPager))
 
-        view.libraryPager.currentItem = curPage
+        (view.libraryPager as ViewPager).currentItem = curPage
 
         return view
     }
 
 
     override fun onDestroyView(view: View) {
-        curPage = view.libraryPager.currentItem
+
+        curPage = (view.libraryPager as ViewPager).currentItem
         super.onDestroyView(view)
         Timber.d("Library ctrl on destroy view")
     }

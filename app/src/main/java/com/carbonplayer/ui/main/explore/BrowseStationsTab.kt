@@ -1,10 +1,10 @@
 package com.carbonplayer.ui.main.explore
 
-import android.support.annotation.Keep
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.Keep
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bluelinelabs.conductor.Controller
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.api.StationCategory
@@ -28,11 +28,11 @@ class BrowseStationsTab (
         view.main_recycler.layoutManager = LinearLayoutManager(inflater.context)
 
         view.main_recycler.adapter = StationCategoryAdapter(
-                category.subcategories ?: listOf(),
-                { (category, _) ->
-                    callback(category);
-                    Timber.d("Clicked @ tab")
-                })
+                category.subcategories ?: listOf()
+        ) { (category, _) ->
+            callback(category);
+            Timber.d("Clicked @ tab")
+        }
 
         Timber.d(category.subcategories?.size.toString())
 

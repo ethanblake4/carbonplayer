@@ -6,9 +6,6 @@ import android.graphics.drawable.Drawable
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.PopupMenu
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
@@ -17,7 +14,10 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.os.bundleOf
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bluelinelabs.conductor.*
 import com.bumptech.glide.Glide
 import com.carbonplayer.CarbonPlayerApplication
@@ -47,7 +47,6 @@ import com.carbonplayer.ui.main.adapters.SuggestionsAdapter
 import com.carbonplayer.ui.main.library.*
 import com.carbonplayer.ui.settings.Settings
 import com.carbonplayer.ui.transition.SimpleScaleTransition
-import com.carbonplayer.ui.widget.helpers.BottomNavigationHelper
 import com.carbonplayer.utils.addToAutoDispose
 import com.carbonplayer.utils.carbonAnalytics
 import com.carbonplayer.utils.general.IdentityUtils
@@ -145,8 +144,6 @@ class MainActivity : AppCompatActivity() {
                 IdentityUtils.getNavbarHeight(resources))
         bottom_nav.selectedItemId = R.id.action_home
 
-        BottomNavigationHelper.disableShiftMode(bottom_nav)
-
         bottom_nav.setOnNavigationItemSelectedListener { item ->
 
             val initialFrag = when (item.itemId) {
@@ -221,8 +218,8 @@ class MainActivity : AppCompatActivity() {
                 inflate(R.menu.menu_main)
                 gravity = Gravity.TOP
                 show()
-                setOnMenuItemClickListener {
-                    if(it.itemId == R.id.menu_item_settings)
+                setOnMenuItemClickListener { mi ->
+                    if(mi.itemId == R.id.menu_item_settings)
                         startActivity(newIntent<Settings>())
                     true
                 }
@@ -316,8 +313,8 @@ class MainActivity : AppCompatActivity() {
     private fun sub() {
         suggestSubject.debounce(300, TimeUnit.MILLISECONDS)
                 .distinctUntilChanged()
-                .flatMapSingle ({ query -> Protocol.suggest(this, query) })
-                .map({ response -> response.suggested_queries })
+                .flatMapSingle { query -> Protocol.suggest(this, query) }
+                .map { response -> response.suggested_queries }
                 .retry(2)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

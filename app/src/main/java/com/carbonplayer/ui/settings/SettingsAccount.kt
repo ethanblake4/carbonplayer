@@ -2,9 +2,9 @@ package com.carbonplayer.ui.settings
 
 import android.app.ProgressDialog
 import android.os.Bundle
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import com.carbonplayer.CarbonPlayerApplication
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.TrackCache
@@ -26,7 +26,7 @@ class SettingsAccount: AppCompatActivity() {
         settings_account_email.text =
                 CarbonPlayerApplication.instance.preferences.userEmail
 
-        settings_account_sign_out.setOnClickListener {
+        settings_account_sign_out.setOnClickListener { it ->
             val d = AlertDialog.Builder(this)
                     .setTitle(R.string.sign_out)
                     .setMessage(R.string.sign_out_confirmation)

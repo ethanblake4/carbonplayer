@@ -1,10 +1,10 @@
 package com.carbonplayer.ui.main.topcharts
 
 import android.content.Context
-import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bluelinelabs.conductor.Controller
 import com.carbonplayer.R
 import com.carbonplayer.model.entity.skyjam.SkyjamTrack
@@ -44,11 +44,11 @@ class TopChartsSongPage : Controller() {
 
     private fun setAdapter(v: View) {
         Timber.d("setting adapter")
-        v.main_recycler.adapter = TopChartsSongAdapter(songList!!, {
-            Timber.d("Track at position $it is " +
-                    (songList as List<SkyjamTrack>)[it].let { it.storeId + ": " + it.title })
-            musicManager.fromTracks(songList!!, it, false)
-        })
+        v.main_recycler.adapter = TopChartsSongAdapter(songList!!) { pos ->
+            Timber.d("Track at position $pos is " +
+                    (songList as List<SkyjamTrack>)[pos].let { it.storeId + ": " + it.title })
+            musicManager.fromTracks(songList!!, pos, false)
+        }
     }
 
 }

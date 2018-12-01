@@ -7,4 +7,8 @@
             <certificates src="user" />
         </trust-anchors>
     </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">googleusercontent.com</domain>
+        <domain includeSubdomains="true">ggpht.com</domain>
+    </domain-config>
 </network-security-config>

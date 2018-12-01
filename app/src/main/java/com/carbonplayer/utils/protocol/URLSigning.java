@@ -2,8 +2,6 @@ package com.carbonplayer.utils.protocol;
 
 import android.util.Base64;
 
-import org.apache.http.util.EncodingUtils;
-
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -37,8 +35,8 @@ public class URLSigning {
         String digest;
         Mac mac = Mac.getInstance("HmacSHA1");
         mac.init(new SecretKeySpec(_key, mac.getAlgorithm()));
-        mac.update(EncodingUtils.getAsciiBytes(song_id));
-        digest = new String(Base64.encode(mac.doFinal(EncodingUtils.getAsciiBytes(salt)), 11));
+        mac.update(song_id.getBytes("US-ASCII"));
+        digest = new String(Base64.encode(mac.doFinal(salt.getBytes("US-ASCII")), 11));
 
         Timber.d("digest: %s", digest);
         return digest;
